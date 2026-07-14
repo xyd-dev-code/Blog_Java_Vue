@@ -16,6 +16,12 @@ public interface ArticleMapper extends BaseMapper<Article> {
     @Update("UPDATE article SET view_count = view_count + 1 WHERE id = #{id}")
     int incrView(@Param("id") Long id);
 
+    @Update("UPDATE article SET view_count = #{value} WHERE id = #{id}")
+    int setViewCount(@Param("id") Long id, @Param("value") long value);
+
+    @Update("UPDATE article SET view_count = GREATEST(0, view_count + #{delta}) WHERE id = #{id}")
+    int incrByView(@Param("id") Long id, @Param("delta") long delta);
+
     @Select("SELECT slug FROM article WHERE id = #{id}")
     String findSlugById(@Param("id") Long id);
 

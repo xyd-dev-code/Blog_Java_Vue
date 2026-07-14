@@ -82,4 +82,18 @@ public class AdminArticleController {
         articleService.updateFeatured(id, featured);
         return R.ok();
     }
+
+    @PutMapping("/{id}/view-count")
+    @Operation(summary = "设置阅读量为指定值(article)")
+    public R<Void> setViewCount(@PathVariable Long id, @RequestParam Long value) {
+        articleService.setViewCount(id, value);
+        return R.ok();
+    }
+
+    @PutMapping("/{id}/view-count/delta")
+    @Operation(summary = "按增量调整阅读量(article),delta 可负,但结果不能 < 0")
+    public R<Void> updateViewDelta(@PathVariable Long id, @RequestParam Long delta) {
+        articleService.incrViewBy(id, delta);
+        return R.ok();
+    }
 }

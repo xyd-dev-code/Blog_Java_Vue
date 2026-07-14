@@ -230,6 +230,26 @@ public class ArticleService {
         articleMapper.updateById(a);
     }
 
+    @CacheEvict(value = "articles", allEntries = true)
+    public void setViewCount(Long id, long value) {
+        if (value < 0) throw new BizException("阅读量不能为负");
+        Article cur = articleMapper.selectById(id);
+        if (cur == null) throw new BizException(404, "文章不存在");
+        int n = articleMapper.setViewCount(id, value);
+        if (n == 0) throw new BizException(404, "文章不存在");
+    }
+
+    @CacheEvict(value = "articles", allEntries = true)
+    public void incrViewBy(Long id, long delta) {
+        Article cur = articleMapper.selectById(id);
+        if (cur == null) throw new BizException(404, "文章不存在");
+        long curVal = cur.getViewCount() == null ? 0L : cur.getViewCount();
+        long next = curVal + delta;
+        if (next < 0) throw new BizException("调整后阅读量不能为负");
+        int n = articleMapper.incrByView(id, delta);
+        if (n == 0) throw new BizException(404, "文章不存在");
+    }
+
     private void syncTags(Long articleId, List<Long> tagIds) {
         articleTagMapper.deleteByArticle(articleId);
         if (tagIds == null || tagIds.isEmpty()) return;
