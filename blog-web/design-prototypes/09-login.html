@@ -1,0 +1,127 @@
+﻿<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>09 · 登录 · 晴天主题</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=Inter:wght@400;500;600;700&family=Noto+Serif+SC:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--sky-50:#f0f9ff;--sky-100:#e0f2fe;--sky-300:#7dd3fc;--sky-500:#38bdf8;--sky-700:#0ea5e9;--sky-900:#0369a1;--cyan-500:#22d3ee;--sun-300:#fcd34d;--sun-500:#fbbf24;--sun-700:#f59e0b;--ink:#1e293b;}
+body{font-family:Inter,'PingFang SC','Microsoft YaHei',sans-serif;color:var(--ink);margin:0;overflow:hidden;height:100vh;}
+.font-hand{font-family:Caveat,'Noto Serif SC',cursive;}.font-serif{font-family:'Noto Serif SC',serif;}
+.sky-bg{background:linear-gradient(180deg,#38bdf8 0%,#0ea5e9 35%,#22d3ee 70%,#bae6fd 100%);}
+@keyframes drift{0%,100%{transform:translateX(0);}50%{transform:translateX(40px);}}
+@keyframes float{0%,100%{transform:translateY(0);}50%{transform:translateY(-14px);}}
+@keyframes sun-pulse{0%,100%{filter:drop-shadow(0 0 30px rgba(251,191,36,.5));}50%{filter:drop-shadow(0 0 60px rgba(251,191,36,.8));}}
+@keyframes wave{0%{transform:translateX(0);}100%{transform:translateX(-50%);}}
+.cloud{animation:drift 16s ease-in-out infinite;}
+.cloud-fast{animation:drift 9s ease-in-out infinite;}
+.sun{animation:sun-pulse 5s ease-in-out infinite;}
+.wave-anim{animation:wave 14s linear infinite;}
+.glass{background:rgba(255,255,255,.75);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,.6);}
+.btn-glow{box-shadow:0 8px 24px rgba(255,255,255,.3),0 0 0 1px rgba(255,255,255,.2);}
+</style>
+</head>
+<body class="sky-bg">
+
+<!-- 天空背景�?-->
+<div class="fixed inset-0 overflow-hidden -z-10">
+  <!-- 太阳 -->
+  <div class="absolute right-[15%] top-[18%] w-32 h-32 rounded-full bg-gradient-to-br from-sun-300 to-sun-500 sun"></div>
+  <!-- �?-->
+  <svg class="absolute right-[8%] top-[12%] w-40 opacity-90 cloud" viewBox="0 0 64 24" fill="white"><ellipse cx="20" cy="14" rx="14" ry="8"/><ellipse cx="38" cy="12" rx="18" ry="10"/><ellipse cx="52" cy="14" rx="10" ry="6"/></svg>
+  <svg class="absolute left-[5%] top-[35%] w-44 opacity-80 cloud-fast" viewBox="0 0 64 24" fill="white"><ellipse cx="32" cy="12" rx="22" ry="11"/></svg>
+  <svg class="absolute right-[20%] bottom-[25%] w-32 opacity-70 cloud" style="animation-delay:-5s" viewBox="0 0 64 24" fill="white"><ellipse cx="32" cy="12" rx="20" ry="10"/></svg>
+  <svg class="absolute left-[15%] top-[15%] w-24 opacity-60 cloud-fast" style="animation-delay:-2s" viewBox="0 0 64 24" fill="white"><ellipse cx="32" cy="12" rx="18" ry="9"/></svg>
+  <!-- 飞鸟 -->
+  <div class="absolute left-[40%] top-[25%] text-white text-2xl float">🕊</div>
+  <div class="absolute right-[35%] top-[35%] text-white text-xl float" style="animation-delay:-3s">🕊</div>
+
+  <!-- 底部波浪 -->
+  <svg class="absolute -bottom-1 left-0 w-[200%] h-32 wave-anim" viewBox="0 0 2880 100" preserveAspectRatio="none">
+    <path d="M0,50 C360,100 720,0 1080,50 C1440,100 1800,0 2160,50 C2520,100 2880,0 2880,50 L2880,100 L0,100 Z" fill="#ffffff" opacity="0.35"/>
+  </svg>
+  <svg class="absolute -bottom-1 left-0 w-[200%] h-24 wave-anim" style="animation-duration:18s" viewBox="0 0 2880 100" preserveAspectRatio="none">
+    <path d="M0,50 C360,0 720,100 1080,50 C1440,0 1800,100 2160,50 C2520,0 2880,100 2880,50 L2880,100 L0,100 Z" fill="#ffffff" opacity="0.6"/>
+  </svg>
+</div>
+
+<!-- 登录�?-->
+<div class="relative min-h-screen flex items-center justify-center px-6 py-12">
+  <div class="w-full max-w-md">
+
+    <!-- Logo / 返回 -->
+    <div class="text-center mb-6">
+      <a href="01-home.html" class="inline-flex items-center gap-2 text-white/90 hover:text-white text-sm">
+        �?返回DemoAuthor博客
+      </a>
+    </div>
+
+    <!-- 玻璃卡片 -->
+    <div class="glass rounded-3xl p-8 shadow-2xl">
+      <div class="text-center mb-6">
+        <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-sky-400 to-cyan-500 text-2xl shadow-lg mb-3">☁️</div>
+        <h1 class="font-serif text-2xl font-semibold">欢迎回来</h1>
+        <p class="text-sm text-slate-600 mt-1">登录后继续记录山�?/p>
+      </div>
+
+      <form class="space-y-4">
+        <label class="block">
+          <span class="text-xs uppercase tracking-widest text-slate-500 mb-1 block">账号</span>
+          <div class="relative">
+            <input type="text" class="w-full bg-white/70 border border-slate-200 rounded-xl px-4 py-3 pl-10 text-sm focus:outline-none focus:border-sky-500 focus:bg-white transition" placeholder="用户名或邮箱">
+            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">👤</span>
+          </div>
+        </label>
+        <label class="block">
+          <span class="text-xs uppercase tracking-widest text-slate-500 mb-1 block">密码</span>
+          <div class="relative">
+            <input type="password" class="w-full bg-white/70 border border-slate-200 rounded-xl px-4 py-3 pl-10 text-sm focus:outline-none focus:border-sky-500 focus:bg-white transition" placeholder="•••••••�?>
+            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">🔒</span>
+          </div>
+        </label>
+        <div class="flex items-center justify-between text-xs">
+          <label class="flex items-center gap-1.5 text-slate-600 cursor-pointer">
+            <input type="checkbox" class="rounded border-slate-300 text-sky-500 focus:ring-sky-500">
+            记住�?          </label>
+          <a href="#" class="text-sky-700 hover:underline">忘记密码�?/a>
+        </div>
+        <button type="button" class="w-full py-3 rounded-xl bg-gradient-to-r from-sky-500 to-cyan-500 text-white font-medium shadow-lg shadow-sky-500/30 hover:shadow-xl hover:-translate-y-0.5 transition btn-glow">
+          进入DemoAuthor �?        </button>
+      </form>
+
+      <div class="my-5 flex items-center gap-3 text-xs text-slate-400">
+        <div class="flex-1 h-px bg-slate-200"></div>
+        <span>�?/span>
+        <div class="flex-1 h-px bg-slate-200"></div>
+      </div>
+
+      <div class="grid grid-cols-3 gap-2">
+        <button class="py-2 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 transition text-xl">🐙</button>
+        <button class="py-2 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 transition text-xl">🐦</button>
+        <button class="py-2 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 transition text-xl">📮</button>
+      </div>
+
+      <p class="text-center text-xs text-slate-500 mt-6">
+        还没有账号？<a href="#" class="text-sky-700 font-medium hover:underline">注册一�?/a>
+      </p>
+    </div>
+
+    <div class="text-center mt-6 text-xs text-white/70">
+      <span class="font-hand text-2xl text-white">see you on the mountain</span>
+    </div>
+  </div>
+</div>
+
+<!-- 顶部语言切换 -->
+<div class="absolute top-6 right-6 text-xs text-white/80">
+  <a href="01-home.html" class="hover:text-white">首页</a>
+  <span class="mx-2">·</span>
+  <a href="06-guestbook.html" class="hover:text-white">留言</a>
+  <span class="mx-2">·</span>
+  <a href="05-about.html" class="hover:text-white">关于</a>
+</div>
+
+</body>
+</html>

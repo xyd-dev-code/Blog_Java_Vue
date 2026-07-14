@@ -1,0 +1,418 @@
+// 晴空主题 / 现代绚丽
+// 主色: 晴空蓝 sky #38bdf8 / 深 #0ea5e9 / 更深 #0284c7
+// 副色: 薄荷青 cyan #22d3ee / 深 #06b6d4
+// 点缀: 暖阳金 sun #fbbf24 / 暖 #f59e0b
+// 背景: 云白 #f0f9ff / 雪白 #ffffff
+
+:root {
+  --c-botany-50: #f0f9ff;
+  --c-botany-100: #e0f2fe;
+  --c-botany-300: #7dd3fc;
+  --c-botany-500: #38bdf8;
+  --c-botany-700: #0ea5e9;
+  --c-botany-900: #0369a1;
+
+  --c-ink-50: #f8fafc;
+  --c-ink-300: #94a3b8;
+  --c-ink-500: #475569;
+  --c-ink-700: #334155;
+
+  --c-autumn-50: #fffbeb;
+  --c-autumn-300: #fcd34d;
+  --c-autumn-500: #fbbf24;
+  --c-autumn-700: #f59e0b;
+
+  --c-bg: #f0f9ff;
+  --c-paper: #ffffff;
+  --c-ink: #1e293b;
+  --c-ink-soft: #64748b;
+  --c-line: #e2e8f0;
+  --c-line-soft: #f1f5f9;
+
+  --shadow-soft: 0 2px 8px rgba(14, 165, 233, 0.06), 0 8px 28px rgba(14, 165, 233, 0.08);
+  --shadow-pop: 0 10px 30px rgba(14, 165, 233, 0.12), 0 20px 50px rgba(14, 165, 233, 0.14);
+  --shadow-glow: 0 0 20px rgba(56, 189, 248, 0.25);
+
+  --radius-sm: 6px;
+  --radius: 14px;
+  --radius-lg: 24px;
+
+  --font-serif: 'Noto Serif SC', 'Source Han Serif SC', 'Songti SC', 'SimSun', serif;
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB',
+               'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+html, body, #app {
+  margin: 0;
+  padding: 0;
+  background: linear-gradient(180deg, var(--c-bg) 0%, #e0f7ff 40%, #ffffff 80%);
+  background-size: 100% 100%;
+  color: var(--c-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  min-height: 100vh;
+  animation: sky-shift 12s ease-in-out infinite alternate;
+}
+
+@keyframes sky-shift {
+  0% { background-position: 0% 0%; }
+  100% { background-position: 0% 30%; }
+}
+
+/* 自定义光标 + 涟漪 */
+.cursor-dot {
+  position: fixed;
+  width: 12px; height: 12px;
+  border-radius: 50%;
+  background: var(--c-botany-500);
+  mix-blend-mode: difference;
+  pointer-events: none;
+  z-index: 99999;
+  transition: transform 0.1s ease, width 0.2s, height 0.2s;
+}
+.cursor-ring {
+  position: fixed;
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  border: 2px solid var(--c-botany-300);
+  pointer-events: none;
+  z-index: 99998;
+  transition: transform 0.15s ease, opacity 0.2s;
+}
+.cursor-click .cursor-dot { transform: scale(0.5); }
+.cursor-click .cursor-ring { transform: scale(1.5); opacity: 0.3; }
+
+@media (max-width: 768px) {
+  .cursor-dot, .cursor-ring { display: none; }
+}
+
+a { color: inherit; text-decoration: none; }
+a:hover { color: var(--c-botany-700); }
+
+h1, h2, h3, h4 { font-family: var(--font-serif); color: var(--c-ink); letter-spacing: 0.02em; }
+
+/* scrollbar */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--c-line); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--c-botany-300); }
+
+/* utility */
+.container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+.container-narrow { max-width: 880px; margin: 0 auto; padding: 0 24px; }
+
+.text-botany { color: var(--c-botany-500); }
+.text-ink { color: var(--c-ink-500); }
+.text-autumn { color: var(--c-autumn-500); }
+.text-soft { color: var(--c-ink-soft); }
+
+.section { padding: 80px 0; }
+.section-title {
+  font-family: var(--font-serif);
+  font-size: 32px;
+  font-weight: 600;
+  margin: 0 0 12px;
+  position: relative;
+  display: inline-block;
+  background: linear-gradient(135deg, var(--c-botany-700), var(--c-botany-500), var(--c-autumn-500));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.section-title::after {
+  content: '';
+  display: block;
+  width: 60px;
+  height: 3px;
+  background: linear-gradient(90deg, var(--c-botany-500), var(--c-autumn-500), var(--c-botany-500));
+  background-size: 200% 100%;
+  margin-top: 10px;
+  border-radius: 2px;
+  animation: shimmer-bar 3s ease-in-out infinite;
+}
+@keyframes shimmer-bar {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+.section-sub { color: var(--c-ink-soft); font-size: 15px; margin-bottom: 40px; }
+
+.card {
+  background: var(--c-paper);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-soft);
+  border: 1px solid var(--c-line-soft);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.card:hover { transform: translateY(-3px); box-shadow: var(--shadow-pop); }
+
+.btn-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--c-botany-500);
+  font-weight: 500;
+  cursor: pointer;
+  transition: gap 0.2s ease;
+}
+.btn-link:hover { gap: 10px; }
+
+/* tag pill */
+.tag-pill {
+  display: inline-block;
+  padding: 3px 12px;
+  background: var(--c-botany-50);
+  color: var(--c-botany-900);
+  border-radius: 999px;
+  font-size: 12px;
+  margin: 0 6px 6px 0;
+  transition: all 0.2s ease;
+  border: 1px solid var(--c-botany-100);
+}
+.tag-pill:hover {
+  background: var(--c-botany-500);
+  color: #fff;
+  border-color: var(--c-botany-500);
+}
+
+/* el overrides */
+.el-button--primary {
+  --el-button-bg-color: var(--c-botany-500);
+  --el-button-border-color: var(--c-botany-500);
+  --el-button-hover-bg-color: var(--c-botany-700);
+  --el-button-hover-border-color: var(--c-botany-700);
+}
+.el-button--warning {
+  --el-button-bg-color: var(--c-autumn-500);
+  --el-button-border-color: var(--c-autumn-500);
+  --el-button-hover-bg-color: var(--c-autumn-700);
+  --el-button-hover-border-color: var(--c-autumn-700);
+}
+.el-pagination .is-active { background-color: var(--c-botany-500) !important; }
+
+.el-card { border-radius: var(--radius) !important; }
+
+/* 通用晴空页头 */
+.sky-page-head {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, #38bdf8 0%, #0ea5e9 40%, #22d3ee 100%);
+  color: #fff;
+  padding: 70px 0 100px;
+  text-align: center;
+  margin-bottom: 50px;
+  box-shadow: 0 10px 40px rgba(14, 165, 233, 0.18);
+}
+/* 光束扫过 */
+.sky-page-head::before {
+  content: '';
+  position: absolute;
+  top: -50%; left: -50%;
+  width: 200%; height: 200%;
+  background: radial-gradient(ellipse at 30% 20%, rgba(255,255,255,0.12) 0%, transparent 60%);
+  animation: beam-drift 10s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+/* 浮动光晕球 */
+.sky-page-head .orb, .sky-page-head::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(50px);
+  z-index: 0;
+  pointer-events: none;
+}
+.sky-page-head::after {
+  width: 240px; height: 240px;
+  background: rgba(255, 255, 255, 0.12);
+  bottom: -80px; right: 5%;
+  animation: float 8s ease-in-out infinite -4s;
+}
+/* SVG 波浪底部 */
+.sky-page-head .wave {
+  position: absolute;
+  bottom: -2px; left: 0; right: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+/* 浮动云 */
+.sky-page-head .cloud {
+  position: absolute;
+  z-index: 0;
+  pointer-events: none;
+}
+.sky-page-head .cloud-1 { top: 10%; right: 8%; width: 200px; animation-delay: 0s; }
+.sky-page-head .cloud-2 { top: 45%; left: 5%; width: 140px; animation-delay: -3s; }
+.sky-page-head h1 {
+  position: relative;
+  z-index: 2;
+  color: #fff;
+  font-size: 38px;
+  margin: 0 0 10px;
+  text-shadow: 0 2px 12px rgba(2, 132, 199, 0.25);
+}
+.sky-page-head p {
+  position: relative;
+  z-index: 2;
+  opacity: 0.92;
+  margin: 0;
+  font-size: 15px;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-12px) scale(1.05); }
+}
+@keyframes beam-drift {
+  0% { transform: translate(-5%, -5%) rotate(0deg); }
+  50% { transform: translate(5%, 5%) rotate(1deg); }
+  100% { transform: translate(-5%, -5%) rotate(0deg); }
+}
+
+@media (max-width: 768px) {
+  .section { padding: 50px 0; }
+  .section-title { font-size: 26px; }
+  .sky-page-head { padding: 50px 0 45px; }
+  .sky-page-head h1 { font-size: 30px; }
+  .container { padding: 0 16px; }
+  .container-narrow { padding: 0 16px; }
+}
+@media (max-width: 480px) {
+  .section { padding: 36px 0; }
+  .section-title { font-size: 22px; }
+  .sky-page-head { padding: 40px 0 38px; }
+  .sky-page-head h1 { font-size: 24px; }
+}
+
+/* 滚动揭示动画 */
+.reveal {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.7s ease, transform 0.7s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* 按钮波纹效果 */
+.ripple {
+  position: relative;
+  overflow: hidden;
+}
+.ripple .ripple-effect {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.5);
+  transform: scale(0);
+  animation: ripple-anim 0.6s ease-out;
+  pointer-events: none;
+}
+@keyframes ripple-anim {
+  to { transform: scale(4); opacity: 0; }
+}
+
+/* 卡片 3D 倾斜 */
+.tilt-card {
+  transform-style: preserve-3d;
+  perspective: 1000px;
+  transition: transform 0.1s ease;
+}
+
+/* 按钮脉冲发光 */
+.btn-pulse {
+  animation: btn-pulse 2s ease-in-out infinite;
+}
+@keyframes btn-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(56, 189, 248, 0.4); }
+  50% { box-shadow: 0 0 0 12px rgba(56, 189, 248, 0); }
+}
+
+/* 鼠标跟随光晕卡片 */
+.glow-card {
+  position: relative;
+  overflow: hidden;
+}
+.glow-card::before {
+  content: '';
+  position: absolute;
+  top: var(--my, 50%); left: var(--mx, 50%);
+  width: 300px; height: 300px;
+  background: radial-gradient(circle, rgba(56,189,248,.15) 0%, transparent 70%);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 0;
+}
+.glow-card:hover::before { opacity: 1; }
+.glow-card > * { position: relative; z-index: 1; }
+
+/* 浮动装饰云 */
+@keyframes cloud-drift {
+  0% { transform: translateX(-20px); }
+  100% { transform: translateX(20px); }
+}
+.cloud-float {
+  animation: cloud-drift 6s ease-in-out infinite alternate;
+}
+
+/* 卡片边框流光 */
+.border-glow {
+  position: relative;
+}
+.border-glow::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--c-botany-500), var(--c-autumn-500), var(--c-botany-300), var(--c-botany-500));
+  background-size: 300% 100%;
+  z-index: -1;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  animation: border-flow 3s linear infinite paused;
+}
+.border-glow:hover::after {
+  opacity: 1;
+  animation-play-state: running;
+}
+@keyframes border-flow {
+  0% { background-position: 0% 0%; }
+  100% { background-position: 300% 0%; }
+}
+
+/* Material 下划线输入框 */
+.mat-input {
+  position: relative;
+}
+.mat-input .el-input__wrapper {
+  border: none !important;
+  border-bottom: 2px solid var(--c-line) !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  padding: 8px 4px !important;
+  transition: border-color 0.3s ease;
+}
+.mat-input .el-input__wrapper:hover,
+.mat-input .el-input__wrapper.is-focus {
+  border-bottom-color: var(--c-botany-500) !important;
+}
+
+/* 页面加载遮罩 */
+.page-loader-enter-active,
+.page-loader-leave-active {
+  transition: opacity 0.3s ease, transform 0.35s ease;
+}
+.page-loader-enter-from {
+  opacity: 0;
+  transform: translateY(10px);
+}
+.page-loader-leave-to {
+  opacity: 0;
+  transform: translateY(-8px);
+}

@@ -1,0 +1,46 @@
+# 后端
+target/
+*.class
+*.jar
+*.war
+*.iml
+.idea/
+.vscode/
+.classpath
+.project
+.settings/
+build/
+
+# 前端
+node_modules/
+dist/
+.DS_Store
+.env.local
+.env.*.local
+npm-debug.log*
+yarn-debug.log*
+
+# 日志
+*.log
+logs/
+
+# 系统
+Thumbs.db
+desktop.ini
+$RECYCLE.BIN/
+
+# 工具状态/缓存
+.claude/
+.workbuddy/
+
+# 上传
+uploads/
+
+# 本地配置
+application-local.yml
+
+# 临时文件
+_compile.args
+_compile2.args
+_cp.txt
+update-jar.py

@@ -1,0 +1,217 @@
+﻿<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>08 · 友链 · 晴天主题</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=Inter:wght@400;500;600;700&family=Noto+Serif+SC:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--sky-50:#f0f9ff;--sky-100:#e0f2fe;--sky-300:#7dd3fc;--sky-500:#38bdf8;--sky-700:#0ea5e9;--sky-900:#0369a1;--cyan-500:#22d3ee;--sun-500:#fbbf24;--sun-700:#f59e0b;--ink:#1e293b;}
+body{font-family:Inter,'PingFang SC','Microsoft YaHei',sans-serif;background:linear-gradient(180deg,#f0f9ff 0%,#fff 60%);color:var(--ink);margin:0;}
+.font-hand{font-family:Caveat,'Noto Serif SC',cursive;}.font-serif{font-family:'Noto Serif SC',serif;}
+.glass{background:rgba(255,255,255,.65);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.7);}
+.friend-card{transition:transform .35s cubic-bezier(.16,1,.3,1),box-shadow .35s ease;position:relative;overflow:hidden;}
+.friend-card:hover{transform:translateY(-4px);}
+.friend-card::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at var(--mx,50%) var(--my,50%),rgba(56,189,248,.18) 0%,transparent 60%);opacity:0;transition:opacity .3s ease;pointer-events:none;}
+.friend-card:hover::before{opacity:1;}
+</style>
+</head>
+<body class="min-h-screen">
+<div class="fixed right-[5%] top-24 w-24 h-24 rounded-full bg-gradient-to-br from-sun-300 to-sun-500 opacity-50 -z-10" style="animation:float 6s ease-in-out infinite"></div>
+
+<header class="sticky top-0 z-50 glass border-b border-white/40">
+  <div class="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
+    <a href="index.html" class="flex items-center gap-2 text-sm font-medium"><span class="text-lg">☁️</span><span class="font-serif">DemoAuthor · 晴天</span></a>
+    <nav class="hidden md:flex items-center gap-7 text-sm text-slate-600">
+      <a href="01-home.html" class="hover:text-sky-700">首页</a>
+      <a href="02-articles.html" class="hover:text-sky-700">文章</a>
+      <a href="08-friends.html" class="text-sky-700 font-medium">友链</a>
+    </nav>
+    <a href="09-login.html" class="text-xs px-3 py-1.5 rounded-full bg-sky-500 text-white">登录</a>
+  </div>
+</header>
+
+<section class="relative overflow-hidden pt-16 pb-10">
+  <div class="max-w-6xl mx-auto px-6 text-center">
+    <span class="text-xs tracking-widest uppercase text-cyan-700">friends</span>
+    <h1 class="font-serif text-5xl md:text-6xl font-semibold mt-2 mb-3">一�?span class="font-hand text-sun-500 text-6xl">朋友</span></h1>
+    <p class="text-slate-600 max-w-xl mx-auto">24 位独立写作者的小角�?· 也欢迎交�?/p>
+  </div>
+</section>
+
+<section class="py-14 bg-white">
+  <div class="max-w-6xl mx-auto px-6">
+    <!-- 申请说明 -->
+    <div class="rounded-2xl bg-gradient-to-r from-sky-50 via-cyan-50 to-sun-50 p-6 mb-10">
+      <div class="grid md:grid-cols-2 gap-4 items-center">
+        <div>
+          <div class="font-serif text-xl font-semibold">想交换友链？</div>
+          <p class="text-sm text-slate-600 mt-1">原创博客、内容持续更新、最好也能留住温度。评论区或邮件均可�?/p>
+        </div>
+        <div class="flex md:justify-end gap-3">
+          <button class="px-4 py-2 rounded-full bg-white border border-sky-100 text-sky-700 text-sm">申请友链</button>
+          <button class="px-4 py-2 rounded-full bg-sky-500 text-white text-sm shadow-lg shadow-sky-500/30">查看要求</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+      <!-- 友链 1 -->
+      <a href="#" class="friend-card bg-white border border-slate-100 rounded-2xl p-5 block">
+        <div class="flex items-start gap-4">
+          <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-sky-400 to-cyan-500 grid place-items-center text-white font-serif text-lg shrink-0">�?/div>
+          <div class="flex-1 min-w-0">
+            <div class="font-serif text-base font-semibold truncate">林深时见�?/div>
+            <div class="text-xs text-slate-500 truncate">www.linshen.ink</div>
+            <p class="text-sm text-slate-600 mt-2 line-clamp-2">关于山里的夜与诗，偶尔也写一点代码笔记�?/p>
+          </div>
+        </div>
+        <div class="mt-3 pt-3 border-t border-dashed border-slate-100 flex items-center justify-between text-xs text-slate-500">
+          <span>独立博客 · 持续 4 �?/span>
+          <span class="text-sky-500">�?/span>
+        </div>
+      </a>
+
+      <!-- 友链 2 -->
+      <a href="#" class="friend-card bg-white border border-slate-100 rounded-2xl p-5 block">
+        <div class="flex items-start gap-4">
+          <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-sun-400 to-sun-700 grid place-items-center text-white font-serif text-lg shrink-0">�?/div>
+          <div class="flex-1 min-w-0">
+            <div class="font-serif text-base font-semibold truncate">老白茶事</div>
+            <div class="text-xs text-slate-500 truncate">tea.friend.host</div>
+            <p class="text-sm text-slate-600 mt-2 line-clamp-2">一壶茶的工夫，关于水温克数与生活�?/p>
+          </div>
+        </div>
+        <div class="mt-3 pt-3 border-t border-dashed border-slate-100 flex items-center justify-between text-xs text-slate-500">
+          <span>茶文�?· 持续 2 �?/span>
+          <span class="text-sky-500">�?/span>
+        </div>
+      </a>
+
+      <!-- 友链 3 -->
+      <a href="#" class="friend-card bg-white border border-slate-100 rounded-2xl p-5 block">
+        <div class="flex items-start gap-4">
+          <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-400 to-sky-500 grid place-items-center text-white font-serif text-lg shrink-0">�?/div>
+          <div class="flex-1 min-w-0">
+            <div class="font-serif text-base font-semibold truncate">云端笔记</div>
+            <div class="text-xs text-slate-500 truncate">cloudme.dev</div>
+            <p class="text-sm text-slate-600 mt-2 line-clamp-2">前端工程师的随笔与工具箱�?/p>
+          </div>
+        </div>
+        <div class="mt-3 pt-3 border-t border-dashed border-slate-100 flex items-center justify-between text-xs text-slate-500">
+          <span>技术博�?· 持续 5 �?/span>
+          <span class="text-sky-500">�?/span>
+        </div>
+      </a>
+
+      <!-- 友链 4 -->
+      <a href="#" class="friend-card bg-white border border-slate-100 rounded-2xl p-5 block">
+        <div class="flex items-start gap-4">
+          <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-sky-300 to-sun-300 grid place-items-center text-white font-serif text-lg shrink-0">�?/div>
+          <div class="flex-1 min-w-0">
+            <div class="font-serif text-base font-semibold truncate">半山�?/div>
+            <div class="text-xs text-slate-500 truncate">half-mountain.cn</div>
+            <p class="text-sm text-slate-600 mt-2 line-clamp-2">城市与山之间，一个写字的人�?/p>
+          </div>
+        </div>
+        <div class="mt-3 pt-3 border-t border-dashed border-slate-100 flex items-center justify-between text-xs text-slate-500">
+          <span>随笔 · 持续 3 �?/span>
+          <span class="text-sky-500">�?/span>
+        </div>
+      </a>
+
+      <!-- 友链 5 -->
+      <a href="#" class="friend-card bg-white border border-slate-100 rounded-2xl p-5 block">
+        <div class="flex items-start gap-4">
+          <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-sun-300 to-sky-300 grid place-items-center text-white font-serif text-lg shrink-0">�?/div>
+          <div class="flex-1 min-w-0">
+            <div class="font-serif text-base font-semibold truncate">风物长宜</div>
+            <div class="text-xs text-slate-500 truncate">wind-things.net</div>
+            <p class="text-sm text-slate-600 mt-2 line-clamp-2">城市里的植物笔记，本周新发现一棵老槐�?/p>
+          </div>
+        </div>
+        <div class="mt-3 pt-3 border-t border-dashed border-slate-100 flex items-center justify-between text-xs text-slate-500">
+          <span>自然 · 持续 1 �?/span>
+          <span class="text-sky-500">�?/span>
+        </div>
+      </a>
+
+      <!-- 友链 6 -->
+      <a href="#" class="friend-card bg-white border border-slate-100 rounded-2xl p-5 block">
+        <div class="flex items-start gap-4">
+          <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-300 to-sun-500 grid place-items-center text-white font-serif text-lg shrink-0">�?/div>
+          <div class="flex-1 min-w-0">
+            <div class="font-serif text-base font-semibold truncate">三三的代码笔�?/div>
+            <div class="text-xs text-slate-500 truncate">33.dev</div>
+            <p class="text-sm text-slate-600 mt-2 line-clamp-2">Java / Spring / Vue，工程师的成长记录�?/p>
+          </div>
+        </div>
+        <div class="mt-3 pt-3 border-t border-dashed border-slate-100 flex items-center justify-between text-xs text-slate-500">
+          <span>技�?· 持续 6 �?/span>
+          <span class="text-sky-500">�?/span>
+        </div>
+      </a>
+
+      <!-- 友链 7 -->
+      <a href="#" class="friend-card bg-white border border-slate-100 rounded-2xl p-5 block">
+        <div class="flex items-start gap-4">
+          <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-sky-500 to-cyan-400 grid place-items-center text-white font-serif text-lg shrink-0">�?/div>
+          <div class="flex-1 min-w-0">
+            <div class="font-serif text-base font-semibold truncate">远山写生</div>
+            <div class="text-xs text-slate-500 truncate">painting.far</div>
+            <p class="text-sm text-slate-600 mt-2 line-clamp-2">每周一幅山的水彩速写，配一点文字�?/p>
+          </div>
+        </div>
+        <div class="mt-3 pt-3 border-t border-dashed border-slate-100 flex items-center justify-between text-xs text-slate-500">
+          <span>绘画 · 持续 2 �?/span>
+          <span class="text-sky-500">�?/span>
+        </div>
+      </a>
+
+      <!-- 友链 8 -->
+      <a href="#" class="friend-card bg-white border border-slate-100 rounded-2xl p-5 block">
+        <div class="flex items-start gap-4">
+          <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-sun-500 to-sky-500 grid place-items-center text-white font-serif text-lg shrink-0">�?/div>
+          <div class="flex-1 min-w-0">
+            <div class="font-serif text-base font-semibold truncate">晚风博客</div>
+            <div class="text-xs text-slate-500 truncate">night-breeze.cn</div>
+            <p class="text-sm text-slate-600 mt-2 line-clamp-2">关于夜晚读书、写代码、听古琴�?/p>
+          </div>
+        </div>
+        <div class="mt-3 pt-3 border-t border-dashed border-slate-100 flex items-center justify-between text-xs text-slate-500">
+          <span>随笔 · 持续 3 �?/span>
+          <span class="text-sky-500">�?/span>
+        </div>
+      </a>
+
+      <!-- 友链 9 -->
+      <a href="#" class="friend-card bg-white border border-slate-100 rounded-2xl p-5 block">
+        <div class="flex items-start gap-4">
+          <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500 to-sun-400 grid place-items-center text-white font-serif text-lg shrink-0">�?/div>
+          <div class="flex-1 min-w-0">
+            <div class="font-serif text-base font-semibold truncate">青藤小院</div>
+            <div class="text-xs text-slate-500 truncate">vineyard.home</div>
+            <p class="text-sm text-slate-600 mt-2 line-clamp-2">院子里的菜与花，记录缓慢生长的日常�?/p>
+          </div>
+        </div>
+        <div class="mt-3 pt-3 border-t border-dashed border-slate-100 flex items-center justify-between text-xs text-slate-500">
+          <span>生活 · 持续 1 �?/span>
+          <span class="text-sky-500">�?/span>
+        </div>
+      </a>
+    </div>
+
+    <div class="text-center mt-12">
+      <button class="px-5 py-2 rounded-full bg-white border border-slate-200 text-sm text-slate-600 hover:bg-slate-50">显示更多友人 �?/button>
+    </div>
+  </div>
+</section>
+
+<footer class="py-10 text-center text-sm text-slate-500 border-t border-slate-100 mt-10">
+  <a href="index.html" class="hover:text-sky-700">设计稿索�?/a> · <a href="spec.html" class="hover:text-sky-700">规范</a>
+  <div class="mt-2">晴天主题 · 为「DemoAuthor」博客设�?· 2026 · 07 · 11</div>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,256 @@
+﻿<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>06 · 留言�?· 晴天主题</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=Inter:wght@400;500;600;700&family=Noto+Serif+SC:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--sky-50:#f0f9ff;--sky-100:#e0f2fe;--sky-300:#7dd3fc;--sky-500:#38bdf8;--sky-700:#0ea5e9;--sky-900:#0369a1;--cyan-500:#22d3ee;--sun-300:#fcd34d;--sun-500:#fbbf24;--sun-700:#f59e0b;--ink:#1e293b;}
+body{font-family:Inter,'PingFang SC','Microsoft YaHei',sans-serif;background:linear-gradient(180deg,#f0f9ff 0%,#fff 60%);color:var(--ink);margin:0;}
+.font-hand{font-family:Caveat,'Noto Serif SC',cursive;}.font-serif{font-family:'Noto Serif SC',serif;}
+.note{transition:transform .35s cubic-bezier(.16,1,.3,1),box-shadow .35s ease;}
+.note:hover{transform:rotate(0deg) translateY(-6px) scale(1.02)!important;z-index:10;}
+.note-paper{background:linear-gradient(180deg,#fff 0%,#fafafa 100%);position:relative;}
+.note-paper::before{content:'';position:absolute;left:24px;top:0;bottom:0;width:1px;background:rgba(220,38,38,.08);}
+</style>
+</head>
+<body class="min-h-screen">
+<header class="sticky top-0 z-50 glass border-b border-white/40" style="backdrop-filter:blur(14px);background:rgba(255,255,255,.6);border-bottom:1px solid rgba(255,255,255,.7);">
+  <div class="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
+    <a href="index.html" class="flex items-center gap-2 text-sm font-medium"><span class="text-lg">☁️</span><span class="font-serif">DemoAuthor · 晴天</span></a>
+    <nav class="hidden md:flex items-center gap-7 text-sm text-slate-600">
+      <a href="01-home.html" class="hover:text-sky-700">首页</a>
+      <a href="02-articles.html" class="hover:text-sky-700">文章</a>
+      <a href="06-guestbook.html" class="text-sky-700 font-medium">留言</a>
+    </nav>
+    <a href="09-login.html" class="text-xs px-3 py-1.5 rounded-full bg-sky-500 text-white">登录</a>
+  </div>
+</header>
+
+<!-- 头部 -->
+<section class="relative overflow-hidden pt-16 pb-10">
+  <div class="max-w-6xl mx-auto px-6 text-center">
+    <span class="text-xs tracking-widest uppercase text-cyan-700">guestbook</span>
+    <h1 class="font-serif text-5xl md:text-6xl font-semibold mt-2 mb-3">�?span class="font-hand text-sun-500 text-6xl">留个</span>脚印</h1>
+    <p class="text-slate-600 max-w-xl mx-auto">每一则留言都会被认真地读，可能还会被回�?�?留言数量�?7</p>
+  </div>
+</section>
+
+<!-- 写留言 -->
+<section class="py-8 bg-white">
+  <div class="max-w-2xl mx-auto px-6">
+    <div class="gradient-border p-6">
+      <div class="flex items-start gap-4">
+        <div class="w-10 h-10 rounded-full bg-gradient-to-br from-sky-300 to-cyan-400 shrink-0"></div>
+        <div class="flex-1">
+          <input class="w-full bg-transparent border-b border-slate-200 focus:border-sky-500 outline-none py-1.5 text-sm" placeholder="昵称">
+          <textarea class="w-full bg-transparent outline-none resize-none mt-3 text-sm" rows="3" placeholder="说点什么吧�?></textarea>
+          <div class="mt-3 flex items-center justify-between text-xs text-slate-500">
+            <div class="flex gap-3">
+              <button>😀</button><button>�?/button><button>🌿</button><button>☀�?/button>
+            </div>
+            <button class="px-4 py-1.5 rounded-full bg-sky-500 text-white">发表</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 留言墙：便签 -->
+<section class="py-14">
+  <div class="max-w-6xl mx-auto px-6">
+    <div class="grid md:grid-cols-3 lg:grid-cols-4 gap-5">
+      <!-- 便签 1：晴�?-->
+      <div class="note note-paper p-5 rounded-xl shadow-md border border-sky-100" style="transform:rotate(-2deg);background:linear-gradient(180deg,#f0f9ff,#fff);">
+        <div class="flex items-center gap-2 mb-3">
+          <div class="w-8 h-8 rounded-full bg-gradient-to-br from-sky-300 to-cyan-400"></div>
+          <div>
+            <div class="text-sm font-medium">林深时见�?/div>
+            <div class="text-[10px] text-slate-400">2026 · 07 · 10</div>
+          </div>
+        </div>
+        <p class="text-sm text-slate-700 leading-relaxed">喜欢「山不说话」那句。城市待久了，最怕自己也变成不停说话的人�?/p>
+        <div class="mt-3 flex gap-3 text-xs text-slate-400">
+          <button class="hover:text-sky-500">�?12</button>
+          <button class="hover:text-sky-500">回复</button>
+        </div>
+      </div>
+
+      <!-- 便签 2：暖�?-->
+      <div class="note note-paper p-5 rounded-xl shadow-md border border-sun-100" style="transform:rotate(1.5deg);background:linear-gradient(180deg,#fffbeb,#fff);">
+        <div class="flex items-center gap-2 mb-3">
+          <div class="w-8 h-8 rounded-full bg-gradient-to-br from-sun-300 to-sun-500"></div>
+          <div>
+            <div class="text-sm font-medium">老白</div>
+            <div class="text-[10px] text-slate-400">2026 · 07 · 09</div>
+          </div>
+        </div>
+        <p class="text-sm text-slate-700 leading-relaxed">我也在山里。希望下次能一起去你那儿喝茶�?/p>
+        <div class="mt-3 flex gap-3 text-xs text-slate-400">
+          <button class="hover:text-sky-500">�?8</button>
+          <button class="hover:text-sky-500">回复</button>
+        </div>
+      </div>
+
+      <!-- 便签 3：薄�?-->
+      <div class="note note-paper p-5 rounded-xl shadow-md border border-cyan-100" style="transform:rotate(-1deg);background:linear-gradient(180deg,#ecfeff,#fff);">
+        <div class="flex items-center gap-2 mb-3">
+          <div class="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-300 to-sky-400"></div>
+          <div>
+            <div class="text-sm font-medium">半山居士</div>
+            <div class="text-[10px] text-slate-400">2026 · 07 · 08</div>
+          </div>
+        </div>
+        <p class="text-sm text-slate-700 leading-relaxed">新版皮肤很好看，晴天蓝很夏天 🌊</p>
+        <div class="mt-3 flex gap-3 text-xs text-slate-400">
+          <button class="hover:text-sky-500">�?5</button>
+          <button class="hover:text-sky-500">回复</button>
+        </div>
+      </div>
+
+      <!-- 便签 4：暖�?+ �?-->
+      <div class="note note-paper p-5 rounded-xl shadow-md border border-sun-100 md:row-span-2" style="transform:rotate(2deg);background:linear-gradient(180deg,#fffbeb,#fff);">
+        <div class="flex items-center gap-2 mb-3">
+          <div class="w-8 h-8 rounded-full bg-gradient-to-br from-sun-300 to-sky-400"></div>
+          <div>
+            <div class="text-sm font-medium">南山�?/div>
+            <div class="text-[10px] text-slate-400">2026 · 07 · 06</div>
+          </div>
+        </div>
+        <p class="text-sm text-slate-700 leading-relaxed">读完了所有关于「山」的文章。最喜欢「把一天过成山的样子」。那种放慢节奏之后才看得见的世界，是我一直向往的�?/p>
+        <p class="text-sm text-slate-700 leading-relaxed mt-2">提一个小问题：你平时喝茶是按心情选茶，还是按茶选心情？</p>
+        <div class="mt-3 flex gap-3 text-xs text-slate-400">
+          <button class="hover:text-sky-500">�?22</button>
+          <button class="hover:text-sky-500">回复 · 1</button>
+        </div>
+      </div>
+
+      <!-- 便签 5 -->
+      <div class="note note-paper p-5 rounded-xl shadow-md border border-sky-100" style="transform:rotate(-1.5deg);background:linear-gradient(180deg,#f0f9ff,#fff);">
+        <div class="flex items-center gap-2 mb-3">
+          <div class="w-8 h-8 rounded-full bg-gradient-to-br from-sky-300 to-sun-300"></div>
+          <div>
+            <div class="text-sm font-medium">三三</div>
+            <div class="text-[10px] text-slate-400">2026 · 07 · 05</div>
+          </div>
+        </div>
+        <p class="text-sm text-slate-700 leading-relaxed">请教作者，你那�?Element Plus 主题切换是怎么做平滑过渡的�?/p>
+        <div class="mt-3 flex gap-3 text-xs text-slate-400">
+          <button class="hover:text-sky-500">�?3</button>
+          <button class="hover:text-sky-500">回复</button>
+        </div>
+      </div>
+
+      <!-- 便签 6 -->
+      <div class="note note-paper p-5 rounded-xl shadow-md border border-cyan-100" style="transform:rotate(0.8deg);background:linear-gradient(180deg,#ecfeff,#fff);">
+        <div class="flex items-center gap-2 mb-3">
+          <div class="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-400 to-sky-500"></div>
+          <div>
+            <div class="text-sm font-medium">风物长宜</div>
+            <div class="text-[10px] text-slate-400">2026 · 07 · 03</div>
+          </div>
+        </div>
+        <p class="text-sm text-slate-700 leading-relaxed">也想交换友链�?我的站是关于城市里的植物笔记�?/p>
+        <div class="mt-3 flex gap-3 text-xs text-slate-400">
+          <button class="hover:text-sky-500">�?6</button>
+          <button class="hover:text-sky-500">回复</button>
+        </div>
+      </div>
+
+      <!-- 便签 7 -->
+      <div class="note note-paper p-5 rounded-xl shadow-md border border-sun-100" style="transform:rotate(-2.5deg);background:linear-gradient(180deg,#fffbeb,#fff);">
+        <div class="flex items-center gap-2 mb-3">
+          <div class="w-8 h-8 rounded-full bg-gradient-to-br from-sun-400 to-sun-700"></div>
+          <div>
+            <div class="text-sm font-medium">麦穗</div>
+            <div class="text-[10px] text-slate-400">2026 · 06 · 28</div>
+          </div>
+        </div>
+        <p class="text-sm text-slate-700 leading-relaxed">已收�?RSS，每早通勤路上听你的文�?☀�?/p>
+        <div class="mt-3 flex gap-3 text-xs text-slate-400">
+          <button class="hover:text-sky-500">�?14</button>
+          <button class="hover:text-sky-500">回复</button>
+        </div>
+      </div>
+
+      <!-- 便签 8 -->
+      <div class="note note-paper p-5 rounded-xl shadow-md border border-sky-100" style="transform:rotate(1.2deg);background:linear-gradient(180deg,#f0f9ff,#fff);">
+        <div class="flex items-center gap-2 mb-3">
+          <div class="w-8 h-8 rounded-full bg-gradient-to-br from-sky-300 to-cyan-500"></div>
+          <div>
+            <div class="text-sm font-medium">青藤</div>
+            <div class="text-[10px] text-slate-400">2026 · 06 · 24</div>
+          </div>
+        </div>
+        <p class="text-sm text-slate-700 leading-relaxed">新主题真的好温柔，像被山里的风吹过一�?🍃</p>
+        <div class="mt-3 flex gap-3 text-xs text-slate-400">
+          <button class="hover:text-sky-500">�?9</button>
+          <button class="hover:text-sky-500">回复</button>
+        </div>
+      </div>
+
+      <!-- 便签 9 -->
+      <div class="note note-paper p-5 rounded-xl shadow-md border border-cyan-100" style="transform:rotate(-0.5deg);background:linear-gradient(180deg,#ecfeff,#fff);">
+        <div class="flex items-center gap-2 mb-3">
+          <div class="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-300 to-sky-300"></div>
+          <div>
+            <div class="text-sm font-medium">远山</div>
+            <div class="text-[10px] text-slate-400">2026 · 06 · 20</div>
+          </div>
+        </div>
+        <p class="text-sm text-slate-700 leading-relaxed">请问茶事笔记 App 开源吗？想学习一下�?/p>
+        <div class="mt-3 flex gap-3 text-xs text-slate-400">
+          <button class="hover:text-sky-500">�?4</button>
+          <button class="hover:text-sky-500">回复</button>
+        </div>
+      </div>
+
+      <!-- 便签 10 -->
+      <div class="note note-paper p-5 rounded-xl shadow-md border border-sun-100" style="transform:rotate(1.8deg);background:linear-gradient(180deg,#fffbeb,#fff);">
+        <div class="flex items-center gap-2 mb-3">
+          <div class="w-8 h-8 rounded-full bg-gradient-to-br from-sun-300 to-cyan-300"></div>
+          <div>
+            <div class="text-sm font-medium">晚风</div>
+            <div class="text-[10px] text-slate-400">2026 · 06 · 15</div>
+          </div>
+        </div>
+        <p class="text-sm text-slate-700 leading-relaxed">来了。收藏夹常客，今日初次留言 🌿</p>
+        <div class="mt-3 flex gap-3 text-xs text-slate-400">
+          <button class="hover:text-sky-500">�?7</button>
+          <button class="hover:text-sky-500">回复</button>
+        </div>
+      </div>
+
+      <!-- 便签 11 -->
+      <div class="note note-paper p-5 rounded-xl shadow-md border border-sky-100" style="transform:rotate(-1deg);background:linear-gradient(180deg,#f0f9ff,#fff);">
+        <div class="flex items-center gap-2 mb-3">
+          <div class="w-8 h-8 rounded-full bg-gradient-to-br from-sky-400 to-sun-400"></div>
+          <div>
+            <div class="text-sm font-medium">小满</div>
+            <div class="text-[10px] text-slate-400">2026 · 06 · 12</div>
+          </div>
+        </div>
+        <p class="text-sm text-slate-700 leading-relaxed">读完《茶之书》笔记，准备去找这本书读读�?/p>
+        <div class="mt-3 flex gap-3 text-xs text-slate-400">
+          <button class="hover:text-sky-500">�?3</button>
+          <button class="hover:text-sky-500">回复</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="text-center mt-12">
+      <button class="px-5 py-2 rounded-full bg-white border border-slate-200 text-sm text-slate-600 hover:bg-slate-50">加载更多 �?/button>
+    </div>
+  </div>
+</section>
+
+<footer class="py-10 text-center text-sm text-slate-500 border-t border-slate-100 mt-10">
+  <a href="index.html" class="hover:text-sky-700">设计稿索�?/a> · <a href="spec.html" class="hover:text-sky-700">规范</a>
+  <div class="mt-2">晴天主题 · 为「DemoAuthor」博客设�?· 2026 · 07 · 11</div>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,350 @@
+﻿<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>晴天主题 · 设计规范 · DemoAuthor博客</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=Inter:wght@400;500;600;700&family=Noto+Serif+SC:wght@500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --sky-50:#f0f9ff; --sky-100:#e0f2fe; --sky-300:#7dd3fc; --sky-500:#38bdf8; --sky-700:#0ea5e9; --sky-900:#0369a1;
+    --cyan-500:#22d3ee; --cyan-700:#06b6d4;
+    --sun-300:#fcd34d; --sun-500:#fbbf24; --sun-700:#f59e0b;
+    --paper:#ffffff; --cloud:#f0f9ff; --ink:#1e293b; --ink-soft:#64748b; --line:#e2e8f0;
+  }
+  body{ font-family:'Inter','PingFang SC','Microsoft YaHei',sans-serif; background:var(--cloud); color:var(--ink); }
+  .font-hand{ font-family:'Caveat','Noto Serif SC',cursive; }
+  .font-serif{ font-family:'Noto Serif SC',serif; }
+  .font-mono{ font-family:'JetBrains Mono',monospace; }
+
+  .glass{ background:rgba(255,255,255,.6); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px); border:1px solid rgba(255,255,255,.7); }
+  .gradient-border{ position:relative; background:#fff; border-radius:18px; }
+  .gradient-border::before{ content:''; position:absolute; inset:-1px; border-radius:inherit; padding:1px; background:linear-gradient(135deg,var(--sky-500),var(--cyan-500),var(--sun-500)); -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0); -webkit-mask-composite:xor; mask-composite:exclude; pointer-events:none; }
+  .blob{ border-radius:60% 40% 30% 70%/60% 30% 70% 40%; }
+
+  @keyframes drift{ 0%,100%{ transform:translateX(0);} 50%{ transform:translateX(40px);} }
+  @keyframes float{ 0%,100%{ transform:translateY(0);} 50%{ transform:translateY(-14px);} }
+  @keyframes sun-pulse{ 0%,100%{ filter:drop-shadow(0 0 20px rgba(251,191,36,.4));} 50%{ filter:drop-shadow(0 0 40px rgba(251,191,36,.7));} }
+  .drift{ animation:drift 12s ease-in-out infinite; }
+  .float{ animation:float 6s ease-in-out infinite; }
+  .sun-pulse{ animation:sun-pulse 4s ease-in-out infinite; }
+
+  .swatch{ width:64px; height:64px; border-radius:14px; box-shadow:inset 0 0 0 1px rgba(0,0,0,.05); }
+  .code{ background:#0f172a; color:#e2e8f0; border-radius:12px; font-family:'JetBrains Mono',monospace; font-size:12px; padding:14px 18px; line-height:1.7; }
+  .code .c{ color:#64748b; } .code .k{ color:#7dd3fc; } .code .v{ color:#fbbf24; } .code .p{ color:#22d3ee; }
+
+  details[open] summary .chev{ transform:rotate(90deg); }
+  summary::-webkit-details-marker{ display:none; }
+  summary{ list-style:none; cursor:pointer; }
+</style>
+</head>
+<body class="min-h-screen">
+
+<!-- 顶部小导�?-->
+<header class="sticky top-0 z-50 glass border-b border-white/40">
+  <div class="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
+    <a href="index.html" class="flex items-center gap-2 text-sm font-medium">
+      <span class="text-lg">☁️</span><span class="font-serif">晴天 · Sky</span>
+    </a>
+    <nav class="hidden md:flex items-center gap-6 text-sm text-slate-600">
+      <a href="#palette" class="hover:text-sky-700">色板</a>
+      <a href="#type" class="hover:text-sky-700">字体</a>
+      <a href="#motion" class="hover:text-sky-700">动效</a>
+      <a href="#layout" class="hover:text-sky-700">栅格</a>
+      <a href="#components" class="hover:text-sky-700">组件</a>
+    </nav>
+    <a href="index.html" class="text-xs px-3 py-1.5 rounded-full bg-sky-500 text-white">�?回索�?/a>
+  </div>
+</header>
+
+<!-- Hero -->
+<section class="relative overflow-hidden pt-20 pb-16">
+  <!-- 装饰：太�?+ �?-->
+  <div class="absolute right-[8%] top-12 w-32 h-32 rounded-full bg-gradient-to-br from-sun-300 to-sun-500 sun-pulse"></div>
+  <svg class="absolute right-[18%] top-20 w-16 h-16 opacity-60 drift" viewBox="0 0 24 24" fill="none"><path d="M5 16h12a3 3 0 0 0 .6-5.9 5 5 0 0 0-9.5-1A4 4 0 0 0 5 16Z" fill="white" stroke="#0ea5e9" stroke-width="1.5"/></svg>
+  <svg class="absolute left-[6%] top-32 w-24 h-12 opacity-70 drift" style="animation-delay:-3s" viewBox="0 0 64 24" fill="white"><ellipse cx="20" cy="14" rx="14" ry="8"/><ellipse cx="38" cy="12" rx="18" ry="10"/><ellipse cx="52" cy="14" rx="10" ry="6"/></svg>
+
+  <div class="relative max-w-5xl mx-auto px-6">
+    <span class="inline-block text-xs tracking-widest uppercase text-sky-700 mb-3">design tokens</span>
+    <h1 class="font-serif text-5xl md:text-6xl font-semibold leading-[1.1] mb-5">
+      晴天主题 <span class="font-hand text-sun-500 text-6xl md:text-7xl">设计规范</span>
+    </h1>
+    <p class="text-slate-600 text-lg max-w-2xl leading-relaxed">
+      一套为「山�?· 个人博客」准备的晴天风格系统：天空蓝做主、薄荷青过渡、暖阳金点缀；用不对称、波浪、玻璃与微动效，留住手写温度�?    </p>
+    <div class="mt-8 flex flex-wrap gap-3">
+      <a href="01-home.html" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-sky-500 text-white text-sm shadow-lg shadow-sky-500/30 hover:shadow-xl hover:-translate-y-0.5 transition">
+        🪁 预览页面设计�?�?      </a>
+      <a href="#palette" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white border border-sky-100 text-sky-700 text-sm hover:bg-sky-50">
+        查看色板
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- 色板 -->
+<section id="palette" class="py-20">
+  <div class="max-w-6xl mx-auto px-6">
+    <span class="text-xs tracking-widest uppercase text-cyan-700">01 · palette</span>
+    <h2 class="font-serif text-4xl font-semibold mt-2 mb-3">色板</h2>
+    <p class="text-slate-600 max-w-2xl mb-12">晴天蓝作主、薄荷青过渡、暖阳金做点缀。三色不超过 80% 饱和度，与云白底构成明亮通透的整体�?/p>
+
+    <!-- 主色：晴天蓝 -->
+    <div class="grid md:grid-cols-5 gap-4 mb-10">
+      <div class="md:col-span-2 gradient-border p-6">
+        <span class="text-xs uppercase tracking-widest text-sky-700">primary</span>
+        <h3 class="font-serif text-2xl mt-1">晴天�?Sky</h3>
+        <p class="text-sm text-slate-600 mt-1">按钮、链接、Hero 主色</p>
+      </div>
+      <div class="space-y-3">
+        <div class="flex items-center gap-3"><div class="swatch" style="background:#f0f9ff"></div><div><div class="text-sm font-medium">Sky 50</div><div class="text-xs font-mono text-slate-500">#f0f9ff</div></div></div>
+        <div class="flex items-center gap-3"><div class="swatch" style="background:#38bdf8"></div><div><div class="text-sm font-medium">Sky 500</div><div class="text-xs font-mono text-slate-500">#38bdf8</div></div></div>
+        <div class="flex items-center gap-3"><div class="swatch" style="background:#0ea5e9"></div><div><div class="text-sm font-medium">Sky 700</div><div class="text-xs font-mono text-slate-500">#0ea5e9</div></div></div>
+      </div>
+      <div class="space-y-3">
+        <div class="flex items-center gap-3"><div class="swatch" style="background:#e0f2fe"></div><div><div class="text-sm font-medium">Sky 100</div><div class="text-xs font-mono text-slate-500">#e0f2fe</div></div></div>
+        <div class="flex items-center gap-3"><div class="swatch" style="background:#7dd3fc"></div><div><div class="text-sm font-medium">Sky 300</div><div class="text-xs font-mono text-slate-500">#7dd3fc</div></div></div>
+        <div class="flex items-center gap-3"><div class="swatch" style="background:#0369a1"></div><div><div class="text-sm font-medium">Sky 900</div><div class="text-xs font-mono text-slate-500">#0369a1</div></div></div>
+      </div>
+    </div>
+
+    <!-- 副色 + 点缀 -->
+    <div class="grid md:grid-cols-2 gap-4">
+      <div class="gradient-border p-6">
+        <span class="text-xs uppercase tracking-widest text-cyan-700">secondary</span>
+        <h3 class="font-serif text-xl mt-1">薄荷�?Cyan</h3>
+        <p class="text-sm text-slate-600 mb-3">辅助、过渡、图�?/p>
+        <div class="flex gap-2">
+          <div class="swatch" style="background:#22d3ee"></div>
+          <div class="swatch" style="background:#06b6d4"></div>
+        </div>
+      </div>
+      <div class="gradient-border p-6">
+        <span class="text-xs uppercase tracking-widest text-sun-700">accent</span>
+        <h3 class="font-serif text-xl mt-1">暖阳�?Sun</h3>
+        <p class="text-sm text-slate-600 mb-3">点缀、hover 高光、装�?/p>
+        <div class="flex gap-2">
+          <div class="swatch" style="background:#fbbf24"></div>
+          <div class="swatch" style="background:#f59e0b"></div>
+          <div class="swatch" style="background:#fcd34d"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 字体 -->
+<section id="type" class="py-20 bg-white">
+  <div class="max-w-6xl mx-auto px-6">
+    <span class="text-xs tracking-widest uppercase text-cyan-700">02 · typography</span>
+    <h2 class="font-serif text-4xl font-semibold mt-2 mb-3">字体</h2>
+    <p class="text-slate-600 max-w-2xl mb-12">三套字体分工：手写体给标题与点缀，衬线体给段落，无衬线给界面与代码�?/p>
+
+    <div class="grid md:grid-cols-3 gap-6">
+      <div class="gradient-border p-6">
+        <div class="text-xs text-slate-500 mb-2">display · 手写</div>
+        <div class="font-hand text-5xl text-sun-500 leading-none">Hello, sky</div>
+        <div class="font-hand text-3xl text-slate-700 mt-2">草木蔓发</div>
+        <div class="mt-4 text-xs font-mono text-slate-500">Caveat · 500/700</div>
+        <p class="text-sm text-slate-600 mt-3">用于 Hero 装饰词、便签卡角落、签�?/p>
+      </div>
+      <div class="gradient-border p-6">
+        <div class="text-xs text-slate-500 mb-2">heading · 衬线</div>
+        <div class="font-serif text-3xl font-semibold leading-tight">春山可望</div>
+        <div class="font-serif text-lg text-slate-700 mt-1">文章标题 / 章节标题</div>
+        <div class="mt-4 text-xs font-mono text-slate-500">Noto Serif SC · 600</div>
+        <p class="text-sm text-slate-600 mt-3">用于文章正文、卡片标题、专题名</p>
+      </div>
+      <div class="gradient-border p-6">
+        <div class="text-xs text-slate-500 mb-2">body · 无衬�?/div>
+        <div class="text-base text-slate-700">今天的天空很蓝，像被洗过一遍�?/div>
+        <div class="text-sm text-slate-500 mt-1">UI / 表格 / 按钮 / 标签</div>
+        <div class="mt-4 text-xs font-mono text-slate-500">Inter · 400/500/600</div>
+        <p class="text-sm text-slate-600 mt-3">用于界面元素、数据、辅助信�?/p>
+      </div>
+    </div>
+
+    <!-- 排版尺度 -->
+    <div class="gradient-border p-6 mt-10">
+      <div class="text-xs text-slate-500 mb-3">type scale</div>
+      <div class="space-y-2">
+        <div class="flex items-baseline gap-4"><span class="font-mono text-xs w-16 text-slate-400">display</span><span class="font-serif text-5xl font-semibold">春山可望</span></div>
+        <div class="flex items-baseline gap-4"><span class="font-mono text-xs w-16 text-slate-400">h1</span><span class="font-serif text-4xl font-semibold">草木蔓发</span></div>
+        <div class="flex items-baseline gap-4"><span class="font-mono text-xs w-16 text-slate-400">h2</span><span class="font-serif text-2xl font-semibold">关于这些日子</span></div>
+        <div class="flex items-baseline gap-4"><span class="font-mono text-xs w-16 text-slate-400">h3</span><span class="font-serif text-xl font-semibold">写在立秋之后</span></div>
+        <div class="flex items-baseline gap-4"><span class="font-mono text-xs w-16 text-slate-400">body</span><span class="text-base">关于这座山与茶，还有那些慢慢发生的事�?/span></div>
+        <div class="flex items-baseline gap-4"><span class="font-mono text-xs w-16 text-slate-400">caption</span><span class="text-xs text-slate-500">2026 · 07 · 11 · 4 分钟读完</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 动效 -->
+<section id="motion" class="py-20">
+  <div class="max-w-6xl mx-auto px-6">
+    <span class="text-xs tracking-widest uppercase text-cyan-700">03 · motion</span>
+    <h2 class="font-serif text-4xl font-semibold mt-2 mb-3">动效</h2>
+    <p class="text-slate-600 max-w-2xl mb-12">所有动效都为层级与叙事服务；遵�?`prefers-reduced-motion`�?/p>
+
+    <div class="grid md:grid-cols-4 gap-4">
+      <div class="gradient-border p-5 text-center">
+        <div class="w-14 h-14 mx-auto rounded-2xl bg-gradient-to-br from-sky-400 to-cyan-500 float"></div>
+        <div class="mt-3 text-sm font-medium">float</div>
+        <div class="text-xs font-mono text-slate-500 mt-1">6s · ease · �?/div>
+        <p class="text-xs text-slate-600 mt-2">云朵、装饰球、头�?/p>
+      </div>
+      <div class="gradient-border p-5 text-center">
+        <div class="w-14 h-14 mx-auto rounded-2xl bg-gradient-to-br from-sun-300 to-sun-500 sun-pulse"></div>
+        <div class="mt-3 text-sm font-medium">sun-pulse</div>
+        <div class="text-xs font-mono text-slate-500 mt-1">4s · ease · �?/div>
+        <p class="text-xs text-slate-600 mt-2">太阳光晕、CTA 呼吸</p>
+      </div>
+      <div class="gradient-border p-5 text-center">
+        <div class="w-14 h-14 mx-auto rounded-2xl bg-gradient-to-br from-sky-300 to-cyan-400 drift"></div>
+        <div class="mt-3 text-sm font-medium">drift</div>
+        <div class="text-xs font-mono text-slate-500 mt-1">12s · ease · �?/div>
+        <p class="text-xs text-slate-600 mt-2">云横向漂�?/p>
+      </div>
+      <div class="gradient-border p-5 text-center">
+        <div class="w-14 h-14 mx-auto rounded-2xl bg-gradient-to-br from-sky-500 to-sun-500 hover:scale-110 transition-transform cursor-pointer"></div>
+        <div class="mt-3 text-sm font-medium">spring</div>
+        <div class="text-xs font-mono text-slate-500 mt-1">cubic-bezier(.16,1,.3,1)</div>
+        <p class="text-xs text-slate-600 mt-2">hover 抬升、卡片悬�?/p>
+      </div>
+    </div>
+
+    <!-- 曲线 -->
+    <div class="gradient-border p-6 mt-8">
+      <div class="text-xs text-slate-500 mb-3">缓动曲线</div>
+      <div class="code">
+<span class="c">/* 默认进入 */</span>
+<span class="k">transition</span>: all .<span class="v">35</span>0ms <span class="p">cubic-bezier</span>(.<span class="v">16</span>, <span class="v">1</span>, .<span class="v">3</span>, <span class="v">1</span>);
+
+<span class="c">/* spring 弹跳 */</span>
+<span class="k">transition</span>: transform .<span class="v">5</span>00ms <span class="p">cubic-bezier</span>(.<span class="v">34</span>, <span class="v">1.56</span>, .<span class="v">64</span>, <span class="v">1</span>);
+
+<span class="c">/* 尊重系统 */</span>
+<span class="k">@media</span> (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 栅格 -->
+<section id="layout" class="py-20 bg-white">
+  <div class="max-w-6xl mx-auto px-6">
+    <span class="text-xs tracking-widest uppercase text-cyan-700">04 · layout</span>
+    <h2 class="font-serif text-4xl font-semibold mt-2 mb-3">栅格</h2>
+    <p class="text-slate-600 max-w-2xl mb-12">刻意用不对称、错落与混合材质，避免死板的「等宽九宫格」�?/p>
+
+    <!-- 不对称示�?-->
+    <div class="grid grid-cols-12 gap-4 mb-10">
+      <div class="col-span-12 md:col-span-7 gradient-border p-8 h-44 flex items-end">
+        <div>
+          <div class="text-xs uppercase tracking-widest text-sky-700">featured</div>
+          <div class="font-serif text-2xl font-semibold mt-1">主视觉卡�?7/12</div>
+        </div>
+      </div>
+      <div class="col-span-6 md:col-span-3 gradient-border p-6 h-44">
+        <div class="text-xs uppercase tracking-widest text-cyan-700">side</div>
+        <div class="font-serif text-lg mt-1">3/12</div>
+      </div>
+      <div class="col-span-6 md:col-span-2 gradient-border p-6 h-44">
+        <div class="text-xs uppercase tracking-widest text-sun-700">tip</div>
+        <div class="font-serif text-lg mt-1">2/12</div>
+      </div>
+    </div>
+
+    <!-- 三种材质 -->
+    <div class="grid md:grid-cols-3 gap-5">
+      <div class="bg-white border border-slate-100 rounded-2xl p-6 shadow-sm">
+        <div class="text-xs uppercase tracking-widest text-slate-500 mb-2">solid</div>
+        <div class="font-serif text-xl">实色卡片</div>
+        <p class="text-sm text-slate-600 mt-2">用于文章摘要、列表项、数据卡片�?/p>
+      </div>
+      <div class="glass rounded-2xl p-6 border border-white/60">
+        <div class="text-xs uppercase tracking-widest text-cyan-700 mb-2">glass</div>
+        <div class="font-serif text-xl">玻璃�?/div>
+        <p class="text-sm text-slate-600 mt-2">用于悬浮导航、筛选侧栏、模态浮层�?/p>
+      </div>
+      <div class="gradient-border p-6">
+        <div class="text-xs uppercase tracking-widest text-sun-700 mb-2">glow</div>
+        <div class="font-serif text-xl">渐变描边</div>
+        <p class="text-sm text-slate-600 mt-2">用于 Hero 卡片、推荐位、强调内容�?/p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 组件 -->
+<section id="components" class="py-20">
+  <div class="max-w-6xl mx-auto px-6">
+    <span class="text-xs tracking-widest uppercase text-cyan-700">05 · components</span>
+    <h2 class="font-serif text-4xl font-semibold mt-2 mb-3">组件</h2>
+
+    <div class="grid md:grid-cols-2 gap-6">
+      <!-- 按钮 -->
+      <div class="gradient-border p-6">
+        <div class="text-xs text-slate-500 mb-3">button</div>
+        <div class="flex flex-wrap gap-3">
+          <button class="px-5 py-2.5 rounded-full bg-sky-500 text-white text-sm shadow-lg shadow-sky-500/30 hover:shadow-xl hover:-translate-y-0.5 transition">主要操作</button>
+          <button class="px-5 py-2.5 rounded-full bg-white border border-sky-100 text-sky-700 text-sm hover:bg-sky-50 transition">次要操作</button>
+          <button class="px-5 py-2.5 rounded-full bg-sun-500 text-white text-sm hover:bg-sun-700 transition">暖阳强调</button>
+          <button class="px-5 py-2.5 rounded-full text-slate-600 text-sm hover:text-sky-700 transition">文字按钮 �?/button>
+        </div>
+      </div>
+
+      <!-- 标签 -->
+      <div class="gradient-border p-6">
+        <div class="text-xs text-slate-500 mb-3">tag · chip · badge</div>
+        <div class="flex flex-wrap gap-2">
+          <span class="px-3 py-1 rounded-full bg-sky-50 text-sky-900 text-xs border border-sky-100"># 草木</span>
+          <span class="px-3 py-1 rounded-full bg-cyan-50 text-cyan-700 text-xs border border-cyan-100"># 茶事</span>
+          <span class="px-3 py-1 rounded-full bg-sun-50 text-sun-700 text-xs border border-sun-100"># 立秋</span>
+          <span class="px-3 py-1 rounded-full bg-white border border-slate-200 text-slate-600 text-xs"># 默认</span>
+          <span class="px-3 py-1 rounded-full bg-sky-500 text-white text-xs"># 实心</span>
+        </div>
+      </div>
+
+      <!-- 输入�?-->
+      <div class="gradient-border p-6">
+        <div class="text-xs text-slate-500 mb-3">input</div>
+        <label class="block">
+          <span class="text-sm text-slate-600 mb-1 block">昵称</span>
+          <input class="w-full bg-transparent border-0 border-b-2 border-slate-200 focus:border-sky-500 outline-none py-2 transition" placeholder="给自己起个名�?>
+        </label>
+      </div>
+
+      <!-- 卡片 -->
+      <div class="gradient-border p-6">
+        <div class="text-xs text-slate-500 mb-3">post card</div>
+        <div class="rounded-xl overflow-hidden border border-slate-100 bg-white">
+          <div class="h-28 bg-gradient-to-br from-sky-300 via-cyan-400 to-sun-300"></div>
+          <div class="p-4">
+            <div class="font-serif text-lg font-semibold">把一天过成山的样�?/div>
+            <div class="text-xs text-slate-500 mt-1">2026 · 07 · 11 · 4,217 �?· 11 分钟</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 设计稿导�?-->
+    <div class="gradient-border p-8 mt-10 text-center">
+      <div class="font-hand text-3xl text-sun-500">所有页面设计稿</div>
+      <p class="text-slate-600 mt-2 mb-6">10 个前台与后台页面，每个一份独�?HTML</p>
+      <a href="index.html" class="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-sky-500 text-white shadow-lg shadow-sky-500/30 hover:-translate-y-0.5 transition">
+        🪁 打开设计稿索�?�?      </a>
+    </div>
+  </div>
+</section>
+
+<footer class="py-12 text-center text-sm text-slate-500">
+  晴天主题 · 为「DemoAuthor」博客系统设�?· 2026 · 07 · 11
+</footer>
+
+</body>
+</html>

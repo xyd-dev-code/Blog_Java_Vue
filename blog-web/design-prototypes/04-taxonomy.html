@@ -1,0 +1,204 @@
+﻿<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>04 · 分类 / 标签 / 归档 · 晴天主题</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=Inter:wght@400;500;600;700&family=Noto+Serif+SC:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{--sky-50:#f0f9ff;--sky-100:#e0f2fe;--sky-300:#7dd3fc;--sky-500:#38bdf8;--sky-700:#0ea5e9;--sky-900:#0369a1;--cyan-500:#22d3ee;--sun-500:#fbbf24;--sun-700:#f59e0b;--ink:#1e293b;}
+  body{font-family:'Inter','PingFang SC','Microsoft YaHei',sans-serif;background:linear-gradient(180deg,#f0f9ff 0%,#fff 60%);color:var(--ink);}
+  .font-hand{font-family:'Caveat','Noto Serif SC',cursive;}.font-serif{font-family:'Noto Serif SC',serif;}
+  .glass{background:rgba(255,255,255,.6);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.7);}
+  .gradient-border{position:relative;background:#fff;border-radius:18px;}
+  .gradient-border::before{content:'';position:absolute;inset:-1px;border-radius:inherit;padding:1px;background:linear-gradient(135deg,var(--sky-500),var(--cyan-500),var(--sun-500));-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none;}
+  .gradient-border-sky{position:relative;background:#fff;border-radius:18px;}
+  .gradient-border-sky::before{content:'';position:absolute;inset:-1px;border-radius:inherit;padding:1px;background:linear-gradient(135deg,var(--sky-300),var(--sky-500),var(--cyan-500));-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none;}
+  .gradient-border-sun{position:relative;background:#fff;border-radius:18px;}
+  .gradient-border-sun::before{content:'';position:absolute;inset:-1px;border-radius:inherit;padding:1px;background:linear-gradient(135deg,var(--sun-300),var(--sun-500),var(--sky-500));-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none;}
+  @keyframes float{0%,100%{transform:translateY(0);}50%{transform:translateY(-12px);}}
+  @keyframes reveal{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
+  .float{animation:float 6s ease-in-out infinite;}.reveal{animation:reveal .8s cubic-bezier(.16,1,.3,1) both;}
+  .stagger-1{animation-delay:.1s;}.stagger-2{animation-delay:.2s;}.stagger-3{animation-delay:.3s;}.stagger-4{animation-delay:.4s;}.stagger-5{animation-delay:.5s;}
+  .tag-bubble{transition:all .3s cubic-bezier(.16,1,.3,1);display:inline-block;}
+  .tag-bubble:hover{transform:translateY(-3px) scale(1.06);}
+</style>
+</head>
+<body class="min-h-screen">
+
+<div class="fixed right-[4%] top-24 w-24 h-24 rounded-full bg-gradient-to-br from-sun-300 to-sun-500 opacity-50 float -z-10"></div>
+
+<header class="sticky top-0 z-50 glass border-b border-white/40">
+  <div class="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
+    <a href="index.html" class="flex items-center gap-2 text-sm font-medium"><span class="text-lg">☁️</span><span class="font-serif">DemoAuthor · 晴天</span></a>
+    <nav class="hidden md:flex items-center gap-7 text-sm text-slate-600">
+      <a href="01-home.html" class="hover:text-sky-700">首页</a>
+      <a href="02-articles.html" class="hover:text-sky-700">文章</a>
+      <a href="04-taxonomy.html" class="text-sky-700 font-medium">分类</a>
+      <a href="07-projects.html" class="hover:text-sky-700">项目</a>
+      <a href="05-about.html" class="hover:text-sky-700">关于</a>
+    </nav>
+    <a href="10-admin-dashboard.html" class="text-xs px-3 py-1.5 rounded-full bg-sky-500 text-white">后台</a>
+  </div>
+</header>
+
+<!-- 顶部 -->
+<section class="relative overflow-hidden pt-20 pb-12">
+  <div class="max-w-6xl mx-auto px-6 text-center">
+    <span class="text-xs tracking-widest uppercase text-cyan-700">taxonomy</span>
+    <h1 class="font-serif text-5xl md:text-6xl font-semibold mt-2 mb-3">分门别类�?span class="font-hand text-sun-500 text-6xl">小角�?/span></h1>
+    <p class="text-slate-600 max-w-xl mx-auto">按主题、按时间、按心情，找到你感兴趣的那一�?/p>
+    <!-- tab -->
+    <div class="inline-flex mt-7 p-1 rounded-full glass">
+      <button class="px-5 py-2 rounded-full bg-sky-500 text-white text-sm">标签�?/button>
+      <button class="px-5 py-2 rounded-full text-slate-600 text-sm">分类</button>
+      <button class="px-5 py-2 rounded-full text-slate-600 text-sm">归档</button>
+    </div>
+  </div>
+  <div class="absolute -bottom-px left-0 right-0"><svg class="w-full h-10" viewBox="0 0 1440 50" preserveAspectRatio="none"><path d="M0,25 C240,50 480,0 720,25 C960,50 1200,0 1440,25 L1440,50 L0,50 Z" fill="#ffffff"/></svg></div>
+</section>
+
+<section class="py-14 bg-white">
+
+  <!-- 标签�?-->
+  <div class="max-w-5xl mx-auto px-6 mb-16">
+    <div class="text-center mb-10">
+      <h2 class="font-serif text-3xl font-semibold">标签�?<span class="font-hand text-sky-500 text-4xl">· 12 �?/span></h2>
+      <p class="text-sm text-slate-500 mt-1">字号 = 文章数量</p>
+    </div>
+    <div class="tag-bubbles flex flex-wrap justify-center items-center gap-3 max-w-4xl mx-auto reveal">
+      <span class="tag-bubble px-5 py-2 rounded-full bg-sky-500 text-white text-xl shadow-lg shadow-sky-500/30 cursor-pointer">Vue 3</span>
+      <span class="tag-bubble px-4 py-1.5 rounded-full bg-cyan-500 text-white text-base shadow cursor-pointer">Java</span>
+      <span class="tag-bubble px-4 py-1.5 rounded-full bg-sky-50 text-sky-900 text-base border border-sky-100 cursor-pointer">笔记</span>
+      <span class="tag-bubble px-6 py-3 rounded-full bg-sun-500 text-white text-2xl shadow-lg shadow-sun-500/30 cursor-pointer">草木</span>
+      <span class="tag-bubble px-3 py-1 rounded-full bg-cyan-50 text-cyan-700 text-sm border border-cyan-100 cursor-pointer">茶事</span>
+      <span class="tag-bubble px-5 py-2 rounded-full bg-sky-100 text-sky-700 text-lg cursor-pointer">设计</span>
+      <span class="tag-bubble px-3 py-1 rounded-full bg-slate-100 text-slate-600 text-sm cursor-pointer">工具</span>
+      <span class="tag-bubble px-4 py-1.5 rounded-full bg-sun-50 text-sun-700 text-base border border-sun-100 cursor-pointer">立秋</span>
+      <span class="tag-bubble px-4 py-1.5 rounded-full bg-cyan-100 text-cyan-700 text-base cursor-pointer">MySQL</span>
+      <span class="tag-bubble px-3 py-1 rounded-full bg-slate-100 text-slate-600 text-xs cursor-pointer">摄影</span>
+      <span class="tag-bubble px-4 py-1.5 rounded-full bg-sky-50 text-sky-900 text-base border border-sky-100 cursor-pointer">山居</span>
+      <span class="tag-bubble px-4 py-1.5 rounded-full bg-cyan-50 text-cyan-700 text-sm border border-cyan-100 cursor-pointer">Spring Boot</span>
+    </div>
+  </div>
+
+  <!-- 分类瀑布 -->
+  <div class="max-w-6xl mx-auto px-6 mb-16">
+    <div class="text-center mb-10">
+      <h2 class="font-serif text-3xl font-semibold">分类</h2>
+    </div>
+    <div class="grid md:grid-cols-3 gap-5">
+      <a href="02-articles.html" class="gradient-border-sky p-6 hover:-translate-y-1 transition reveal block">
+        <div class="text-5xl mb-3">🌿</div>
+        <div class="font-serif text-xl font-semibold">草木山居</div>
+        <div class="text-xs text-slate-500 mt-1">28 �?/div>
+        <p class="text-sm text-slate-600 mt-3 leading-relaxed">关于山里的日子，茶与饭，节气与雨�?/p>
+        <div class="mt-4 text-xs text-sky-700">查看 �?/div>
+      </a>
+      <a href="02-articles.html" class="gradient-border p-6 hover:-translate-y-1 transition reveal stagger-2 block">
+        <div class="text-5xl mb-3">💻</div>
+        <div class="font-serif text-xl font-semibold">代码札记</div>
+        <div class="text-xs text-slate-500 mt-1">31 �?/div>
+        <p class="text-sm text-slate-600 mt-3 leading-relaxed">Vue、Java、Spring Boot，写给未来自己的笔记�?/p>
+        <div class="mt-4 text-xs text-sky-700">查看 �?/div>
+      </a>
+      <a href="02-articles.html" class="gradient-border-sun p-6 hover:-translate-y-1 transition reveal stagger-3 block">
+        <div class="text-5xl mb-3">�?/div>
+        <div class="font-serif text-xl font-semibold">茶事与饭</div>
+        <div class="text-xs text-slate-500 mt-1">15 �?/div>
+        <p class="text-sm text-slate-600 mt-3 leading-relaxed">一壶茶、一锅粥，慢慢做完一顿饭�?/p>
+        <div class="mt-4 text-xs text-sun-700">查看 �?/div>
+      </a>
+      <a href="02-articles.html" class="gradient-border-sky p-6 hover:-translate-y-1 transition reveal stagger-2 block">
+        <div class="text-5xl mb-3">📚</div>
+        <div class="font-serif text-xl font-semibold">读书</div>
+        <div class="text-xs text-slate-500 mt-1">9 �?/div>
+        <p class="text-sm text-slate-600 mt-3 leading-relaxed">每月读两三本，挑能留下的写下来�?/p>
+        <div class="mt-4 text-xs text-sky-700">查看 �?/div>
+      </a>
+      <a href="02-articles.html" class="gradient-border p-6 hover:-translate-y-1 transition reveal stagger-3 block">
+        <div class="text-5xl mb-3">🪁</div>
+        <div class="font-serif text-xl font-semibold">旅行</div>
+        <div class="text-xs text-slate-500 mt-1">4 �?/div>
+        <p class="text-sm text-slate-600 mt-3 leading-relaxed">偶尔出发，去不远的地方看看�?/p>
+        <div class="mt-4 text-xs text-sky-700">查看 �?/div>
+      </a>
+      <a href="02-articles.html" class="gradient-border-sun p-6 hover:-translate-y-1 transition reveal stagger-4 block">
+        <div class="text-5xl mb-3">🌙</div>
+        <div class="font-serif text-xl font-semibold">随笔</div>
+        <div class="text-xs text-slate-500 mt-1">�?/div>
+        <p class="text-sm text-slate-600 mt-3 leading-relaxed">放不进其他分类的，就在这里�?/p>
+        <div class="mt-4 text-xs text-sun-700">查看 �?/div>
+      </a>
+    </div>
+  </div>
+
+  <!-- 归档时间�?-->
+  <div class="max-w-4xl mx-auto px-6">
+    <div class="text-center mb-10">
+      <h2 class="font-serif text-3xl font-semibold">归档 · 时间�?/h2>
+    </div>
+    <div class="relative pl-8 md:pl-12">
+      <!-- 时间轴线 -->
+      <div class="absolute left-3 md:left-5 top-2 bottom-2 w-px bg-gradient-to-b from-sky-300 via-cyan-300 to-sun-300"></div>
+
+      <div class="space-y-10">
+        <div class="relative reveal">
+          <div class="absolute -left-[24px] md:-left-[36px] top-1 w-4 h-4 rounded-full bg-sky-500 ring-4 ring-sky-100"></div>
+          <div class="flex items-baseline gap-3 mb-3">
+            <span class="font-serif text-2xl font-semibold">2026</span>
+            <span class="text-sm text-slate-500">· 7 月至今（4 篇）</span>
+          </div>
+          <ul class="space-y-2.5 ml-2 border-l-2 border-sky-100 pl-5">
+            <li class="text-sm hover:text-sky-700 cursor-pointer"><span class="text-slate-400 mr-2">07 · 09</span>把一天过成山的样�?/li>
+            <li class="text-sm hover:text-sky-700 cursor-pointer"><span class="text-slate-400 mr-2">07 · 06</span>关于夏至那天熬的�?/li>
+            <li class="text-sm hover:text-sky-700 cursor-pointer"><span class="text-slate-400 mr-2">07 · 02</span>晴天主题的第一版色�?/li>
+            <li class="text-sm hover:text-sky-700 cursor-pointer"><span class="text-slate-400 mr-2">07 · 01</span>半山笔记 · 七月</li>
+          </ul>
+        </div>
+
+        <div class="relative reveal stagger-2">
+          <div class="absolute -left-[24px] md:-left-[36px] top-1 w-4 h-4 rounded-full bg-cyan-500 ring-4 ring-cyan-100"></div>
+          <div class="flex items-baseline gap-3 mb-3">
+            <span class="font-serif text-2xl font-semibold">2026 · 6 �?/span>
+            <span class="text-sm text-slate-500">· 9 �?/span>
+          </div>
+          <ul class="space-y-2.5 ml-2 border-l-2 border-cyan-100 pl-5">
+            <li class="text-sm hover:text-sky-700 cursor-pointer"><span class="text-slate-400 mr-2">06 · 28</span>Vue 3 的组合式 API，比我想象中温柔</li>
+            <li class="text-sm hover:text-sky-700 cursor-pointer"><span class="text-slate-400 mr-2">06 · 22</span>《茶之书》读书笔�?/li>
+            <li class="text-sm hover:text-sky-700 cursor-pointer"><span class="text-slate-400 mr-2">06 · 18</span>山脚的集市，每月初一</li>
+            <li class="text-sm text-slate-400 cursor-pointer">+ 6 篇更�?/li>
+          </ul>
+        </div>
+
+        <div class="relative reveal stagger-3">
+          <div class="absolute -left-[24px] md:-left-[36px] top-1 w-4 h-4 rounded-full bg-sun-500 ring-4 ring-sun-100"></div>
+          <div class="flex items-baseline gap-3 mb-3">
+            <span class="font-serif text-2xl font-semibold">2026 · 5 �?/span>
+            <span class="text-sm text-slate-500">· 7 �?/span>
+          </div>
+          <ul class="space-y-2.5 ml-2 border-l-2 border-sun-100 pl-5">
+            <li class="text-sm hover:text-sky-700 cursor-pointer"><span class="text-slate-400 mr-2">05 · 21</span>立夏那天，山上下了点小雨</li>
+            <li class="text-sm hover:text-sky-700 cursor-pointer"><span class="text-slate-400 mr-2">05 · 14</span>把博客从木绿换成晴天</li>
+            <li class="text-sm text-slate-400 cursor-pointer">+ 5 篇更�?/li>
+          </ul>
+        </div>
+
+        <div class="text-center reveal stagger-4">
+          <button class="px-5 py-2 rounded-full bg-white border border-slate-200 text-sm text-slate-600 hover:bg-slate-50 transition">查看更早的归�?�?/button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer class="py-10 text-center text-sm text-slate-500 border-t border-slate-100 mt-10">
+  <a href="index.html" class="hover:text-sky-700">设计稿索�?/a> · <a href="spec.html" class="hover:text-sky-700">规范</a>
+  <div class="mt-2">晴天主题 · 为「DemoAuthor」博客设�?· 2026 · 07 · 11</div>
+</footer>
+
+</body>
+</html>

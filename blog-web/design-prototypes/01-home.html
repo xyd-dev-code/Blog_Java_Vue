@@ -1,0 +1,326 @@
+﻿<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>01 · 首页 · 晴天主题</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=Inter:wght@400;500;600;700&family=Noto+Serif+SC:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{--sky-50:#f0f9ff;--sky-100:#e0f2fe;--sky-300:#7dd3fc;--sky-500:#38bdf8;--sky-700:#0ea5e9;--sky-900:#0369a1;--cyan-500:#22d3ee;--sun-300:#fcd34d;--sun-500:#fbbf24;--sun-700:#f59e0b;--ink:#1e293b;--ink-soft:#64748b;}
+  body{font-family:'Inter','PingFang SC','Microsoft YaHei',sans-serif;background:linear-gradient(180deg,#f0f9ff 0%,#e0f7ff 40%,#fff 100%);background-attachment:fixed;color:var(--ink);}
+  .font-hand{font-family:'Caveat','Noto Serif SC',cursive;}.font-serif{font-family:'Noto Serif SC',serif;}
+  .glass{background:rgba(255,255,255,.6);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.7);}
+  .gradient-border{position:relative;background:#fff;border-radius:18px;}
+  .gradient-border::before{content:'';position:absolute;inset:-1px;border-radius:inherit;padding:1px;background:linear-gradient(135deg,var(--sky-500),var(--cyan-500),var(--sun-500));-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none;}
+  .gradient-border-sky{position:relative;background:#fff;border-radius:18px;}
+  .gradient-border-sky::before{content:'';position:absolute;inset:-1px;border-radius:inherit;padding:1px;background:linear-gradient(135deg,var(--sky-300),var(--sky-500),var(--cyan-500));-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none;}
+  .gradient-border-sun{position:relative;background:#fff;border-radius:18px;}
+  .gradient-border-sun::before{content:'';position:absolute;inset:-1px;border-radius:inherit;padding:1px;background:linear-gradient(135deg,var(--sun-300),var(--sun-500),var(--sky-500));-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none;}
+  @keyframes drift{0%,100%{transform:translateX(0);}50%{transform:translateX(40px);}}
+  @keyframes float{0%,100%{transform:translateY(0);}50%{transform:translateY(-14px);}}
+  @keyframes sun-pulse{0%,100%{filter:drop-shadow(0 0 20px rgba(251,191,36,.4));}50%{filter:drop-shadow(0 0 40px rgba(251,191,36,.7));}}
+  @keyframes reveal{from{opacity:0;transform:translateY(24px);}to{opacity:1;transform:translateY(0);}}
+  @keyframes wave{0%{transform:translateX(0);}100%{transform:translateX(-50%);}}
+  .drift{animation:drift 12s ease-in-out infinite;}.float{animation:float 6s ease-in-out infinite;}.sun-pulse{animation:sun-pulse 4s ease-in-out infinite;}
+  .reveal{animation:reveal .8s cubic-bezier(.16,1,.3,1) both;}
+  .stagger-1{animation-delay:.1s;}.stagger-2{animation-delay:.2s;}.stagger-3{animation-delay:.3s;}.stagger-4{animation-delay:.4s;}
+  .wave-anim{animation:wave 18s linear infinite;}
+  .tag-cloud span{transition:all .3s cubic-bezier(.16,1,.3,1);}
+  .tag-cloud span:hover{transform:translateY(-3px) scale(1.05);}
+  .post-card{transition:transform .35s cubic-bezier(.16,1,.3,1),box-shadow .35s ease;}
+  .post-card:hover{transform:translateY(-4px) rotate(-.4deg);}
+</style>
+</head>
+<body class="min-h-screen">
+
+<!-- 浮动装饰 -->
+<div class="fixed right-[5%] top-28 w-32 h-32 rounded-full bg-gradient-to-br from-sun-300 to-sun-500 sun-pulse -z-10"></div>
+<svg class="fixed right-[12%] top-40 w-24 opacity-60 drift -z-10" viewBox="0 0 64 24" fill="white"><ellipse cx="20" cy="14" rx="14" ry="8"/><ellipse cx="38" cy="12" rx="18" ry="10"/></svg>
+<svg class="fixed left-[3%] top-56 w-28 opacity-60 drift -z-10" style="animation-delay:-4s" viewBox="0 0 64 24" fill="white"><ellipse cx="32" cy="12" rx="22" ry="11"/></svg>
+<svg class="fixed left-[8%] bottom-40 w-20 opacity-50 float -z-10" viewBox="0 0 64 24" fill="white"><ellipse cx="32" cy="12" rx="20" ry="10"/></svg>
+
+<!-- 导航 -->
+<header class="sticky top-0 z-50 glass border-b border-white/40">
+  <div class="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
+    <a href="index.html" class="flex items-center gap-2 text-sm font-medium">
+      <span class="text-lg">☁️</span><span class="font-serif">DemoAuthor · 晴天</span>
+    </a>
+    <nav class="hidden md:flex items-center gap-7 text-sm text-slate-600">
+      <a href="01-home.html" class="text-sky-700 font-medium">首页</a>
+      <a href="02-articles.html" class="hover:text-sky-700">文章</a>
+      <a href="04-taxonomy.html" class="hover:text-sky-700">分类</a>
+      <a href="07-projects.html" class="hover:text-sky-700">项目</a>
+      <a href="05-about.html" class="hover:text-sky-700">关于</a>
+      <a href="06-guestbook.html" class="hover:text-sky-700">留言</a>
+    </nav>
+    <div class="flex items-center gap-2">
+      <a href="09-login.html" class="text-xs px-3 py-1.5 rounded-full bg-white border border-sky-100 text-sky-700 hover:bg-sky-50">登录</a>
+      <a href="10-admin-dashboard.html" class="text-xs px-3 py-1.5 rounded-full bg-sky-500 text-white">后台</a>
+    </div>
+  </div>
+</header>
+
+<!-- Hero -->
+<section class="relative overflow-hidden pt-24 pb-10">
+  <div class="max-w-6xl mx-auto px-6">
+    <div class="grid md:grid-cols-12 gap-8 items-center">
+      <div class="md:col-span-7 reveal">
+        <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/70 border border-sky-100 text-xs text-sky-700 mb-5">
+          ☁️ DemoAuthor博客 · 晴天主题 v1 · 2026 �?        </span>
+        <h1 class="font-serif text-5xl md:text-7xl font-semibold leading-[1.05] mb-5">
+          草木蔓发<br>
+          <span class="font-hand text-sun-500 text-6xl md:text-8xl">春山可望</span>
+        </h1>
+        <p class="text-slate-600 text-lg max-w-xl leading-relaxed">
+          一个关于山、茶、代码与慢慢发生的事的小角落。喝口茶，看看今天的天空�?        </p>
+        <div class="mt-7 flex flex-wrap gap-3">
+          <a href="02-articles.html" class="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-sky-500 text-white shadow-lg shadow-sky-500/30 hover:shadow-xl hover:-translate-y-0.5 transition">开始阅�?�?/a>
+          <a href="05-about.html" class="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-white border border-sky-100 text-sky-700 hover:bg-sky-50 transition">关于�?/a>
+        </div>
+        <div class="mt-8 flex items-center gap-5 text-xs text-slate-500">
+          <div class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-sky-500"></span>已写 87 �?/div>
+          <div class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-cyan-500"></span>12 个标�?/div>
+          <div class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-sun-500"></span>2.4k 读�?/div>
+        </div>
+      </div>
+
+      <!-- 装饰卡片：天�?-->
+      <div class="md:col-span-5 reveal stagger-2">
+        <div class="gradient-border p-7 float">
+          <div class="flex items-start justify-between">
+            <div>
+              <div class="text-xs uppercase tracking-widest text-cyan-700">today</div>
+              <div class="font-serif text-4xl font-semibold mt-1">�?· 28°</div>
+              <div class="text-xs text-slate-500 mt-2">DemoAuthor博客 · 2026 · 07 · 11</div>
+            </div>
+            <div class="text-6xl sun-pulse">☀�?/div>
+          </div>
+          <div class="mt-5 pt-5 border-t border-dashed border-slate-200 grid grid-cols-3 gap-2 text-center">
+            <div><div class="text-xs text-slate-500">文章</div><div class="font-serif text-2xl">87</div></div>
+            <div><div class="text-xs text-slate-500">标签</div><div class="font-serif text-2xl">12</div></div>
+            <div><div class="text-xs text-slate-500">友人</div><div class="font-serif text-2xl">24</div></div>
+          </div>
+          <div class="mt-5 text-xs text-slate-600 italic leading-relaxed">
+            「天气好的时候，写字也会明亮些。�?          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 波浪分隔 -->
+  <div class="absolute -bottom-px left-0 right-0 overflow-hidden leading-none">
+    <svg class="w-full h-16" viewBox="0 0 1440 80" preserveAspectRatio="none">
+      <path d="M0,40 C240,80 480,0 720,40 C960,80 1200,0 1440,40 L1440,80 L0,80 Z" fill="#ffffff"/>
+    </svg>
+  </div>
+</section>
+
+<!-- 最新文�?· 非对�?-->
+<section class="py-20 bg-white">
+  <div class="max-w-6xl mx-auto px-6">
+    <div class="flex items-end justify-between mb-10">
+      <div>
+        <span class="text-xs tracking-widest uppercase text-cyan-700">latest</span>
+        <h2 class="font-serif text-4xl font-semibold mt-2">最新文�?/h2>
+        <p class="text-slate-600 mt-1">最近写的几�?· 不定期更�?/p>
+      </div>
+      <a href="02-articles.html" class="text-sm text-sky-700 hover:gap-2 inline-flex items-center gap-1 transition-all">查看全部 <span>�?/span></a>
+    </div>
+
+    <div class="grid grid-cols-12 gap-5">
+      <!-- 大卡 8/12 -->
+      <a href="03-article-detail.html" class="post-card col-span-12 md:col-span-8 gradient-border-sky overflow-hidden reveal block">
+        <div class="grid md:grid-cols-5">
+          <div class="md:col-span-2 h-56 md:h-auto bg-gradient-to-br from-sky-400 via-cyan-400 to-sky-200 relative">
+            <div class="absolute inset-0 flex items-center justify-center text-7xl">🌿</div>
+            <div class="absolute left-4 top-4 px-2 py-1 rounded-full bg-white/80 text-[10px] text-sky-700">FEATURED</div>
+          </div>
+          <div class="md:col-span-3 p-6">
+            <div class="flex items-center gap-2 text-xs text-slate-500 mb-3">
+              <span class="px-2 py-0.5 rounded-full bg-sky-50 text-sky-700">草木</span>
+              <span>·</span>
+              <span>2026 · 07 · 09</span>
+              <span>·</span>
+              <span>11 分钟</span>
+            </div>
+            <div class="font-serif text-2xl font-semibold leading-snug mb-2">把一天过成山的样�?/div>
+            <p class="text-sm text-slate-600 leading-relaxed">清晨四点半的山是紫色的。我端着茶杯在屋檐下坐了一会儿，听到最远的那只鸟叫了三声。这篇想记下的，是把节奏放慢之后，那些本来会错过的事�?/p>
+            <div class="mt-4 flex items-center gap-2 text-xs text-slate-500">
+              <div class="w-6 h-6 rounded-full bg-gradient-to-br from-sky-300 to-cyan-400"></div>
+              <span>陈见�?/span>
+              <span class="ml-auto text-sky-500">阅读全文 �?/span>
+            </div>
+          </div>
+        </div>
+      </a>
+
+      <!-- 小卡 4/12 -->
+      <a href="03-article-detail.html" class="post-card col-span-12 md:col-span-4 gradient-border-sun overflow-hidden reveal stagger-2 block">
+        <div class="h-32 bg-gradient-to-br from-sun-300 to-sun-500 relative">
+          <div class="absolute right-3 top-3 text-3xl">�?/div>
+        </div>
+        <div class="p-5">
+          <span class="text-[10px] tracking-widest uppercase text-sun-700">essay</span>
+          <div class="font-serif text-lg font-semibold leading-snug mt-1">关于夏至那天熬的�?/div>
+          <div class="text-xs text-slate-500 mt-2">2026 · 07 · 06 · 6 分钟</div>
+        </div>
+      </a>
+
+      <!-- 中卡 -->
+      <a href="03-article-detail.html" class="post-card col-span-6 md:col-span-4 gradient-border-sky overflow-hidden reveal stagger-2 block">
+        <div class="h-28 bg-gradient-to-br from-cyan-300 to-sky-300 relative">
+          <div class="absolute inset-0 flex items-center justify-center text-5xl">💻</div>
+        </div>
+        <div class="p-5">
+          <span class="text-[10px] tracking-widest uppercase text-cyan-700">tech</span>
+          <div class="font-serif text-base font-semibold leading-snug mt-1">Vue 3 的组合式 API，比我想象中温柔</div>
+          <div class="text-xs text-slate-500 mt-2">2026 · 06 · 28 · 9 分钟</div>
+        </div>
+      </a>
+
+      <a href="03-article-detail.html" class="post-card col-span-6 md:col-span-4 gradient-border-sky overflow-hidden reveal stagger-3 block">
+        <div class="h-28 bg-gradient-to-br from-sky-200 to-cyan-100 relative">
+          <div class="absolute inset-0 flex items-center justify-center text-5xl">🪁</div>
+        </div>
+        <div class="p-5">
+          <span class="text-[10px] tracking-widest uppercase text-sky-700">life</span>
+          <div class="font-serif text-base font-semibold leading-snug mt-1">山脚的集市，每月初一</div>
+          <div class="text-xs text-slate-500 mt-2">2026 · 06 · 18 · 4 分钟</div>
+        </div>
+      </a>
+
+      <!-- 装饰小卡 -->
+      <div class="col-span-12 md:col-span-4 gradient-border-sun p-6 reveal stagger-4 flex flex-col justify-between">
+        <div>
+          <div class="font-hand text-3xl text-sun-700 leading-none">Quote</div>
+          <p class="font-serif text-base leading-relaxed mt-3 text-slate-700">「山不说话，只是日日站在那里。�?/p>
+        </div>
+        <div class="mt-4 text-xs text-slate-500">—�?立秋随笔</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 推荐项目 -->
+<section class="py-20">
+  <div class="max-w-6xl mx-auto px-6">
+    <div class="flex items-end justify-between mb-10">
+      <div>
+        <span class="text-xs tracking-widest uppercase text-cyan-700">projects</span>
+        <h2 class="font-serif text-4xl font-semibold mt-2">最近在做的�?/h2>
+      </div>
+      <a href="07-projects.html" class="text-sm text-sky-700 inline-flex items-center gap-1 hover:gap-2 transition-all">所有项�?<span>�?/span></a>
+    </div>
+    <div class="grid md:grid-cols-3 gap-5">
+      <a href="07-projects.html" class="post-card gradient-border-sky overflow-hidden block reveal">
+        <div class="aspect-[4/3] bg-gradient-to-br from-sky-400 via-cyan-500 to-sky-300 relative">
+          <div class="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent"></div>
+          <div class="absolute right-4 top-4 px-3 py-1 rounded-full bg-white/90 text-xs text-sky-700">进行�?/div>
+          <div class="absolute left-5 bottom-4 text-white">
+            <div class="text-xs opacity-80">2026</div>
+            <div class="font-serif text-xl font-semibold">DemoAuthor博客 v2</div>
+          </div>
+        </div>
+        <div class="p-5">
+          <div class="flex gap-1.5 mb-3">
+            <span class="text-[10px] px-2 py-0.5 rounded bg-sky-50 text-sky-700">Vue 3</span>
+            <span class="text-[10px] px-2 py-0.5 rounded bg-cyan-50 text-cyan-700">Spring Boot</span>
+            <span class="text-[10px] px-2 py-0.5 rounded bg-sun-50 text-sun-700">MySQL</span>
+          </div>
+          <p class="text-sm text-slate-600 leading-relaxed">一个给独立写作者的全栈博客系统，从设计到实现都在追求温柔�?/p>
+        </div>
+      </a>
+
+      <a href="07-projects.html" class="post-card gradient-border-sky overflow-hidden block reveal stagger-2">
+        <div class="aspect-[4/3] bg-gradient-to-br from-cyan-300 via-sky-200 to-sun-200 relative">
+          <div class="absolute right-4 top-4 px-3 py-1 rounded-full bg-white/90 text-xs text-sun-700">已完�?/div>
+          <div class="absolute left-5 bottom-4 text-slate-800">
+            <div class="text-xs opacity-70">2026 �?/div>
+            <div class="font-serif text-xl font-semibold">茶事笔记 App</div>
+          </div>
+        </div>
+        <div class="p-5">
+          <div class="flex gap-1.5 mb-3">
+            <span class="text-[10px] px-2 py-0.5 rounded bg-sky-50 text-sky-700">Flutter</span>
+            <span class="text-[10px] px-2 py-0.5 rounded bg-cyan-50 text-cyan-700">SQLite</span>
+          </div>
+          <p class="text-sm text-slate-600 leading-relaxed">记录每次泡茶的水温、克数与口感，慢慢攒出一本自己的茶经�?/p>
+        </div>
+      </a>
+
+      <a href="07-projects.html" class="post-card gradient-border-sun overflow-hidden block reveal stagger-3">
+        <div class="aspect-[4/3] bg-gradient-to-br from-sun-300 via-sun-200 to-sky-200 relative">
+          <div class="absolute right-4 top-4 px-3 py-1 rounded-full bg-white/90 text-xs text-slate-700">草稿</div>
+          <div class="absolute left-5 bottom-4 text-slate-800">
+            <div class="text-xs opacity-70">2026 计划</div>
+            <div class="font-serif text-xl font-semibold">晴天组件�?/div>
+          </div>
+        </div>
+        <div class="p-5">
+          <div class="flex gap-1.5 mb-3">
+            <span class="text-[10px] px-2 py-0.5 rounded bg-sun-50 text-sun-700">Design</span>
+            <span class="text-[10px] px-2 py-0.5 rounded bg-sky-50 text-sky-700">Figma</span>
+          </div>
+          <p class="text-sm text-slate-600 leading-relaxed">把这套天空蓝的视觉语言沉淀为可复用组件，开源给同样喜欢温和感的人�?/p>
+        </div>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- 标签�?-->
+<section class="py-20 bg-white">
+  <div class="max-w-6xl mx-auto px-6">
+    <div class="gradient-border-sky p-10 text-center tag-cloud reveal">
+      <span class="text-xs tracking-widest uppercase text-cyan-700">tag cloud</span>
+      <h2 class="font-serif text-3xl font-semibold mt-2 mb-8">常常会写到的话题</h2>
+      <div class="flex flex-wrap justify-center gap-2 max-w-3xl mx-auto">
+        <span class="px-3 py-1.5 rounded-full bg-sky-50 text-sky-900 text-sm border border-sky-100 cursor-pointer"># 草木 (12)</span>
+        <span class="px-3 py-1.5 rounded-full bg-cyan-50 text-cyan-700 text-sm border border-cyan-100 cursor-pointer"># 茶事 (8)</span>
+        <span class="px-3 py-1.5 rounded-full bg-sun-50 text-sun-700 text-sm border border-sun-100 cursor-pointer"># 立秋 (5)</span>
+        <span class="px-4 py-2 rounded-full bg-sky-500 text-white text-base cursor-pointer"># Vue 3 (14)</span>
+        <span class="px-4 py-2 rounded-full bg-cyan-500 text-white text-base cursor-pointer"># Java (9)</span>
+        <span class="px-3 py-1.5 rounded-full bg-sky-50 text-sky-900 text-sm border border-sky-100 cursor-pointer"># 笔记 (18)</span>
+        <span class="px-4 py-2 rounded-full bg-sun-500 text-white text-base cursor-pointer"># 设计 (11)</span>
+        <span class="px-3 py-1.5 rounded-full bg-cyan-50 text-cyan-700 text-sm border border-cyan-100 cursor-pointer"># MySQL (4)</span>
+        <span class="px-3 py-1.5 rounded-full bg-sky-50 text-sky-900 text-sm border border-sky-100 cursor-pointer"># 旅行 (7)</span>
+        <span class="px-3 py-1.5 rounded-full bg-sun-50 text-sun-700 text-sm border border-sun-100 cursor-pointer"># 山居 (6)</span>
+        <span class="px-3 py-1.5 rounded-full bg-sky-50 text-sky-900 text-sm border border-sky-100 cursor-pointer"># 工具 (3)</span>
+        <span class="px-3 py-1.5 rounded-full bg-cyan-50 text-cyan-700 text-sm border border-cyan-100 cursor-pointer"># 摄影 (5)</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 关于 + 留言 CTA -->
+<section class="py-20">
+  <div class="max-w-6xl mx-auto px-6 grid md:grid-cols-2 gap-5">
+    <a href="05-about.html" class="post-card gradient-border-sky p-8 block reveal">
+      <span class="text-xs tracking-widest uppercase text-cyan-700">about</span>
+      <div class="font-serif text-3xl font-semibold mt-2 mb-3">关于�?· 陈见�?/div>
+      <p class="text-slate-600 leading-relaxed">前端工程师，写代码也写散文。常在山里，偶尔进城。喜欢的事：泡茶、看云、把复杂的东西讲简单�?/p>
+      <div class="mt-5 inline-flex items-center gap-2 text-sky-700 text-sm">了解更多 �?/div>
+    </a>
+    <a href="06-guestbook.html" class="post-card gradient-border-sun p-8 block reveal stagger-2">
+      <span class="text-xs tracking-widest uppercase text-sun-700">guestbook</span>
+      <div class="font-serif text-3xl font-semibold mt-2 mb-3">留言�?/div>
+      <p class="text-slate-600 leading-relaxed">来过就留个脚印吧。每一则留言都会被认真地读，可能还会被回复。也欢迎交换友链�?/p>
+      <div class="mt-5 inline-flex items-center gap-2 text-sun-700 text-sm">去留言 �?/div>
+    </a>
+  </div>
+</section>
+
+<footer class="py-10 text-center text-sm text-slate-500 border-t border-slate-100">
+  <div class="flex justify-center gap-4 mb-2">
+    <a href="index.html" class="hover:text-sky-700">设计稿索�?/a>
+    <span>·</span>
+    <a href="spec.html" class="hover:text-sky-700">规范</a>
+  </div>
+  晴天主题 · 为「DemoAuthor」博客设�?· 2026 · 07 · 11
+</footer>
+
+</body>
+</html>

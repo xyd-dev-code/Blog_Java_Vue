@@ -1,0 +1,203 @@
+﻿<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>03 · 文章详情 · 晴天主题</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=Inter:wght@400;500;600;700&family=Noto+Serif+SC:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{--sky-50:#f0f9ff;--sky-100:#e0f2fe;--sky-300:#7dd3fc;--sky-500:#38bdf8;--sky-700:#0ea5e9;--sky-900:#0369a1;--cyan-500:#22d3ee;--sun-500:#fbbf24;--sun-700:#f59e0b;--ink:#1e293b;--ink-soft:#64748b;}
+  body{font-family:'Inter','PingFang SC','Microsoft YaHei',sans-serif;background:linear-gradient(180deg,#f0f9ff 0%,#fff 60%);color:var(--ink);}
+  .font-hand{font-family:'Caveat','Noto Serif SC',cursive;}.font-serif{font-family:'Noto Serif SC',serif;}
+  .glass{background:rgba(255,255,255,.65);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.7);}
+  .gradient-border{position:relative;background:#fff;border-radius:18px;}
+  .gradient-border::before{content:'';position:absolute;inset:-1px;border-radius:inherit;padding:1px;background:linear-gradient(135deg,var(--sky-500),var(--cyan-500),var(--sun-500));-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none;}
+  .gradient-border-sky{position:relative;background:#fff;border-radius:18px;}
+  .gradient-border-sky::before{content:'';position:absolute;inset:-1px;border-radius:inherit;padding:1px;background:linear-gradient(135deg,var(--sky-300),var(--sky-500),var(--cyan-500));-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none;}
+  @keyframes float{0%,100%{transform:translateY(0);}50%{transform:translateY(-12px);}}
+  .float{animation:float 6s ease-in-out infinite;}
+  .prose-custom p{font-family:'Noto Serif SC',serif;font-size:17px;line-height:1.95;color:#334155;margin:1.4em 0;}
+  .prose-custom h2{font-family:'Noto Serif SC',serif;font-size:1.6rem;font-weight:600;margin:2em 0 .6em;padding-left:.8em;border-left:3px solid var(--sky-500);color:var(--ink);}
+  .prose-custom h3{font-family:'Noto Serif SC',serif;font-size:1.25rem;font-weight:600;margin:1.6em 0 .4em;color:var(--ink);}
+  .prose-custom blockquote{border-left:3px solid var(--sun-500);background:linear-gradient(90deg,rgba(251,191,36,.08),transparent);padding:1em 1.4em;margin:1.6em 0;border-radius:0 12px 12px 0;font-style:italic;color:#475569;}
+  .prose-custom code{background:#e0f2fe;color:#0369a1;padding:2px 6px;border-radius:4px;font-size:.92em;font-family:'JetBrains Mono',monospace;}
+  .prose-custom pre{background:#0f172a;color:#e2e8f0;padding:1.2em 1.4em;border-radius:14px;overflow-x:auto;font-size:13px;line-height:1.7;margin:1.5em 0;}
+  .prose-custom img{border-radius:14px;margin:1.8em auto;}
+  .toc-link{transition:all .2s ease;padding-left:0;}
+  .toc-link:hover,.toc-link.active{padding-left:8px;color:var(--sky-700);border-left-color:var(--sky-500);}
+</style>
+</head>
+<body class="min-h-screen">
+
+<header class="sticky top-0 z-50 glass border-b border-white/40">
+  <div class="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
+    <a href="index.html" class="flex items-center gap-2 text-sm font-medium"><span class="text-lg">☁️</span><span class="font-serif">DemoAuthor · 晴天</span></a>
+    <nav class="hidden md:flex items-center gap-7 text-sm text-slate-600">
+      <a href="01-home.html" class="hover:text-sky-700">首页</a>
+      <a href="02-articles.html" class="hover:text-sky-700">文章</a>
+      <a href="04-taxonomy.html" class="hover:text-sky-700">分类</a>
+      <a href="05-about.html" class="hover:text-sky-700">关于</a>
+    </nav>
+    <a href="10-admin-dashboard.html" class="text-xs px-3 py-1.5 rounded-full bg-sky-500 text-white">后台</a>
+  </div>
+</header>
+
+<!-- 封面 -->
+<section class="relative overflow-hidden">
+  <div class="aspect-[21/9] md:aspect-[21/8] relative bg-gradient-to-br from-sky-400 via-cyan-400 to-sky-200">
+    <div class="absolute inset-0 flex items-center justify-center text-[140px] md:text-[200px] opacity-50">🌿</div>
+    <div class="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent"></div>
+  </div>
+  <div class="absolute inset-x-0 bottom-0">
+    <div class="max-w-3xl mx-auto px-6 pb-10 text-white">
+      <div class="flex items-center gap-2 text-xs mb-3">
+        <span class="px-2 py-0.5 rounded-full bg-white/20 backdrop-blur">草木</span>
+        <span class="px-2 py-0.5 rounded-full bg-white/20 backdrop-blur">山居</span>
+        <span class="opacity-80">2026 · 07 · 09</span>
+      </div>
+      <h1 class="font-serif text-4xl md:text-5xl font-semibold leading-tight">把一天过成山的样�?/h1>
+      <p class="mt-3 text-white/80 text-sm max-w-xl">关于在山里的一个清晨，放慢节奏之后那些本来会错过的事�?/p>
+      <div class="mt-5 flex items-center gap-3 text-xs">
+        <div class="w-8 h-8 rounded-full bg-gradient-to-br from-sky-300 to-cyan-400"></div>
+        <span>陈见�?/span>
+        <span class="opacity-60">·</span>
+        <span class="opacity-80">4,217 �?· 11 分钟读完</span>
+        <span class="opacity-60">·</span>
+        <span class="opacity-80">👁 1.2k</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 主体 -->
+<section class="py-12">
+  <div class="max-w-6xl mx-auto px-6 grid lg:grid-cols-12 gap-10">
+
+    <!-- 正文 -->
+    <article class="lg:col-span-8 max-w-2xl">
+      <div class="prose-custom">
+        <p>清晨四点半，山是紫色的。那颜色很轻，几乎要融进天里。我端着茶杯在屋檐下坐了一会儿，听到最远的那只鸟叫了三声�?/p>
+        <p>这种安静不是空的。它里面有草叶上露水落下来的声音，有风把松针吹过去的声音，还有自己呼吸的声音�?/p>
+
+        <h2>关于放慢这件�?/h2>
+        <p>我们这一代人好像都把节奏调得太快了。一周过完，才想起来还没好好看过一次窗外的天。我在城里住了十年，最长一次连续看天超过十分钟，是在医院排队的时候�?/p>
+        <blockquote>「山不说话，只是日日站在那里。人来到山里，是来听自己说话的。�?/blockquote>
+
+        <h3>一壶茶的工�?/h3>
+        <p>我把茶壶从厨房端出来，水温刚好。第一泡洗茶，第二泡入口。山里的水总比城里的软，喝起来像是在和什么更远的东西打招呼�?/p>
+        <pre><code>// 今天想记下的
+const moment = {
+  time: '04:32',
+  weather: '�?,
+  mood: '安静',
+  tea: '老白�?2019',
+};</code></pre>
+
+        <h2>那些本来会错过的�?/h2>
+        <p>一只蝴蝶从左边的山坳飞过来，停在我茶杯边上。它的翅膀是透明的，边缘带一点淡蓝。我没有动，怕吓走它。它停留了大�?14 秒，然后被一阵风带走了�?/p>
+        <p>如果我今天还在赶早高峰的地铁，这些事就不会发生。它们一直在那里，只是需要一个慢下来的人�?/p>
+
+        <h3>写给以后看的�?/h3>
+        <p>这篇文字，是�?2027 年的自己看的。如果那时候我又开始觉得日子过得很快，我会回来这里坐一坐�?/p>
+      </div>
+
+      <!-- 标签 -->
+      <div class="mt-12 pt-8 border-t border-dashed border-slate-200">
+        <div class="flex flex-wrap gap-2">
+          <span class="px-3 py-1 rounded-full bg-sky-50 text-sky-900 text-sm border border-sky-100"># 草木</span>
+          <span class="px-3 py-1 rounded-full bg-cyan-50 text-cyan-700 text-sm border border-cyan-100"># 山居</span>
+          <span class="px-3 py-1 rounded-full bg-sun-50 text-sun-700 text-sm border border-sun-100"># 立夏</span>
+        </div>
+      </div>
+
+      <!-- 操作�?-->
+      <div class="mt-6 flex items-center justify-between text-sm">
+        <div class="flex items-center gap-5 text-slate-500">
+          <button class="hover:text-sky-500 transition">�?124</button>
+          <button class="hover:text-sky-500 transition">💬 18</button>
+          <button class="hover:text-sky-500 transition">�?收藏</button>
+          <button class="hover:text-sky-500 transition">�?分享</button>
+        </div>
+        <button class="text-slate-400 hover:text-sky-700 transition">�?/button>
+      </div>
+
+      <!-- 作者卡 -->
+      <div class="gradient-border-sky p-6 mt-10 flex items-start gap-4">
+        <div class="w-14 h-14 rounded-full bg-gradient-to-br from-sky-400 to-cyan-500 shrink-0"></div>
+        <div>
+          <div class="font-serif text-lg font-semibold">陈见�?/div>
+          <p class="text-sm text-slate-600 mt-1">前端工程师，写代码也写散文。常在山里，偶尔进城�?/p>
+          <button class="mt-3 px-4 py-1.5 rounded-full bg-sky-500 text-white text-xs">+ 关注</button>
+        </div>
+      </div>
+
+      <!-- 评论�?-->
+      <div class="mt-12">
+        <h3 class="font-serif text-2xl font-semibold mb-5">评论 <span class="text-slate-400 text-base">· 18</span></h3>
+        <div class="gradient-border p-5 mb-6">
+          <textarea class="w-full bg-transparent outline-none resize-none text-sm" rows="3" placeholder="说点什么吧�?></textarea>
+          <div class="mt-3 flex justify-end gap-2">
+            <button class="px-4 py-1.5 rounded-full text-sm text-slate-500">取消</button>
+            <button class="px-4 py-1.5 rounded-full bg-sky-500 text-white text-sm">发表</button>
+          </div>
+        </div>
+        <!-- 评论�?-->
+        <div class="space-y-5">
+          <div class="flex gap-3">
+            <div class="w-9 h-9 rounded-full bg-gradient-to-br from-cyan-300 to-sky-400 shrink-0"></div>
+            <div class="flex-1">
+              <div class="text-sm font-medium">林深时见�?<span class="text-slate-400 text-xs ml-2">2026 · 07 · 10</span></div>
+              <p class="text-sm text-slate-700 mt-1 leading-relaxed">「山不说话」这句很喜欢。城市里待久了，最怕的就是自己也变成不停说话的人�?/p>
+              <div class="text-xs text-slate-400 mt-2 flex gap-3"><button class="hover:text-sky-500">回复</button><button class="hover:text-sky-500">�?12</button></div>
+            </div>
+          </div>
+          <div class="flex gap-3">
+            <div class="w-9 h-9 rounded-full bg-gradient-to-br from-sun-300 to-sun-500 shrink-0"></div>
+            <div class="flex-1">
+              <div class="text-sm font-medium">老白 <span class="text-slate-400 text-xs ml-2">2026 · 07 · 09</span></div>
+              <p class="text-sm text-slate-700 mt-1 leading-relaxed">我也常常在山里坐着。希望下次能一起去你那儿喝茶�?/p>
+              <div class="text-xs text-slate-400 mt-2 flex gap-3"><button class="hover:text-sky-500">回复</button><button class="hover:text-sky-500">�?8</button></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <!-- 悬浮目录 -->
+    <aside class="lg:col-span-4">
+      <div class="sticky top-20">
+        <!-- 目录 -->
+        <div class="glass rounded-2xl p-5 mb-5">
+          <span class="text-xs uppercase tracking-widest text-cyan-700 block mb-3">目录</span>
+          <ul class="space-y-2 text-sm text-slate-600 border-l border-slate-200">
+            <li><a class="toc-link block pl-3 border-l-2 border-transparent active" href="#">关于放慢这件�?/a></li>
+            <li><a class="toc-link block pl-3 border-l-2 border-transparent" href="#">一壶茶的工�?/a></li>
+            <li><a class="toc-link block pl-3 border-l-2 border-transparent pl-6 text-xs" href="#">写给以后看的�?/a></li>
+            <li><a class="toc-link block pl-3 border-l-2 border-transparent" href="#">那些本来会错过的�?/a></li>
+          </ul>
+        </div>
+
+        <!-- 目录下方推荐 -->
+        <div class="gradient-border-sky p-5">
+          <span class="text-xs uppercase tracking-widest text-cyan-700 block mb-3">相关阅读</span>
+          <ul class="space-y-3 text-sm">
+            <li class="cursor-pointer hover:text-sky-700 transition">山脚的集市，每月初一</li>
+            <li class="cursor-pointer hover:text-sky-700 transition">关于夏至那天熬的�?/li>
+            <li class="cursor-pointer hover:text-sky-700 transition">立夏那天，山上下了点小雨</li>
+          </ul>
+        </div>
+      </div>
+    </aside>
+  </div>
+</section>
+
+<footer class="py-10 text-center text-sm text-slate-500 border-t border-slate-100 mt-10">
+  <a href="index.html" class="hover:text-sky-700">设计稿索�?/a> · <a href="spec.html" class="hover:text-sky-700">规范</a>
+  <div class="mt-2">晴天主题 · 为「DemoAuthor」博客设�?· 2026 · 07 · 11</div>
+</footer>
+
+</body>
+</html>
