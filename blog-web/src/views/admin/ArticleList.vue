@@ -56,10 +56,11 @@
           <el-table-column prop="createTime" label="创建时间" width="160">
             <template #default="{ row }">{{ fmtDate(row.createTime) }}</template>
           </el-table-column>
-          <el-table-column label="操作" width="200" fixed="right">
+          <el-table-column label="操作" width="260" fixed="right">
             <template #default="{ row }">
               <el-button size="small" link @click="$router.push(`/admin/articles/${row.id}/edit`)">编辑</el-button>
               <el-button size="small" link @click="preview(row)" v-if="row.status === 1">预览</el-button>
+              <el-button size="small" link @click="openAdjustView(row)">阅读量</el-button>
               <el-button size="small" link type="danger" @click="remove(row)">删除</el-button>
             </template>
           </el-table-column>
@@ -99,6 +100,7 @@
           <div class="art-card-actions">
             <el-button size="small" type="primary" @click="$router.push(`/admin/articles/${row.id}/edit`)">编辑</el-button>
             <el-button size="small" v-if="row.status === 1" @click="preview(row)">预览</el-button>
+            <el-button size="small" @click="openAdjustView(row)">阅读量</el-button>
             <el-button size="small" type="danger" @click="remove(row)">删除</el-button>
           </div>
         </div>
@@ -116,6 +118,30 @@
           @current-change="(p) => { query.page = p; reload() }" />
       </div>
     </el-card>
+
+    <el-dialog v-model="adjustDialog.open" title="调整阅读量" width="420px" destroy-on-close
+      append-to-body>
+      <div class="adjust-meta" v-if="adjustDialog.target">
+        《{{ adjustDialog.target.title }}》当前阅读量：
+        <b>{{ adjustDialog.target.viewCount || 0 }}</b>
+      </div>
+      <el-form label-position="top" @submit.prevent>
+        <el-form-item label="调整方式">
+          <el-radio-group v-model="adjustDialog.mode">
+            <el-radio-button value="delta">按增量(可正可负)</el-radio-button>
+            <el-radio-button value="set">直接设为</el-radio-button>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item :label="adjustDialog.mode === 'set' ? '目标阅读量' : '调整量 (负数表示减少)'">
+          <el-input-number v-model="adjustDialog.value" :min="adjustDialog.mode === 'set' ? 0 : null"
+            :step="1" controls-position="right" style="width: 100%" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="adjustDialog.open = false">取消</el-button>
+        <el-button type="primary" :loading="adjustDialog.loading" @click="submitAdjust">确认</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -123,13 +149,55 @@
 import { ref, reactive, onMounted } from 'vue'
 import { Plus } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { adminArticles, adminDeleteArticle, adminBatchDeleteArticles, adminUpdateArticleStatus, adminUpdateArticleTop, adminUpdateArticleFeatured } from '@/api/admin'
+import { adminArticles, adminDeleteArticle, adminBatchDeleteArticles, adminUpdateArticleStatus, adminUpdateArticleTop, adminUpdateArticleFeatured, adminSetArticleViewCount, adminAdjustArticleViewCount } from '@/api/admin'
 import { fmtDate } from '@/utils/format'
 
 const list = ref([])
 const total = ref(0)
 const loading = ref(false)
 const selected = ref([])
+
+const adjustDialog = reactive({
+  open: false,
+  loading: false,
+  target: null,
+  mode: 'delta',
+  value: 0
+})
+
+const openAdjustView = (row) => {
+  adjustDialog.target = row
+  adjustDialog.mode = 'delta'
+  adjustDialog.value = 0
+  adjustDialog.open = true
+}
+
+const submitAdjust = async () => {
+  const row = adjustDialog.target
+  if (!row) return
+  const n = Number(adjustDialog.value)
+  if (!Number.isFinite(n)) {
+    ElMessage.error('请输入有效数字')
+    return
+  }
+  adjustDialog.loading = true
+  try {
+    if (adjustDialog.mode === 'set') {
+      await adminSetArticleViewCount(row.id, n)
+      row.viewCount = n
+      ElMessage.success(`已设阅读量为 ${n}`)
+    } else {
+      await adminAdjustArticleViewCount(row.id, n)
+      row.viewCount = Math.max(0, (row.viewCount || 0) + n)
+      ElMessage.success(`已按 ${n > 0 ? '+' : ''}${n} 调整阅读量`)
+    }
+    adjustDialog.open = false
+  } catch (_) {
+    // request.js 拦截器已经 toast 了
+  } finally {
+    adjustDialog.loading = false
+  }
+}
 
 const query = reactive({ page: 1, size: 10, keyword: '', status: '' })
 
@@ -238,6 +306,16 @@ onMounted(reload)
 }
 .art-card-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 .art-card-actions .el-button { flex: 1; }
+
+.adjust-meta {
+  font-size: 13px;
+  color: var(--c-ink-soft);
+  margin-bottom: 12px;
+  padding: 8px 12px;
+  background: var(--c-botany-50);
+  border-radius: 8px;
+}
+.adjust-meta b { color: var(--c-ink); font-weight: 600; }
 
 @media (max-width: 900px) {
   .desktop-table { display: none; }

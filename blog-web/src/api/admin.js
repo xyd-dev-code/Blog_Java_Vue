@@ -10,6 +10,8 @@ export const adminBatchDeleteArticles = (ids) => http.delete('/admin/articles', 
 export const adminUpdateArticleStatus = (id, status) => http.put(`/admin/articles/${id}/status`, null, { params: { status } })
 export const adminUpdateArticleTop = (id, top) => http.put(`/admin/articles/${id}/top`, null, { params: { top } })
 export const adminUpdateArticleFeatured = (id, featured) => http.put(`/admin/articles/${id}/featured`, null, { params: { featured } })
+export const adminSetArticleViewCount = (id, value) => http.put(`/admin/articles/${id}/view-count`, null, { params: { value } })
+export const adminAdjustArticleViewCount = (id, delta) => http.put(`/admin/articles/${id}/view-count/delta`, null, { params: { delta } })
 
 // categories
 export const adminCategories = (params) => http.get('/admin/categories', { params })
