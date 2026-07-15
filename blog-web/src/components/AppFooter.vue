@@ -10,7 +10,10 @@
         <h4>导航</h4>
         <router-link to="/">首页</router-link>
         <router-link to="/articles">文章</router-link>
+        <router-link to="/projects">项目</router-link>
+        <router-link to="/friends">友链</router-link>
         <router-link to="/guestbook">留言</router-link>
+        <router-link to="/about">关于</router-link>
       </div>
       <div class="footer-col">
         <h4>关注</h4>
@@ -20,9 +23,14 @@
       </div>
       <div class="footer-col">
         <h4>友链</h4>
-        <a href="javascript:;">Vue.js</a>
-        <a href="javascript:;">Element Plus</a>
-        <a href="javascript:;">MyBatis-Plus</a>
+        <a v-if="friendLinks.length === 0" href="javascript:;" class="f-empty">暂无友链,去申请 →</a>
+        <a
+          v-for="link in friendLinks"
+          :key="link.id"
+          :href="link.url"
+          target="_blank"
+          rel="noopener"
+        >{{ link.name }}</a>
       </div>
     </div>
     <div class="footer-bottom">
@@ -35,8 +43,9 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useSiteStore } from '@/stores/site'
+import { friendLinks as fetchFriendLinks } from '@/api/front'
 
 const siteStore = useSiteStore()
 const siteName = computed(() => siteStore.info?.siteName || 'DemoAuthor')
@@ -45,6 +54,16 @@ const siteDesc = computed(() => siteStore.info?.description || '')
 const siteBeian = computed(() => siteStore.info?.beian || '')
 const githubUrl = computed(() => siteStore.info?.github || '')
 const year = new Date().getFullYear()
+
+const friendLinks = ref([])
+onMounted(async () => {
+  try {
+    const res = await fetchFriendLinks()
+    friendLinks.value = res?.data ?? res ?? []
+  } catch {
+    friendLinks.value = []
+  }
+})
 </script>
 
 <style scoped lang="scss">
