@@ -88,10 +88,10 @@
           <div class="tiptap-toolbar">
             <!-- 撤销/重做 -->
             <el-button-group class="toolbar-group">
-              <el-button size="small" text @click="editor.chain().focus().undo().run()" title="撤销">
+              <el-button size="small" text @click="editor.chain().focus().undo().run()" title="撤销 (Ctrl+Z)">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
               </el-button>
-              <el-button size="small" text @click="editor.chain().focus().redo().run()" title="重做">
+              <el-button size="small" text @click="editor.chain().focus().redo().run()" title="重做 (Ctrl+Shift+Z)">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
               </el-button>
             </el-button-group>
@@ -100,10 +100,10 @@
 
             <!-- 文本样式 -->
             <el-button-group class="toolbar-group">
-              <el-button size="small" text :type="editor.isActive('bold') ? 'primary' : ''" @click="editor.chain().focus().toggleBold().run()" title="加粗"><b>B</b></el-button>
-              <el-button size="small" text :type="editor.isActive('italic') ? 'primary' : ''" @click="editor.chain().focus().toggleItalic().run()" title="斜体"><i>I</i></el-button>
-              <el-button size="small" text :type="editor.isActive('underline') ? 'primary' : ''" @click="editor.chain().focus().toggleUnderline().run()" title="下划线"><u>U</u></el-button>
-              <el-button size="small" text :type="editor.isActive('strike') ? 'primary' : ''" @click="editor.chain().focus().toggleStrike().run()" title="删除线"><s>S</s></el-button>
+              <el-button size="small" text :type="editor.isActive('bold') ? 'primary' : ''" @click="editor.chain().focus().toggleBold().run()" title="加粗 (Ctrl+B)"><b>B</b></el-button>
+              <el-button size="small" text :type="editor.isActive('italic') ? 'primary' : ''" @click="editor.chain().focus().toggleItalic().run()" title="斜体 (Ctrl+I)"><i>I</i></el-button>
+              <el-button size="small" text :type="editor.isActive('underline') ? 'primary' : ''" @click="editor.chain().focus().toggleUnderline().run()" title="下划线 (Ctrl+U)"><u>U</u></el-button>
+              <el-button size="small" text :type="editor.isActive('strike') ? 'primary' : ''" @click="editor.chain().focus().toggleStrike().run()" title="删除线 (Ctrl+Shift+X)"><s>S</s></el-button>
             </el-button-group>
 
             <span class="toolbar-divider" />
@@ -114,6 +114,7 @@
               size="small"
               style="width: 90px"
               placeholder="正文"
+              title="段落 / 标题 (Ctrl+Alt+1~6)"
               @change="setHeading"
             >
               <el-option :value="0" label="正文" />
@@ -189,13 +190,13 @@
 
             <!-- 引用 / 代码 -->
             <el-button-group class="toolbar-group">
-              <el-button size="small" text :type="editor.isActive('blockquote') ? 'primary' : ''" @click="editor.chain().focus().toggleBlockquote().run()" title="引用">
+              <el-button size="small" text :type="editor.isActive('blockquote') ? 'primary' : ''" @click="editor.chain().focus().toggleBlockquote().run()" title="引用 (Ctrl+Shift+B)">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M6 17h3l2-4V7H5v6h3zm8 0h3l2-4V7h-6v6h3z"/></svg>
               </el-button>
-              <el-button size="small" text :type="editor.isActive('code') ? 'primary' : ''" @click="editor.chain().focus().toggleCode().run()" title="行内代码">
+              <el-button size="small" text :type="editor.isActive('code') ? 'primary' : ''" @click="editor.chain().focus().toggleCode().run()" title="行内代码 (Ctrl+E)">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
               </el-button>
-              <el-button size="small" text :type="editor.isActive('codeBlock') ? 'primary' : ''" @click="editor.chain().focus().toggleCodeBlock().run()" title="代码块">
+              <el-button size="small" text :type="editor.isActive('codeBlock') ? 'primary' : ''" @click="editor.chain().focus().toggleCodeBlock().run()" title="代码块 (Ctrl+Alt+C)">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="2"/><line x1="6" y1="6" x2="6" y2="18"/></svg>
               </el-button>
             </el-button-group>
@@ -204,13 +205,13 @@
 
             <!-- 列表 -->
             <el-button-group class="toolbar-group">
-              <el-button size="small" text :type="editor.isActive('bulletList') ? 'primary' : ''" @click="editor.chain().focus().toggleBulletList().run()" title="无序列表">
+              <el-button size="small" text :type="editor.isActive('bulletList') ? 'primary' : ''" @click="editor.chain().focus().toggleBulletList().run()" title="无序列表 (Ctrl+Shift+8)">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><circle cx="4" cy="6" r="1.5" fill="currentColor" stroke="none"/><circle cx="4" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="4" cy="18" r="1.5" fill="currentColor" stroke="none"/></svg>
               </el-button>
-              <el-button size="small" text :type="editor.isActive('orderedList') ? 'primary' : ''" @click="editor.chain().focus().toggleOrderedList().run()" title="有序列表">
+              <el-button size="small" text :type="editor.isActive('orderedList') ? 'primary' : ''" @click="editor.chain().focus().toggleOrderedList().run()" title="有序列表 (Ctrl+Shift+7)">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="10" y1="6" x2="21" y2="6"/><line x1="10" y1="12" x2="21" y2="12"/><line x1="10" y1="18" x2="21" y2="18"/><text x="2" y="15" font-size="10" fill="currentColor" stroke="none">1.</text></svg>
               </el-button>
-              <el-button size="small" text :type="editor.isActive('taskList') ? 'primary' : ''" @click="editor.chain().focus().toggleTaskList().run()" title="任务列表">
+              <el-button size="small" text :type="editor.isActive('taskList') ? 'primary' : ''" @click="editor.chain().focus().toggleTaskList().run()" title="任务列表 (Ctrl+Shift+9)">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="5" height="5" rx="1"/><line x1="11" y1="7.5" x2="21" y2="7.5"/><rect x="3" y="14" width="5" height="5" rx="1"/><line x1="11" y1="16.5" x2="21" y2="16.5"/></svg>
               </el-button>
             </el-button-group>
@@ -219,7 +220,7 @@
 
             <!-- 插入 -->
             <el-button-group class="toolbar-group">
-              <el-button size="small" text @click="insertLink" title="插入链接">
+              <el-button size="small" text @click="insertLink" title="插入链接 (Ctrl+K)">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
               </el-button>
               <el-button size="small" text @click="insertImage" title="插入图片">
@@ -276,6 +277,7 @@ import { Table, TableRow, TableHeader, TableCell } from '@tiptap/extension-table
 import TaskList from '@tiptap/extension-task-list'
 import TaskItem from '@tiptap/extension-task-item'
 import TurndownService from 'turndown'
+import { gfm } from 'turndown-plugin-gfm'
 import { renderMarkdown } from '@/utils/markdown'
 import { adminArticleById, adminCreateArticle, adminUpdateArticle, adminUpload, adminUploadBase64 } from '@/api/admin'
 import { categoriesAll, tagsAll } from '@/api/front'
@@ -312,6 +314,7 @@ const turndown = new TurndownService({
   bulletListMarker: '-',
   codeBlockStyle: 'fenced'
 })
+turndown.use(gfm)
 
 // 保持 <span style="..."> 原样（颜色/字体/高亮）
 turndown.addRule('styledSpan', {
@@ -646,9 +649,11 @@ onBeforeUnmount(() => {
   background: #fafafa;
   margin-bottom: -1px;
   z-index: 10;
-  position: relative;
+  position: sticky;
+  top: 56px;
   width: 100%;
   box-sizing: border-box;
+  box-shadow: 0 1px 0 #dcdfe6;
 }
 
 .toolbar-group {
@@ -697,9 +702,9 @@ onBeforeUnmount(() => {
 
 :deep(.tiptap-editor .ProseMirror) {
   width: 100%;
-  min-height: 540px;
-  max-height: 700px;
-  overflow-y: auto;
+  min-height: calc(100vh - 360px);
+  max-height: none;
+  overflow-y: visible;
   padding: 16px 20px;
   border: 1px solid #dcdfe6;
   border-radius: 0 0 4px 4px;
