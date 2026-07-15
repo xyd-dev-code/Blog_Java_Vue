@@ -65,7 +65,7 @@
     <el-dialog
       v-model="applyDialogVisible"
       title="申请友链"
-      width="520px"
+      width="min(520px, 92vw)"
       :close-on-click-modal="false"
       :append-to-body="false"
       class="apply-dialog"

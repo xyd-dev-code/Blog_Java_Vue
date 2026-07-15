@@ -36,7 +36,7 @@
       </div>
     </el-card>
 
-    <el-dialog v-model="dlg" :title="form.id ? '编辑项目' : '新建项目'" width="560px">
+    <el-dialog v-model="dlg" :title="form.id ? '编辑项目' : '新建项目'" width="min(560px, 92vw)">
       <el-form :model="form" label-width="80px">
         <el-form-item label="名称" required>
           <el-input v-model="form.name" />

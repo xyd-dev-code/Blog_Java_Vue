@@ -23,7 +23,7 @@
       </div>
     </el-card>
 
-    <el-dialog v-model="dlg" :title="form.id ? '编辑标签' : '新建标签'" width="420px">
+    <el-dialog v-model="dlg" :title="form.id ? '编辑标签' : '新建标签'" width="min(420px, 92vw)">
       <el-form :model="form" label-width="80px">
         <el-form-item label="名称" required><el-input v-model="form.name" /></el-form-item>
         <el-form-item label="Slug"><el-input v-model="form.slug" placeholder="留空自动生成" /></el-form-item>

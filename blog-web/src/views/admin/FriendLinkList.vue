@@ -42,7 +42,7 @@
       </div>
     </el-card>
 
-    <el-dialog v-model="dlg" :title="form.id ? '编辑友链' : '新建友链'" width="520px">
+    <el-dialog v-model="dlg" :title="form.id ? '编辑友链' : '新建友链'" width="min(520px, 92vw)">
       <el-form :model="form" label-width="80px">
         <el-form-item label="名称" required>
           <el-input v-model="form.name" />

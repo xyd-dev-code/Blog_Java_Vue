@@ -91,7 +91,7 @@
     </div>
 
     <!-- 裁剪弹窗 -->
-    <el-dialog v-model="cropVisible" title="裁剪头像" width="560px" :close-on-click-modal="false" destroy-on-close>
+    <el-dialog v-model="cropVisible" title="裁剪头像" width="min(560px, 92vw)" :close-on-click-modal="false" destroy-on-close>
       <div class="crop-container" v-if="cropVisible">
         <Cropper
           ref="cropperRef"
@@ -109,7 +109,7 @@
     </el-dialog>
 
     <!-- 修改密码弹窗 -->
-    <el-dialog v-model="pwdVisible" title="修改密码" width="420px" :close-on-click-modal="false" destroy-on-close>
+    <el-dialog v-model="pwdVisible" title="修改密码" width="min(420px, 92vw)" :close-on-click-modal="false" destroy-on-close>
       <el-form :model="pwdForm" label-width="90px">
         <el-form-item label="旧密码">
           <el-input v-model="pwdForm.oldPassword" type="password" placeholder="输入旧密码" show-password />

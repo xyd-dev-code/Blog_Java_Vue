@@ -119,7 +119,7 @@
       </div>
     </el-card>
 
-    <el-dialog v-model="adjustDialog.open" title="调整阅读量" width="420px" destroy-on-close
+    <el-dialog v-model="adjustDialog.open" title="调整阅读量" width="min(420px, 92vw)" destroy-on-close
       append-to-body>
       <div class="adjust-meta" v-if="adjustDialog.target">
         《{{ adjustDialog.target.title }}》当前阅读量：

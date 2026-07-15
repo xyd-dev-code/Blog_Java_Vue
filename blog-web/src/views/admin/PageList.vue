@@ -30,7 +30,7 @@
       </div>
     </el-card>
 
-    <el-dialog v-model="dlg" :title="form.id ? '编辑页面' : '新建页面'" width="720px" top="6vh">
+    <el-dialog v-model="dlg" :title="form.id ? '编辑页面' : '新建页面'" width="min(720px, 92vw)" top="6vh">
       <el-form :model="form" label-width="80px">
         <el-form-item label="标题" required><el-input v-model="form.title" /></el-form-item>
         <el-row :gutter="20">

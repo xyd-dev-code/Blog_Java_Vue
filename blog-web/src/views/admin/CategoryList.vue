@@ -25,7 +25,7 @@
       </div>
     </el-card>
 
-    <el-dialog v-model="dlg" :title="form.id ? '编辑分类' : '新建分类'" width="480px">
+    <el-dialog v-model="dlg" :title="form.id ? '编辑分类' : '新建分类'" width="min(480px, 92vw)">
       <el-form :model="form" label-width="80px">
         <el-form-item label="名称" required>
           <el-input v-model="form.name" />
