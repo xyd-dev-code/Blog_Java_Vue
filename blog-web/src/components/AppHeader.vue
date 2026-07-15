@@ -32,8 +32,11 @@
     </div>
 
     <!-- 手机抽屉 -->
-    <transition name="drawer">
-      <div v-if="drawerOpen" class="mobile-drawer" @click.self="toggleDrawer">
+    <!-- Teleport to body 让抽屉脱离 AppHeader 的 stacking context,
+         避免被页面里 transform/filter 元素(如 SkyHero / ParticleBg)盖住 -->
+    <Teleport to="body">
+      <transition name="drawer">
+        <div v-if="drawerOpen" class="mobile-drawer" @click.self="toggleDrawer">
         <div class="drawer-panel">
           <div class="drawer-head">
             <span class="drawer-title">{{ siteName }}</span>
@@ -63,8 +66,9 @@
             </router-link>
           </div>
         </div>
-      </div>
-    </transition>
+        </div>
+      </transition>
+    </Teleport>
   </header>
 </template>
 
