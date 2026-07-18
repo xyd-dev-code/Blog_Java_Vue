@@ -4,7 +4,7 @@
     <div class="art-progress" :style="{ width: progressPercent + '%' }"></div>
 
     <!-- 顶部 Hero：标题 + 元信息 + 封面 -->
-    <header class="art-hero">
+    <header class="art-hero" :class="{ 'has-cover': !!article.coverImage }">
       <div class="hero-bg">
         <div class="orb orb-1"></div>
         <div class="orb orb-2"></div>
@@ -14,6 +14,8 @@
         <svg class="cloud cloud-2" viewBox="0 0 160 60" preserveAspectRatio="none">
           <path fill="rgba(255,255,255,.12)" d="M20,45 Q35,20 55,28 Q65,8 90,12 Q105,0 130,18 Q150,15 155,35 Q160,45 140,48 L15,48 Z"/>
         </svg>
+        <div v-if="article.coverImage" class="hero-cover" :style="{ backgroundImage: `url(${article.coverImage})` }"></div>
+        <div class="hero-cover-mask"></div>
       </div>
 
       <div class="container-narrow hero-inner reveal">
@@ -61,11 +63,6 @@
     </header>
 
     <div class="container-narrow art-body">
-      <!-- 封面图（如有） -->
-      <div class="cover reveal" v-if="article.coverImage">
-        <img :src="article.coverImage" :alt="article.title" />
-      </div>
-
       <!-- 正文 -->
       <article class="art-content markdown-body" v-html="rendered"></article>
 
@@ -178,7 +175,32 @@ onUnmounted(() => { window.removeEventListener('scroll', onScroll) })
   padding: 60px 0 80px;
   background: linear-gradient(180deg, #e0f7ff 0%, #f0f9ff 60%, #ffffff 100%);
 }
+.art-hero.has-cover {
+  background: #0c4a6e;
+  color: #f0f9ff;
+}
 .hero-bg { position: absolute; inset: 0; pointer-events: none; }
+
+/* 封面叠加层:背景图 + 暗色遮罩,保留底层 orb/cloud 氛围 */
+.hero-cover {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  opacity: 0.42;
+  filter: saturate(1.05) blur(2px);
+  transform: scale(1.05);
+}
+.hero-cover-mask {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(12, 74, 110, 0.45) 0%, rgba(12, 74, 110, 0.25) 50%, rgba(12, 74, 110, 0.55) 100%),
+    radial-gradient(ellipse at center, transparent 0%, rgba(12, 74, 110, 0.4) 100%);
+}
+.has-cover .orb { opacity: 0.25; mix-blend-mode: screen; }
+.has-cover .cloud path { fill: rgba(255, 255, 255, 0.22); }
 .orb {
   position: absolute;
   border-radius: 50%;
@@ -269,6 +291,48 @@ onUnmounted(() => { window.removeEventListener('scroll', onScroll) })
   max-width: 640px;
   margin: 0 auto 28px;
 }
+
+/* 有封面时:hero 文本切到浅色 + 玻璃质卡片 */
+.has-cover .art-title {
+  background: linear-gradient(135deg, #ffffff 0%, #bae6fd 60%, #fde68a 100%);
+  -webkit-background-clip: text;
+          background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 2px 18px rgba(12, 74, 110, 0.55);
+}
+.has-cover .art-deck { color: rgba(240, 249, 255, 0.92); }
+.has-cover .tag-pill {
+  background: rgba(255, 255, 255, 0.22);
+  color: #f0f9ff;
+  border-color: rgba(186, 230, 253, 0.55);
+  backdrop-filter: blur(8px);
+}
+.has-cover .tag-pill:hover { background: #38bdf8; color: #fff; }
+.has-cover .tag-pill-sun {
+  color: #fde68a;
+  border-color: rgba(253, 230, 138, 0.55);
+  background: rgba(255, 251, 235, 0.18);
+}
+.has-cover .tag-pill-sun:hover { background: #fbbf24; color: #fff; }
+.has-cover .section-eyebrow { color: #fde68a; }
+.has-cover .weather-line { color: #f0f9ff; }
+.has-cover .author-name { color: #f0f9ff; }
+.has-cover .author-meta { color: rgba(240, 249, 255, 0.78); }
+.has-cover .author-meta .dot { color: rgba(240, 249, 255, 0.5); }
+.has-cover .avatar { box-shadow: 0 4px 12px rgba(12, 74, 110, 0.5); }
+
+/* 穿透 GradientBorderCard:深色玻璃底 + 内部浅色文字 */
+.has-cover :deep(.gradient-border-card) {
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(186, 230, 253, 0.35);
+}
+.has-cover :deep(.gradient-border-card) .author-name { color: #f0f9ff; }
+.has-cover :deep(.gradient-border-card) .author-meta { color: rgba(240, 249, 255, 0.85); }
+.has-cover :deep(.gradient-border-card) .author-meta .dot { color: rgba(240, 249, 255, 0.55); }
+.has-cover :deep(.gradient-border-card) .section-eyebrow { color: #fde68a; }
+.has-cover :deep(.gradient-border-card) .weather-line { color: #f0f9ff; }
 
 /* ===== 作者条（渐变描边卡内嵌） ===== */
 .art-author-bar {
