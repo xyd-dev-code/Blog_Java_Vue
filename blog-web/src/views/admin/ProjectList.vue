@@ -68,7 +68,7 @@
           <el-input v-model="form.demoUrl" placeholder="https://..." />
         </el-form-item>
         <el-form-item label="排序">
-          <el-input-number v-model="form.sortOrder" :min="0" />
+          <el-input-number v-model="form.sortOrder" :min="0" placeholder="留空自动续号" controls-position="right" />
         </el-form-item>
       </el-form>
       <template #footer>
