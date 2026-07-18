@@ -1,4 +1,4 @@
-# ☁️ DemoAuthor · 个人博客系统
+# ☁️ 个人博客系统
 
 一个基于 **Spring Boot 3 + Vue 3 + MyBatis-Plus + Element Plus** 的全栈个人博客系统，采用"晴天"主题视觉。
 
