@@ -13,6 +13,7 @@ import org.springframework.util.StringUtils;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 public class ProjectService {
@@ -62,9 +63,18 @@ public class ProjectService {
         Project p = new Project();
         BeanUtils.copyProperties(dto, p);
         if (p.getStatus() == null) p.setStatus(1);
+        if (p.getSortOrder() == null || p.getSortOrder() == 0) p.setSortOrder(nextSortOrder());
         p.setTechStack(join(dto.getStack()));
         projectMapper.insert(p);
         return byId(p.getId());
+    }
+
+    private int nextSortOrder() {
+        Integer max = projectMapper.selectList(new LambdaQueryWrapper<Project>()
+                        .select(Project::getSortOrder))
+                .stream().map(Project::getSortOrder).filter(Objects::nonNull)
+                .mapToInt(Integer::intValue).max().orElse(-1);
+        return max + 1;
     }
 
     public Project update(ProjectDTO dto) {

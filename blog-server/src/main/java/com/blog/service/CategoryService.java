@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.util.List;
+import java.util.Objects;
 
 @Service
 public class CategoryService {
@@ -52,8 +53,17 @@ public class CategoryService {
         if (!StringUtils.hasText(c.getSlug())) c.setSlug(slug(c.getName()));
         Long n = categoryMapper.selectCount(new LambdaQueryWrapper<Category>().eq(Category::getSlug, c.getSlug()));
         if (n != null && n > 0) throw new BizException("slug 已存在");
+        if (c.getSortOrder() == null || c.getSortOrder() == 0) c.setSortOrder(nextSortOrder());
         categoryMapper.insert(c);
         return c;
+    }
+
+    private int nextSortOrder() {
+        Integer max = categoryMapper.selectList(new LambdaQueryWrapper<Category>()
+                        .select(Category::getSortOrder))
+                .stream().map(Category::getSortOrder).filter(Objects::nonNull)
+                .mapToInt(Integer::intValue).max().orElse(-1);
+        return max + 1;
     }
 
     @CacheEvict(value = "categories", allEntries = true)
