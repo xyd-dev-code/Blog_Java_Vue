@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.util.List;
+import java.util.Objects;
 
 @Service
 public class FriendLinkService {
@@ -56,6 +57,7 @@ public class FriendLinkService {
         FriendLink f = new FriendLink();
         BeanUtils.copyProperties(dto, f);
         if (f.getStatus() == null) f.setStatus(0);
+        if (f.getSortOrder() == null || f.getSortOrder() == 0) f.setSortOrder(nextSortOrder());
         friendLinkMapper.insert(f);
         return byId(f.getId());
     }
@@ -65,10 +67,18 @@ public class FriendLinkService {
         FriendLink f = new FriendLink();
         BeanUtils.copyProperties(dto, f);
         f.setStatus(0);
-        f.setSortOrder(0);
+        f.setSortOrder(nextSortOrder());
         f.setLinkGroup("网友");
         friendLinkMapper.insert(f);
         return byId(f.getId());
+    }
+
+    private int nextSortOrder() {
+        Integer max = friendLinkMapper.selectList(new LambdaQueryWrapper<FriendLink>()
+                        .select(FriendLink::getSortOrder))
+                .stream().map(FriendLink::getSortOrder).filter(Objects::nonNull)
+                .mapToInt(Integer::intValue).max().orElse(-1);
+        return max + 1;
     }
 
     public FriendLink update(FriendLinkDTO dto) {
