@@ -196,12 +196,13 @@ CREATE TABLE site_config (
 --                       Seed Data
 -- ===============================================================
 
--- 默认管理员 admin / BOOTSTRAP_REQUIRED (BCrypt $2a$10$)
--- 密码原文: BOOTSTRAP_REQUIRED
--- BCrypt hash (Spring Security BCryptPasswordEncoder, strength=10, verified true)
--- ⚠️ 部署后请立即在后台「个人中心」修改此密码
+-- 默认管理员账号 admin
+-- ⚠️ 这里给的是**无效占位 BCrypt hash**,任何密码都登不上。首次登录前请重置:
+--   1) 用 backend BCryptPasswordEncoder.encode("你的新密码") 生成 hash
+--   2) UPDATE user SET password='<新 hash>' WHERE username='admin';
+--   3) 或登录后台"个人中心"直接修改密码
 INSERT INTO user (username, password, nickname, email, role, status) VALUES
-('admin', '!BOOTSTRAP_REQUIRED!', '站长', 'admin@example.com', 'ADMIN', 1);
+('admin', '$2a$10$REPLACE_WITH_YOUR_OWN_BCRYPT_HASH_FOR_NEW_PASSWORD', '站长', 'your_email@example.com', 'ADMIN', 1);
 
 -- 分类
 INSERT INTO category (name, slug, description, color, sort_order) VALUES
@@ -288,10 +289,10 @@ INSERT INTO article_tag (article_id, tag_id) VALUES
 
 -- 示例评论（已通过）
 INSERT INTO comment (article_id, parent_id, nickname, email, content, status, create_time) VALUES
-(1, 0, '路过的小熊', 'bear@example.com', '博客做得真好看！配色很舒服。', 1, NOW()),
-(1, 1, '站长', 'admin@example.com', '谢谢，欢迎常来～', 1, NOW()),
-(2, 0, 'Java 学习者', 'java@example.com', 'JWT 这块讲得很清楚，期待后续的 refresh 策略更新。', 1, NOW()),
-(3, 0, '前端新人', 'vue@example.com', 'Composition API 真香，比 mixin 清晰多了。', 1, NOW());
+(1, 0, '路过的小熊', 'comment1@example.com', '博客做得真好看！配色很舒服。', 1, NOW()),
+(1, 1, '站长', 'your_email@example.com', '谢谢，欢迎常来～', 1, NOW()),
+(2, 0, 'Java 学习者', 'comment2@example.com', 'JWT 这块讲得很清楚，期待后续的 refresh 策略更新。', 1, NOW()),
+(3, 0, '前端新人', 'comment3@example.com', 'Composition API 真香，比 mixin 清晰多了。', 1, NOW());
 
 -- 独立页面
 INSERT INTO page (title, slug, content, sort_order, status) VALUES
@@ -327,7 +328,7 @@ INSERT INTO site_config (config_key, config_value, description) VALUES
 ('beian', '', 'ICP 备案号'),
 ('comment_audit', '1', '评论是否需要审核 (0=不需, 1=需要)'),
 ('github', 'https://github.com/', 'GitHub 链接（占位，部署后请在后台替换）'),
-('email', 'admin@example.com', '联系邮箱（占位，部署后请在后台替换）'),
+('email', 'your_email@example.com', '联系邮箱（占位，部署后请在后台替换）'),
 ('authorName', '站长', '站长/博主展示名,默认随 admin 用户昵称同步');
 
 -- 项目（与前端静态示例保持一致）

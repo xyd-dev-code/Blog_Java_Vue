@@ -4,17 +4,18 @@
 
 > 草木蔓发，春山可望。
 
-> ⚠️ **上线部署后请立即在后台「个人中心」修改 admin 初始密码，并替换 `site_config` 中 `email` / `github` 的占位值。**
+> ⚠️ **部署后请立即在后台「个人中心」重置 admin 密码，并在「站点配置」中替换 `email` / `github` 等占位值。**
 
 ---
 
 ## ✨ 特性
 
-- **后端**：Spring Boot 3.3 + Spring Security 6 + JWT + MyBatis-Plus 3.5 + MySQL 8 + Redis + Swagger
+- **后端**：Spring Boot 3.3 + Spring Security 6 + JWT + MyBatis-Plus 3.5 + MySQL 8 + Redis + SpringDoc OpenAPI
 - **前端**：Vue 3 + Vite 6 + Pinia + Vue Router 4 + Element Plus 2 + Axios + SCSS
-- **图床**：本地图床（Nginx 静态服务 + Let's Encrypt 签发 HTTPS），不再依赖第三方对象存储
-- **部署**：Alibaba Cloud Ubuntu 24.04 + Nginx 反向代理 + systemd + Let's Encrypt
+- **图床**：本地图床（Nginx 静态服务 + Let's Encrypt 签发 HTTPS），不依赖第三方对象存储
+- **部署**：Ubuntu 24.04 + Nginx 反向代理 + systemd + Let's Encrypt
 - **功能**：文章 / 分类 / 标签 / 评论 / 留言 / 归档 / 搜索 / 项目 / 友链 / 站点配置 / 后台管理
+- **编辑器**：Tiptap 所见即所得 + Markdown 互转（GFM 表格支持）
 
 ## 🏗 目录结构
 
@@ -23,7 +24,7 @@ Blog_Java_Vue/
 ├── blog-server/             # 后端 Spring Boot (端口 8080)
 │   ├── src/main/java/com/blog/
 │   │   ├── common/          # 统一响应、异常、PageQuery
-│   │   ├── config/          # MyBatis-Plus、安全、CORS、BlogProperties 配置
+│   │   ├── config/          # MyBatis-Plus、安全、CORS、BlogProperties
 │   │   ├── controller/      # REST 控制器
 │   │   ├── dto/             # 数据传输对象
 │   │   ├── entity/          # 数据库实体
@@ -31,13 +32,13 @@ Blog_Java_Vue/
 │   │   ├── security/        # JWT + 登录用户
 │   │   └── service/         # 业务逻辑（LocalStorageService 等）
 │   └── src/main/resources/
-│       ├── application.yml
+│       ├── application-example.yml   # 配置模板（已脱敏，提交到仓库）
 │       └── db/init.sql      # 初始化数据库 + 示例数据
 ├── blog-web/                # 前端 Vue 3 (端口 5173)
 │   └── src/
 │       ├── api/             # axios 封装
-│       ├── components/      # 通用组件（AppHeader、HeroSection、SkyHero 等）
-│       ├── layouts/         # 布局 (前台 / 后台)
+│       ├── components/      # 通用组件
+│       ├── layouts/         # 布局（前台 / 后台）
 │       ├── router/          # 路由
 │       ├── stores/          # Pinia
 │       ├── styles/          # 全局 SCSS
@@ -62,13 +63,27 @@ Blog_Java_Vue/
 | MySQL | 8.0+ |
 | Redis | 7+（可选，用于评论防刷 / 缓存） |
 
-### 2. 初始化数据库
+### 2. 准备配置文件（⚠️ 不要提交真实配置）
 
 ```bash
-mysql -uroot -p123456 < blog-server/src/main/resources/db/init.sql
+cd blog-server/src/main/resources
+cp application-example.yml application.yml
+# 按需修改 application.yml 中的 DB / Redis / JWT / CORS / 图床 段落
 ```
 
-### 3. 启动后端
+所有敏感字段都已改为环境变量占位符（`DB_PASSWORD` / `JWT_SECRET` / `FRONTEND_ORIGIN` / `IMG_BASE_URL` 等），
+生产部署时强烈建议通过环境变量注入。
+
+### 3. 初始化数据库
+
+```bash
+mysql -u<user> -p<pass> < blog-server/src/main/resources/db/init.sql
+```
+
+`init.sql` 已脱敏：admin 用户的 `password` 字段是**无效占位 hash**（任何密码都登不上），
+请按文件内提示用 `BCryptPasswordEncoder.encode("你的新密码")` 生成新 hash 后入库。
+
+### 4. 启动后端
 
 ```bash
 # Windows
@@ -80,8 +95,9 @@ mvn spring-boot:run
 ```
 
 后端启动后访问：<http://localhost:8080>
+Swagger UI：<http://localhost:8080/swagger-ui.html>
 
-### 4. 启动前端
+### 5. 启动前端
 
 ```bash
 # Windows
@@ -95,26 +111,11 @@ npm run dev
 
 前端启动后访问：<http://localhost:5173>
 
-### 5. 默认账号
+### 6. 默认账号
 
-| 角色 | 用户名 | 初始密码 |
+| 角色 | 用户名 | 密码 |
 |---|---|---|
-| 管理员 | admin | `BOOTSTRAP_REQUIRED` |
-
-> ⚠️ 该初始密码写在 `init.sql` 中，任何拿到源码的人都能看到。**部署后请第一时间在后台修改。**
-
-### 6. 本地图床（本地开发）
-
-本地开发时图片存到本地，配置在 `application.yml`：
-
-```yaml
-blog:
-  local-storage:
-    dir: D:/AppData/uploads/img    # Windows 本地路径
-    base-url: https://img.example.com   # 生产图床域名
-```
-
-> 本地开发时把 `base-url` 临时改为 `http://localhost/img` 即可，无需真实域名。
+| 管理员 | admin | 见 `db/init.sql` 顶部说明，需自行重置 |
 
 ## 📚 接口文档
 
@@ -122,7 +123,7 @@ blog:
 
 API 前缀：`/api/v1`
 
-- 前台：`/api/v1/home`, `/api/v1/articles`, `/api/v1/categories`, `/api/v1/tags`, `/api/v1/projects`, `/api/v1/friend-links`, ...
+- 前台：`/api/v1/home`, `/api/v1/articles`, `/api/v1/categories`, `/api/v1/tags`, `/api/v1/projects`, `/api/v1/friend-links`
 - 后台：`/api/v1/admin/**`（需登录）
 - 认证：`/api/v1/auth/login`
 
@@ -140,21 +141,20 @@ API 前缀：`/api/v1`
 - 中文衬线：`Noto Serif SC / Songti SC`
 - 中文无衬线：`PingFang SC / Microsoft YaHei`
 
-## ☁️ 生产图床
+## ☁️ 图床与部署
 
-部署后图片走独立域名 `img.example.com`：
+图床采用独立 HTTPS 子域（如 `img.yourdomain.com`），与主站分离，
+避免主站反代时携带大图片流量。
 
-```
-浏览器 → https://img.example.com/2026/07/xxx.jpg
-                  ↓
-              Nginx (ssl + static)
-                  ↓
-        /home/blog/blog/uploads/img/2026/07/xxx.jpg
-```
+浏览器 → https://img.yourdomain.com/yyyy/MM/xxx.jpg
+                      ↓
+                  Nginx (ssl + static)
+                      ↓
+           ${UPLOAD_DIR}/yyyy/MM/xxx.jpg
 
 - 证书：Let's Encrypt，3 个月自动续期
-- 上传：Spring Boot `LocalStorageService` 按 MD5 自动去重，按日期分目录
-- URL 格式：`https://img.example.com/{yyyy/MM}/{md5}.{ext}`
+- 上传：`LocalStorageService` 按 MD5 自动去重，按日期分目录
+- URL 格式：`${IMG_BASE_URL}/{yyyy/MM}/{md5}.{ext}`
 
 ## 🛠 技术栈版本
 
@@ -173,12 +173,10 @@ API 前缀：`/api/v1`
 | Element Plus | 2.9 |
 | Pinia | 2.x |
 
-## 🚢 生产部署（阿里云 Ubuntu 24.04）
-
-简要步骤（详见个人部署笔记）：
+## 🚢 生产部署（Ubuntu 24.04）
 
 1. **服务器初始化**：创建 `blog` 用户，安装 JDK 17、MySQL、Redis、Nginx、certbot
-2. **初始化数据库**：将 `init.sql` 导入 MySQL
+2. **初始化数据库**：将 `init.sql` 导入 MySQL，按文件内提示重置 admin 密码
 3. **打包后端**：
    ```bash
    cd blog-server
@@ -186,16 +184,16 @@ API 前缀：`/api/v1`
    ```
 4. **上传 jar 与 prod 配置**：
    ```bash
-   scp target/blog-server.jar blog@<server>:/home/blog/blog/jar/
-   scp application-prod.yml blog@<server>:/home/blog/blog/jar/
+   scp target/blog-server.jar <user>@<server>:/srv/blog/jar/
+   scp application-prod.yml   <user>@<server>:/srv/blog/jar/
    ```
 5. **配置 systemd**：写入 `/etc/systemd/system/blog.service`
 6. **配置 Nginx**：
-   - `example.com`：前台 + 反代 `/api/` 到 `127.0.0.1:8080`
-   - `img.example.com`：HTTPS 静态图床
+   - 主域（前台 + `/api/` 反代到 `127.0.0.1:8080`）
+   - 图床子域（HTTPS 静态服务）
 7. **申请证书**：
    ```bash
-   sudo certbot --nginx -d example.com -d www.example.com -d img.example.com
+   sudo certbot --nginx -d yourdomain.com -d www.yourdomain.com -d img.yourdomain.com
    ```
 8. **启动服务**：
    ```bash
@@ -203,14 +201,14 @@ API 前缀：`/api/v1`
    sudo systemctl reload nginx
    ```
 
-## 🔐 安全注意事项
+## 🔐 安全 / 隐私注意事项
 
-1. **修改 admin 初始密码**：上线后立即在后台「个人中心 → 修改密码」
-2. **不要打开外网端口**：3306 / 6379 / 8080 仅监听 127.0.0.1，只通过 Nginx 443 反代访问
-3. **不要 push `application-prod.yml`**：里面包含数据库密码、JWT secret，必须 `.gitignore`
-4. **MySQL 用户**：应用使用低权限用户 `blog_app`，不要用 `root` 连接 Spring Boot
-5. **图床目录权限**：建议 `drwxr-x---`，所有者 `blog:blog`，Nginx 用 `www-data` 用户读取
-6. **七牛云 AK/SK**：如果以后重新启用第三方存储，**严禁**写入公开仓库
+1. **重置 admin 密码**：部署后立即在后台「个人中心 → 修改密码」
+2. **不要将 `application.yml` / `application-prod.yml` 提交到仓库**——本仓库已通过 `.gitignore` 屏蔽这两个文件，只保留 `application-example.yml` 模板
+3. **不要打开外网端口**：3306 / 6379 / 8080 仅监听 `127.0.0.1`，通过 Nginx 443 反代访问
+4. **MySQL 用户**：应用使用低权限用户，不要用 `root` 连接 Spring Boot
+5. **图床目录权限**：建议 `drwxr-x---`，Nginx 以独立用户读取
+6. **JWT secret**：生产环境通过 `JWT_SECRET` 环境变量注入，至少 64 字节随机
 
 ## 📝 License
 

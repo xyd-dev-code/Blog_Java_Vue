@@ -36,8 +36,12 @@ $RECYCLE.BIN/
 # 上传
 uploads/
 
-# 本地配置
-application-local.yml
+# 本地配置 / 隐私
+**/application-local.yml
+**/application.yml
+**/application-prod.yml
+server-config/
+release-sanitize/
 
 # 临时文件
 _compile.args
