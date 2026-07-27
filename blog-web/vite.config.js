@@ -2,7 +2,7 @@ import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import path from 'path'
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   plugins: [vue()],
   resolve: {
     alias: { '@': path.resolve(__dirname, 'src') }
@@ -13,12 +13,14 @@ export default defineConfig({
     open: false,
     proxy: {
       '/api': {
-        target: 'http://localhost:8080',
-        changeOrigin: true
+        target: 'https://203.0.113.10',
+        changeOrigin: true,
+        secure: false
       },
       '/uploads': {
-        target: 'http://localhost:8080',
-        changeOrigin: true
+        target: 'https://203.0.113.10',
+        changeOrigin: true,
+        secure: false
       }
     }
   },
@@ -26,4 +28,4 @@ export default defineConfig({
     outDir: 'dist',
     chunkSizeWarningLimit: 1500
   }
-})
+}))
