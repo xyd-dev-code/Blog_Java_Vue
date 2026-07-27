@@ -507,22 +507,39 @@ onUnmounted(() => { window.removeEventListener('scroll', onScroll) })
 :deep(.markdown-body) a:hover { color: #0369a1; border-bottom-color: #0369a1; }
 :deep(.markdown-body) table {
   width: 100%;
-  border-collapse: collapse;
-  margin: 24px 0;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin: 28px 0;
   border-radius: 10px;
   overflow: hidden;
+  border: 2px solid #bae6fd;
+  box-shadow: 0 4px 16px rgba(14, 165, 233, 0.08);
+  background: #ffffff;
 }
 :deep(.markdown-body) th, :deep(.markdown-body) td {
-  padding: 10px 14px;
-  border: 1px solid #e0f2fe;
+  padding: 12px 16px;
+  border: 1px solid #bae6fd;
+  font-size: 15px;
+  line-height: 1.6;
 }
 :deep(.markdown-body) th {
-  background: linear-gradient(135deg, #e0f7ff, #f0f9ff);
+  background: linear-gradient(135deg, #0c4a6e 0%, #0369a1 100%);
   font-weight: 600;
-  color: #0369a1;
+  color: #ffffff;
+  text-align: left;
+  letter-spacing: 0.02em;
+  border-color: #0c4a6e;
 }
-:deep(.markdown-body) tr:nth-child(even) td {
-  background: rgba(224, 247, 255, 0.4);
+:deep(.markdown-body) td {
+  color: #0f172a;
+  vertical-align: top;
+}
+:deep(.markdown-body) tbody tr:nth-child(even) td {
+  background: #f0f9ff;
+}
+:deep(.markdown-body) tbody tr:hover td {
+  background: #e0f7ff;
+  transition: background 0.15s ease;
 }
 
 /* 标签条 */
