@@ -16,7 +16,18 @@ marked.setOptions({
   gfm: true
 })
 
+const wrapTables = (html) => {
+  if (!html) return html
+  return html.replace(/<table\b([^>]*)>[\s\S]*?<\/table>/g, (match, attrs) => {
+    if (/<table\b/i.test(match.slice(attrs.length + 7))) {
+      return match
+    }
+    const inner = match.slice(7 + attrs.length, -8)
+    return `<div class="table-wrap"><table${attrs}>${inner}</table></div>`
+  })
+}
+
 export const renderMarkdown = (md) => {
   if (!md) return ''
-  return marked.parse(md)
+  return wrapTables(marked.parse(md, { async: false }))
 }

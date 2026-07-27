@@ -416,3 +416,108 @@ h1, h2, h3, h4 { font-family: var(--font-serif); color: var(--c-ink); letter-spa
   opacity: 0;
   transform: translateY(-8px);
 }
+
+
+/* Markdown 通用表格样式（保证 .markdown-body 在所有页面都有一致表现） */
+.markdown-body table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin: 0;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 2px solid #bae6fd;
+  box-shadow: 0 4px 16px rgba(14, 165, 233, 0.08);
+  background: #ffffff;
+  table-layout: fixed;
+}
+.markdown-body th,
+.markdown-body td {
+  padding: 10px 12px;
+  border: 1px solid #bae6fd;
+  font-size: 14px;
+  line-height: 1.55;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  vertical-align: middle;
+  min-width: 80px;
+}
+.markdown-body th {
+  background: linear-gradient(135deg, #0c4a6e 0%, #0369a1 100%) !important;
+  font-weight: 600 !important;
+  color: #ffffff !important;
+  text-align: left;
+  letter-spacing: 0.02em;
+  border-color: #0c4a6e !important;
+  white-space: normal;
+}
+.markdown-body th > *,
+.markdown-body th p,
+.markdown-body th strong,
+.markdown-body th span,
+.markdown-body td > *,
+.markdown-body td p,
+.markdown-body td strong,
+.markdown-body td span {
+  margin: 0 !important;
+  padding: 0 !important;
+  color: inherit !important;
+  font-weight: inherit !important;
+  background: transparent !important;
+  text-shadow: none !important;
+}
+.markdown-body td {
+  color: #0f172a !important;
+  vertical-align: top;
+  background: #ffffff;
+}
+.markdown-body thead th,
+.markdown-body tbody tr:first-child th,
+.markdown-body tbody > tr:first-child > th {
+  background: linear-gradient(135deg, #0c4a6e 0%, #0369a1 100%) !important;
+  color: #ffffff !important;
+}
+.markdown-body tbody tr:nth-child(even) td {
+  background: #f0f9ff !important;
+}
+.markdown-body tbody tr:hover td {
+  background: #e0f7ff;
+  transition: background 0.15s ease;
+}
+.table-wrap {
+  overflow-x: auto;
+  margin: 28px 0;
+  border-radius: 10px;
+  border: 2px solid #bae6fd;
+  box-shadow: 0 4px 16px rgba(14, 165, 233, 0.08);
+  background: #ffffff;
+}
+.table-wrap > table {
+  margin: 0;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  width: max-content;
+  min-width: 100%;
+}
+.table-wrap th {
+  background: linear-gradient(135deg, #0c4a6e 0%, #0369a1 100%) !important;
+  color: #ffffff !important;
+}
+.table-wrap td {
+  background: #ffffff !important;
+}
+.table-wrap tbody tr:nth-child(even) td {
+  background: #f0f9ff !important;
+}
+.table-wrap tbody tr:hover td {
+  background: #e0f7ff !important;
+}
+@media (max-width: 720px) {
+  .markdown-body th,
+  .markdown-body td {
+    padding: 8px 10px;
+    font-size: 13px;
+    min-width: 64px;
+  }
+}
