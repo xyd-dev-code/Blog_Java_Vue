@@ -527,29 +527,68 @@ onUnmounted(() => { window.removeEventListener('scroll', onScroll) })
   vertical-align: middle;
 }
 :deep(.markdown-body) th {
-  background: linear-gradient(135deg, #0c4a6e 0%, #0369a1 100%);
-  font-weight: 600;
-  color: #ffffff;
+  background: linear-gradient(135deg, #0c4a6e 0%, #0369a1 100%) !important;
+  font-weight: 600 !important;
+  color: #ffffff !important;
   text-align: left;
   letter-spacing: 0.02em;
-  border-color: #0c4a6e;
-  white-space: nowrap;
+  border-color: #0c4a6e !important;
+  white-space: normal;
+}
+:deep(.markdown-body) th > *,
+:deep(.markdown-body) th p,
+:deep(.markdown-body) th strong,
+:deep(.markdown-body) th span,
+:deep(.markdown-body) td > *,
+:deep(.markdown-body) td p,
+:deep(.markdown-body) td strong,
+:deep(.markdown-body) td span {
+  margin: 0 !important;
+  padding: 0 !important;
+  color: inherit !important;
+  font-weight: inherit !important;
+  background: transparent !important;
+  text-shadow: none !important;
 }
 :deep(.markdown-body) td {
-  color: #0f172a;
+  color: #0f172a !important;
   vertical-align: top;
+  background: #ffffff;
+}
+:deep(.markdown-body) thead th,
+:deep(.markdown-body) tbody tr:first-child th,
+:deep(.markdown-body) tbody > tr:first-child > th {
+  background: linear-gradient(135deg, #0c4a6e 0%, #0369a1 100%) !important;
+  color: #ffffff !important;
 }
 :deep(.markdown-body) tbody tr:nth-child(even) td {
-  background: #f0f9ff;
+  background: #f0f9ff !important;
 }
 :deep(.markdown-body) tbody tr:hover td {
   background: #e0f7ff;
   transition: background 0.15s ease;
 }
-:deep(.markdown-body) .table-wrap {
+:deep(.markdown-body) .table-wrap,
+:deep(.table-wrap) {
   overflow-x: auto;
   margin: 28px 0;
   border-radius: 10px;
+  border: 2px solid #bae6fd;
+  box-shadow: 0 4px 16px rgba(14, 165, 233, 0.08);
+  background: #ffffff;
+}
+:deep(.table-wrap) th {
+  background: linear-gradient(135deg, #0c4a6e 0%, #0369a1 100%) !important;
+  color: #ffffff !important;
+}
+:deep(.table-wrap) td {
+  background: #ffffff !important;
+}
+:deep(.table-wrap) tbody tr:nth-child(even) td {
+  background: #f0f9ff !important;
+}
+:deep(.table-wrap) tbody tr:hover td {
+  background: #e0f7ff !important;
 }
 @media (max-width: 720px) {
   :deep(.markdown-body) th, :deep(.markdown-body) td {
