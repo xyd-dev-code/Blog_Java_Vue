@@ -515,12 +515,16 @@ onUnmounted(() => { window.removeEventListener('scroll', onScroll) })
   border: 2px solid #bae6fd;
   box-shadow: 0 4px 16px rgba(14, 165, 233, 0.08);
   background: #ffffff;
+  table-layout: auto;
 }
 :deep(.markdown-body) th, :deep(.markdown-body) td {
-  padding: 12px 16px;
+  padding: 10px 12px;
   border: 1px solid #bae6fd;
-  font-size: 15px;
-  line-height: 1.6;
+  font-size: 14px;
+  line-height: 1.55;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  vertical-align: middle;
 }
 :deep(.markdown-body) th {
   background: linear-gradient(135deg, #0c4a6e 0%, #0369a1 100%);
@@ -529,6 +533,7 @@ onUnmounted(() => { window.removeEventListener('scroll', onScroll) })
   text-align: left;
   letter-spacing: 0.02em;
   border-color: #0c4a6e;
+  white-space: nowrap;
 }
 :deep(.markdown-body) td {
   color: #0f172a;
@@ -540,6 +545,17 @@ onUnmounted(() => { window.removeEventListener('scroll', onScroll) })
 :deep(.markdown-body) tbody tr:hover td {
   background: #e0f7ff;
   transition: background 0.15s ease;
+}
+:deep(.markdown-body) .table-wrap {
+  overflow-x: auto;
+  margin: 28px 0;
+  border-radius: 10px;
+}
+@media (max-width: 720px) {
+  :deep(.markdown-body) th, :deep(.markdown-body) td {
+    padding: 8px 10px;
+    font-size: 13px;
+  }
 }
 
 /* 标签条 */
