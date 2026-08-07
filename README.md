@@ -10,12 +10,15 @@
 
 ## ✨ 特性
 
-- **后端**：Spring Boot 3.3 + Spring Security 6 + JWT + MyBatis-Plus 3.5 + MySQL 8 + Redis + SpringDoc OpenAPI
-- **前端**：Vue 3 + Vite 6 + Pinia + Vue Router 4 + Element Plus 2 + Axios + SCSS
-- **图床**：本地图床（Nginx 静态服务 + Let's Encrypt 签发 HTTPS），不依赖第三方对象存储
-- **部署**：Ubuntu 24.04 + Nginx 反向代理 + systemd + Let's Encrypt
-- **功能**：文章 / 分类 / 标签 / 评论 / 留言 / 归档 / 搜索 / 项目 / 友链 / 站点配置 / 后台管理
-- **编辑器**：Tiptap 所见即所得 + Markdown 互转（GFM 表格支持）
+- **后端**：Spring Boot 3.5 + Spring Security 6 + JWT + MyBatis-Plus 3.5 + MySQL 8 + Redis + Caffeine（本地缓存）+ SpringDoc OpenAPI
+- **前端**：Vue 3.5 + Vite 6 + Pinia + Vue Router 4 + Element Plus（按需引入）+ Axios + SCSS
+- **图表**：ECharts 5（后台访问统计饼图，按需引入）
+- **编辑器**：Tiptap 3 所见即所得 + Markdown 互转（GFM 表格支持），后台另配 MdEditor
+- **图床**：本地图床（Nginx 静态服务 + Let's Encrypt 签发 HTTPS），不依赖第三方对象存储（七牛云 SDK 已预留，可按需启用）
+- **部署**：Ubuntu + Nginx 反向代理 + systemd + Let's Encrypt；一键发布脚本 `deploy.sh` / `deploy.ps1`
+- **功能**：文章 / 分类 / 标签 / 评论 / 留言板 / 归档 / 搜索 / 项目集 / 工具集 / 友链 / 关于 / 站点配置 / 后台管理 / 首页天气卡 / 访问统计
+- **天气卡**：Open-Meteo 实时天气（温度 / 体感 / 湿度 / 风力风向 / 气压 / 天气状况），含 WMO code 校验与高温降级；城市默认定位 + 访客手动搜索切换；拒绝定位时显示"位置信息暂未授权" + 重新授权
+- **访问统计**：基于 ip2region 的 IP 地理解析，按设备 / 系统 / 浏览器 / 省份分布用 ECharts 饼图展示，访客明细按 IP + 日期分组折叠
 
 ## 🏗 目录结构
 
@@ -33,21 +36,28 @@ Blog_Java_Vue/
 │   │   └── service/         # 业务逻辑（LocalStorageService 等）
 │   └── src/main/resources/
 │       ├── application-example.yml   # 配置模板（已脱敏，提交到仓库）
-│       └── db/init.sql      # 初始化数据库 + 示例数据
+│       └── db/init.sql      # 新库初始化（建表 + 示例数据）
 ├── blog-web/                # 前端 Vue 3 (端口 5173)
 │   └── src/
-│       ├── api/             # axios 封装
-│       ├── components/      # 通用组件
+│       ├── api/             # axios 封装（front.js / admin.js / share.js）
+│       ├── components/      # 通用组件（含 SkyHero 天气卡、CountUp 等）
+│       ├── composables/     # 组合式函数（useWeather 等）
 │       ├── layouts/         # 布局（前台 / 后台）
-│       ├── router/          # 路由
+│       ├── router/          # 路由（含懒加载 + 导航预取）
 │       ├── stores/          # Pinia
 │       ├── styles/          # 全局 SCSS
 │       ├── utils/           # 工具
 │       └── views/
 │           ├── front/       # 前台页面
-│           └── admin/       # 后台管理
+│           └── admin/       # 后台管理（含 Stats 访问统计）
+├── server-config/           # 部署与迁移配置
+│   ├── deploy.sh            # Linux 一键发布（默认不跑 SQL）
+│   ├── migration-*.sql      # 增量迁移脚本（幂等，可重复执行）
+│   └── *.nginx.conf         # Nginx 站点配置示例
+├── ip2region.xdb            # IP 地理库（访客统计用）
 ├── start-backend.bat        # Windows 启动后端
 ├── start-frontend.bat       # Windows 启动前端
+├── deploy.ps1               # Windows 一键发布
 └── README.md
 ```
 
@@ -82,6 +92,8 @@ mysql -u<user> -p<pass> < blog-server/src/main/resources/db/init.sql
 
 `init.sql` 已脱敏：admin 用户的 `password` 字段是**无效占位 hash**（任何密码都登不上），
 请按文件内提示用 `BCryptPasswordEncoder.encode("你的新密码")` 生成新 hash 后入库。
+
+> 后续表结构变更请走 **增量迁移脚本**（见下文「🗄 数据库迁移规范」），不要把改动直接手改进 `init.sql` 又忘了老库。
 
 ### 4. 启动后端
 
@@ -123,9 +135,26 @@ npm run dev
 
 API 前缀：`/api/v1`
 
-- 前台：`/api/v1/home`, `/api/v1/articles`, `/api/v1/categories`, `/api/v1/tags`, `/api/v1/projects`, `/api/v1/friend-links`
-- 后台：`/api/v1/admin/**`（需登录）
+- 前台：`/api/v1/home`, `/api/v1/articles`, `/api/v1/categories`, `/api/v1/tags`, `/api/v1/projects`, `/api/v1/tools`, `/api/v1/friend-links`, `/api/v1/about`, `/api/v1/comments/guestbook`, `/api/v1/site`
+- 后台：`/api/v1/admin/**`（需登录），含 `/api/v1/admin/stats` 访问统计
 - 认证：`/api/v1/auth/login`
+
+> 完整端点以 Swagger UI 为准；以上为常用分组示例。
+
+## ☁️ 天气卡与访客统计
+
+### 天气卡（`SkyHero.vue` + `useWeather.js`）
+
+- **数据源**：Open-Meteo V1 Forecast（免费、无需 Key、CORS 允许）。`current` 取温度 / 体感 / 湿度 / 风速 / 风向 / 气压 / 天气状况。
+- **天气状况校验**：`weather_code`（WMO Code）经完整映射表转中文；并做合理性校验——高温（≥30°C）+ 极端风暴码（95/96/99）属模型偏差，自动降级为「晴 / 局部晴朗 / 多云」。数值字段（温度 / 湿度 / 风力）经温度范围、湿度范围、数据时效（<2h）校验。
+- **城市定位**：默认定位访客所在城市（浏览器定位 + BigDataCloud 反向地理编码中文名）；访客可点 📍 打开搜索面板，用 Open-Meteo Geocoding（中文名）手动切换城市，选定后记忆到 `localStorage`。
+- **拒绝定位**：访客拒绝授权时，天气卡显示「位置信息暂未授权」+「重新授权」按钮，重新触发定位流程；**不**回退显示任何预设城市。
+
+### 访客统计（`views/admin/Stats.vue`）
+
+- **IP 地理解析**：基于 `ip2region.xdb`，将访客 IP 解析到省 / 国家；境外 IP 在省份列显示为「境外(美国)」等友好文案。
+- **分布可视化**：设备 / 系统 / 浏览器 / 省份四类分布用 ECharts 真饼图（按需引入 `PieChart` + 必要组件）展示，空态用 Vue 模板层占位（不依赖图表库自身渲染）。
+- **访客明细**：按「IP + 日期」分组折叠，汇总行展示 IP / 省份 / 设备 / 系统 / 浏览器 / 访问次数 / 时间范围，展开看当日该 IP 全部明细。
 
 ## 🎨 设计说明（晴天主题）
 
@@ -156,50 +185,71 @@ API 前缀：`/api/v1`
 - 上传：`LocalStorageService` 按 MD5 自动去重，按日期分目录
 - URL 格式：`${IMG_BASE_URL}/{yyyy/MM}/{md5}.{ext}`
 
+## 🗄 数据库迁移规范
+
+> ⚠️ **铁律**：改 Java 实体 / SQL 前，必须先把对应的迁移 SQL 跑进目标库，否则 MyBatis-Plus 会报 `Unknown column` / `Data too long` 导致接口 500。
+
+- **新库**：`blog-server/src/main/resources/db/init.sql`（建表 + 示例数据）。**每次加表 / 加列必须 `init.sql` 与迁移脚本双写**，否则新库照样缺列。
+- **增量**：`server-config/migration-*.sql`，统一用 `information_schema` 探测 + `ALTER ADD COLUMN` / `CREATE TABLE IF NOT EXISTS` + `ON DUPLICATE KEY UPDATE`，**幂等、可重复执行**。
+  - ⚠️ 注意：`CREATE TABLE IF NOT EXISTS` 在表已存在时会整段跳过，**不会补列**。老库补列必须写 `information_schema` 探测 + 动态 `PREPARE/EXECUTE ALTER` 段（`no-op` 分支用 `DO 0`）。
+- **部署时执行迁移**：
+  - Linux：`RUN_MIGRATION=1 DB_PASS='<pwd>' bash server-config/deploy.sh`（默认不跑 SQL）
+  - Windows：`deploy.ps1` 加 `-Migrate` 参数或设 `$RunMigration=$true`
+  - 迁移脚本按文件名顺序逐个应用，失败会打印 `FAILED` 但不中断其余脚本。
+
 ## 🛠 技术栈版本
 
 | 技术 | 版本 |
 |---|---|
-| Spring Boot | 3.3.4 |
+| Spring Boot | 3.5.6 |
 | Java | 17 |
 | MyBatis-Plus | 3.5.7 |
-| Spring Security | 6.3 |
+| Spring Security | 6.x |
 | jjwt | 0.12.6 |
 | SpringDoc OpenAPI | 2.6.0 |
 | MySQL | 8.0 |
 | Redis | 7.x |
 | Vue | 3.5 |
 | Vite | 6 |
-| Element Plus | 2.9 |
+| Element Plus | 2.9（按需引入：unplugin-vue-components + unplugin-auto-import） |
+| ECharts | 5.5 |
 | Pinia | 2.x |
+| Tiptap | 3.x |
+| md-editor-v3 | 4.x |
+| highlight.js | 11.x |
 
-## 🚢 生产部署（Ubuntu 24.04）
+## 🚢 生产部署（Ubuntu）
 
 1. **服务器初始化**：创建 `blog` 用户，安装 JDK 17、MySQL、Redis、Nginx、certbot
-2. **初始化数据库**：将 `init.sql` 导入 MySQL，按文件内提示重置 admin 密码
+2. **初始化数据库**：将 `db/init.sql` 导入 MySQL，按文件内提示重置 admin 密码
 3. **打包后端**：
    ```bash
    cd blog-server
    mvn -DskipTests clean package
    ```
-4. **上传 jar 与 prod 配置**：
+4. **构建前端**：
    ```bash
-   scp target/blog-server.jar <user>@<server>:/srv/blog/jar/
-   scp application-prod.yml   <user>@<server>:/srv/blog/jar/
+   cd blog-web
+   npm install
+   npm run build        # 产物在 blog-web/dist
    ```
-5. **配置 systemd**：写入 `/etc/systemd/system/blog.service`
-6. **配置 Nginx**：
-   - 主域（前台 + `/api/` 反代到 `127.0.0.1:8080`）
-   - 图床子域（HTTPS 静态服务）
-7. **申请证书**：
+5. **一键发布**（Linux）：
+   ```bash
+   PROJECT_ROOT=/path/to/Blog_Java_Vue \
+   RUN_MIGRATION=1 DB_PASS='<pwd>' \
+   bash server-config/deploy.sh
+   ```
+   - 备份并覆盖 jar（chown `blog:blog`）、灌入 `dist`、重启 systemd + reload Nginx、健康检查
+   - 需应用增量迁移时务必带 `RUN_MIGRATION=1`（否则只发代码不跑 SQL）
+   - Windows 用 `deploy.ps1`（参数 `-Migrate` 开启迁移）
+6. **（首次 / 手动）配置 systemd**：写入 `/etc/systemd/system/blog.service`
+7. **（首次 / 手动）配置 Nginx**：主域（前台 + `/api/` 反代到 `127.0.0.1:8080`）、图床子域（HTTPS 静态服务）
+8. **申请证书**：
    ```bash
    sudo certbot --nginx -d yourdomain.com -d www.yourdomain.com -d img.yourdomain.com
    ```
-8. **启动服务**：
-   ```bash
-   sudo systemctl enable --now blog
-   sudo systemctl reload nginx
-   ```
+
+> 详细 SOP 见团队《博客部署上线教程》；`deploy.sh` 顶部注释含全部可覆盖的环境变量（`BACKEND_DIR` / `FRONTEND_DIR` / `SKIP_FRONTEND` / `SKIP_BACKEND` 等）。
 
 ## 🔐 安全 / 隐私注意事项
 
@@ -209,6 +259,7 @@ API 前缀：`/api/v1`
 4. **MySQL 用户**：应用使用低权限用户，不要用 `root` 连接 Spring Boot
 5. **图床目录权限**：建议 `drwxr-x---`，Nginx 以独立用户读取
 6. **JWT secret**：生产环境通过 `JWT_SECRET` 环境变量注入，至少 64 字节随机
+7. **访客隐私**：访问统计仅记录 IP 与派生地理位置用于展示分布，不展示完整 IP 明细给非授权用户
 
 ## 📝 License
 

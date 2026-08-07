@@ -1,11 +1,13 @@
 <template>
   <article
-    class="post-card reveal glow-card border-glow"
+    class="post-card reveal"
     v-tilt
     @click="$router.push(`/articles/${article.slug}`)"
     @mousemove="onGlowMove"
     ref="cardRef"
   >
+    <!-- 鼠标跟随径向光晕（真实 DOM，避免 glow-card/border-glow 伪元素冲突） -->
+    <div class="card-radial-glow" aria-hidden="true"></div>
     <div class="cover" v-if="article.coverImage">
       <img :src="article.coverImage" :alt="article.title" loading="lazy" />
     </div>
@@ -76,6 +78,32 @@ const onGlowMove = (e) => {
   box-shadow: var(--shadow-pop), var(--shadow-glow);
 }
 .post-card:hover::before { opacity: 1; }
+
+/* 鼠标跟随径向光晕（真实 DOM，不占用 ::before/::after） */
+.card-radial-glow {
+  position: absolute;
+  inset: 0;
+  top: var(--my, 50%);
+  left: var(--mx, 50%);
+  width: 300px;
+  height: 300px;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(
+    circle,
+    rgba(251, 191, 36, 0.15) 0%,
+    rgba(56, 189, 248, 0.10) 30%,
+    transparent 65%
+  );
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.35s ease;
+  z-index: 0;
+}
+.post-card:hover .card-radial-glow { opacity: 1; }
+.post-card > :not(.card-radial-glow) {
+  position: relative;
+  z-index: 1;
+}
 .cover {
   aspect-ratio: 16/9;
   background: var(--c-line-soft);
@@ -150,4 +178,12 @@ const onGlowMove = (e) => {
   margin-top: auto;
 }
 .dot { color: #ccc; }
+
+/* mobile */
+@media (max-width: 480px) {
+  .cover-char { font-size: 48px; }
+  .meta { padding: 16px 16px 14px; }
+  .title { font-size: 17px; }
+  .excerpt { font-size: 13px; }
+}
 </style>

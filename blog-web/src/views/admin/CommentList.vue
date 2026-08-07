@@ -14,30 +14,38 @@
       </template>
 
       <div class="table-scroll">
-        <el-table :data="list" v-loading="loading" class="desktop-table">
-          <el-table-column type="index" label="序号" width="60" align="center" />
+        <el-table :data="list" v-loading="loading" class="desktop-table" :row-key="(row) => row.id">
+          <el-table-column label="序号" width="60" align="center">
+            <template #default="{ $index }">
+              {{ (query.page - 1) * query.size + $index + 1 }}
+            </template>
+          </el-table-column>
           <el-table-column label="评论人" width="200">
             <template #default="{ row }">
-              <div class="cm-author">
-                <el-avatar :src="row.avatar" :size="32" />
-                <div class="cm-author-info">
-                  <div class="cm-name">{{ row.nickname }}</div>
-                  <div v-if="row.parentName" class="cm-reply-to">
-                    ↳ 回复 <b>@{{ row.parentName }}</b>
+              <div class="cell-flex">
+                <div class="cm-author">
+                  <el-avatar :src="row.avatar" :size="32" :key="row.avatar">{{ row.nickname?.[0] }}</el-avatar>
+                  <div class="cm-author-info">
+                    <div class="cm-name" :title="row.nickname">{{ row.nickname }}</div>
+                    <div v-if="row.parentName" class="cm-reply-to">
+                      ↳ 回复 <b>@{{ row.parentName }}</b>
+                    </div>
+                    <div v-else class="cm-email" :title="row.email">{{ row.email || '-' }}</div>
                   </div>
-                  <div v-else class="cm-email">{{ row.email || '-' }}</div>
                 </div>
               </div>
             </template>
           </el-table-column>
           <el-table-column label="来源" width="160">
             <template #default="{ row }">
-              {{ row.articleTitle || '-' }}
+              <span class="cell-text">{{ row.articleTitle || '-' }}</span>
             </template>
           </el-table-column>
           <el-table-column label="内容" min-width="280">
             <template #default="{ row }">
-              <div class="cm-content">{{ row.content }}</div>
+              <div class="cell-flex">
+                <div class="cm-content" :title="row.content">{{ row.content }}</div>
+              </div>
             </template>
           </el-table-column>
           <el-table-column label="状态" width="100">
@@ -48,13 +56,16 @@
             </template>
           </el-table-column>
           <el-table-column prop="createTime" label="时间" width="160">
-            <template #default="{ row }">{{ fmtDate(row.createTime) }}</template>
+            <template #default="{ row }"><span class="cell-text">{{ fmtDate(row.createTime) }}</span></template>
           </el-table-column>
-          <el-table-column label="操作" width="200">
+          <el-table-column label="操作" width="220">
             <template #default="{ row }">
-              <el-button v-if="row.status !== 1" size="small" link type="success" @click="approve(row)">通过</el-button>
-              <el-button v-if="row.status !== 2" size="small" link type="warning" @click="spam(row)">垃圾</el-button>
-              <el-button size="small" link type="danger" @click="remove(row)">删除</el-button>
+              <div class="cell-actions">
+                <el-button size="small" link type="primary" @click="openReply(row)">回复</el-button>
+                <el-button v-if="row.status !== 1" size="small" link type="success" @click="approve(row)">通过</el-button>
+                <el-button v-if="row.status !== 2" size="small" link type="warning" @click="spam(row)">垃圾</el-button>
+                <el-button size="small" link type="danger" @click="remove(row)">删除</el-button>
+              </div>
             </template>
           </el-table-column>
         </el-table>
@@ -76,6 +87,7 @@
           <div class="cm-card-content">{{ row.content }}</div>
           <div v-if="row.articleTitle" class="cm-card-source">来源: {{ row.articleTitle }}</div>
           <div class="cm-card-actions">
+            <el-button size="small" type="primary" @click="openReply(row)">回复</el-button>
             <el-button v-if="row.status !== 1" size="small" type="success" @click="approve(row)">通过</el-button>
             <el-button v-if="row.status !== 2" size="small" type="warning" @click="spam(row)">垃圾</el-button>
             <el-button size="small" type="danger" @click="remove(row)">删除</el-button>
@@ -87,8 +99,20 @@
       <div class="footer-bar" v-if="total > query.size">
         <el-pagination background layout="prev, pager, next, total"
           :current-page="query.page" :page-size="query.size" :total="total"
-          @current-change="(p) => { query.page = p; reload() }" />
+          @current-change="(p) => { query.page = p; reload(false) }" />
       </div>
+
+      <el-dialog v-model="replyVisible" title="回复评论" width="520px" append-to-body>
+        <div v-if="replyTarget" class="reply-quote">
+          ↳ 回复 <b>@{{ replyTarget.nickname }}</b>：{{ clipText(replyTarget.content) }}
+        </div>
+        <el-input v-model="replyContent" type="textarea" :rows="4" maxlength="1000" show-word-limit
+          placeholder="输入回复内容…" />
+        <template #footer>
+          <el-button @click="replyVisible = false">取消</el-button>
+          <el-button type="primary" :loading="replyLoading" @click="submitReply">发送回复</el-button>
+        </template>
+      </el-dialog>
     </el-card>
   </div>
 </template>
@@ -97,7 +121,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
-  adminComments, adminApproveComment, adminSpamComment, adminDeleteComment, adminCommentStats
+  adminComments, adminApproveComment, adminSpamComment, adminDeleteComment, adminCommentStats, adminReplyComment
 } from '@/api/admin'
 import { fmtDate } from '@/utils/format'
 
@@ -107,14 +131,35 @@ const loading = ref(false)
 const filter = ref('all')
 const counts = ref({})
 
+const replyVisible = ref(false)
+const replyLoading = ref(false)
+const replyTarget = ref(null)
+const replyContent = ref('')
+const openReply = (row) => { replyTarget.value = row; replyContent.value = ''; replyVisible.value = true }
+const clipText = (s) => (s && s.length > 60 ? s.slice(0, 60) + '…' : (s || ''))
+const submitReply = async () => {
+  if (!replyContent.value.trim()) { ElMessage.warning('回复内容不能为空'); return }
+  replyLoading.value = true
+  try {
+    await adminReplyComment(replyTarget.value.id, { content: replyContent.value })
+    ElMessage.success('回复已发送')
+    replyVisible.value = false
+    reload()
+  } catch (_) {
+  } finally {
+    replyLoading.value = false
+  }
+}
+
 const query = reactive({ page: 1, size: 15, status: '' })
 
-const reload = async () => {
+const reload = async (resetPage = true) => {
   loading.value = true
   query.status = filter.value === 'all' ? '' :
                  filter.value === 'pending' ? 0 :
                  filter.value === 'approved' ? 1 : 2
-  query.page = 1
+  // 分页器回调里传 false,避免「点第 2 页 → 立刻被重置回第 1 页」的递归 bug
+  if (resetPage) query.page = 1
   try {
     const resp = await adminComments(query)
     list.value = resp.data?.records || []

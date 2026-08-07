@@ -8,6 +8,10 @@ import com.blog.service.TagService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -27,21 +31,21 @@ public class ArticleController {
 
     @Operation(summary = "首页列表")
     @GetMapping
-    public R<Page<Article>> home(@RequestParam(defaultValue = "1") long page,
-                                  @RequestParam(defaultValue = "10") long size) {
+    public R<Page<Article>> home(@RequestParam(defaultValue = "1") @Min(1) long page,
+                                  @RequestParam(defaultValue = "10") @Min(1) @Max(50) long size) {
         return R.ok(articleService.homePage(page, size));
     }
 
     @Operation(summary = "推荐文章")
     @GetMapping("/featured")
-    public R<List<Article>> featured(@RequestParam(defaultValue = "5") int limit) {
+    public R<List<Article>> featured(@RequestParam(defaultValue = "5") @Min(1) @Max(50) int limit) {
         return R.ok(articleService.listFeatured(limit));
     }
 
     @Operation(summary = "搜索")
     @GetMapping("/search")
-    public R<List<Article>> search(@RequestParam String q,
-                                   @RequestParam(defaultValue = "20") int limit) {
+    public R<List<Article>> search(@RequestParam @Size(min = 2, max = 50, message = "搜索关键词 2~50 字") String q,
+                                   @RequestParam(defaultValue = "20") @Min(1) @Max(50) int limit) {
         return R.ok(articleService.search(q, limit));
     }
 
@@ -61,7 +65,7 @@ public class ArticleController {
 
     @Operation(summary = "归档按月")
     @GetMapping("/archive/{ym}")
-    public R<List<Article>> byMonth(@PathVariable String ym) {
+    public R<List<Article>> byMonth(@PathVariable @Pattern(regexp = "^\\d{4}-\\d{2}$", message = "ym 格式须为 YYYY-MM") String ym) {
         return R.ok(articleService.listByMonth(ym));
     }
 

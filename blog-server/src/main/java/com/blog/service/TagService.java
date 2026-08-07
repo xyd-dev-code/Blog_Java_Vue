@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.blog.common.BizException;
 import com.blog.dto.PageQuery;
+import com.blog.dto.TagDTO;
 import com.blog.entity.Tag;
 import com.blog.mapper.ArticleTagMapper;
 import com.blog.mapper.TagMapper;
@@ -35,8 +36,31 @@ public class TagService {
     }
 
     public Page<Tag> page(PageQuery q) {
-        return tagMapper.selectPage(Page.of(q.getPage(), q.getSize()),
-                new LambdaQueryWrapper<Tag>().orderByAsc(Tag::getId));
+        return page(q, null);
+    }
+
+    /**
+     * 分页 + 模糊搜索(name/slug 命中任一)+ 批量统计 articleCount。
+     */
+    public Page<Tag> page(PageQuery q, String keyword) {
+        LambdaQueryWrapper<Tag> w = new LambdaQueryWrapper<Tag>().orderByAsc(Tag::getId);
+        if (keyword != null && !keyword.isBlank()) {
+            String kw = keyword.trim();
+            w.and(qq -> qq.like(Tag::getName, kw).or().like(Tag::getSlug, kw));
+        }
+        com.baomidou.mybatisplus.extension.plugins.pagination.Page<Tag> p =
+                tagMapper.selectPage(Page.of(q.getPage(), q.getSize()), w);
+        if (p.getRecords() != null && !p.getRecords().isEmpty()) {
+            // 批量统计本页标签的文章数
+            List<Long> tagIds = p.getRecords().stream().map(Tag::getId).collect(Collectors.toList());
+            Map<Long, Long> counts = articleTagMapper.selectList(
+                    new LambdaQueryWrapper<com.blog.entity.ArticleTag>().in(com.blog.entity.ArticleTag::getTagId, tagIds)
+            ).stream().collect(Collectors.groupingBy(at -> at.getTagId(), Collectors.counting()));
+            for (Tag t : p.getRecords()) {
+                t.setArticleCount(counts.getOrDefault(t.getId(), 0L));
+            }
+        }
+        return p;
     }
 
     public Tag byId(Long id) {
@@ -89,7 +113,25 @@ public class TagService {
         tagMapper.deleteById(id);
     }
 
+    @CacheEvict(value = "tags", allEntries = true)
+    public Tag saveFromDTO(TagDTO dto) {
+        Tag t = new Tag();
+        t.setName(dto.getName());
+        t.setSlug(dto.getSlug());
+        return save(t);
+    }
+
+    @CacheEvict(value = "tags", allEntries = true)
+    public Tag updateFromDTO(TagDTO dto) {
+        Tag t = new Tag();
+        t.setId(dto.getId());
+        t.setName(dto.getName());
+        t.setSlug(dto.getSlug());
+        return update(t);
+    }
+
     private String slug(String s) {
-        return s == null ? "" : s.toLowerCase().replaceAll("[^\\u4e00-\\u9fa5a-z0-9]+", "-");
+        if (s == null) return "";
+        return s.toLowerCase().replaceAll("[^\\u4e00-\\u9fa5a-z0-9]+", "-").replaceAll("(^-+|-+$)", "");
     }
 }

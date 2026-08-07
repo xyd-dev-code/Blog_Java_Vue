@@ -1,5 +1,5 @@
 <template>
-  <div class="tag-admin-page">
+  <div class="tag-page">
     <el-card>
       <template #header>
         <div class="header-bar">
@@ -7,20 +7,40 @@
           <el-button type="primary" @click="openForm()"><el-icon><Plus /></el-icon> 新建标签</el-button>
         </div>
       </template>
+      <div class="toolbar">
+        <el-input v-model="filters.keyword" placeholder="搜索" clearable style="width: 200px" @keyup.enter="reload" @clear="reload" />
+        <el-button @click="reload">查询</el-button>
+      </div>
       <div class="table-scroll">
         <el-table :data="list" v-loading="loading">
-          <el-table-column type="index" label="序号" width="60" align="center" />
+          <el-table-column label="序号" width="60" align="center">
+            <template #default="{ $index }">
+              {{ (currentPage - 1) * pageSize + $index + 1 }}
+            </template>
+          </el-table-column>
           <el-table-column prop="name" label="名称" />
-          <el-table-column prop="slug" label="Slug" />
-          <el-table-column prop="articleCount" label="文章数" width="100" />
-          <el-table-column label="操作" width="180">
+          <el-table-column prop="slug" label="Slug" width="180" />
+          <el-table-column prop="articleCount" label="文章数" width="100" align="center" />
+          <el-table-column label="操作" width="180" fixed="right">
             <template #default="{ row }">
-              <el-button size="small" link @click="openForm(row)">编辑</el-button>
-              <el-button size="small" link type="danger" @click="remove(row)">删除</el-button>
+              <div class="cell-actions">
+                <el-button size="small" link @click="openForm(row)">编辑</el-button>
+                <el-button size="small" link type="danger" @click="remove(row)">删除</el-button>
+              </div>
             </template>
           </el-table-column>
         </el-table>
       </div>
+      <el-pagination
+        v-if="total > pageSize"
+        class="pager"
+        background
+        layout="prev, pager, next, total"
+        :total="total"
+        :page-size="pageSize"
+        :current-page="currentPage"
+        @current-change="(p) => { currentPage = p; reload() }"
+      />
     </el-card>
 
     <el-dialog v-model="dlg" :title="form.id ? '编辑标签' : '新建标签'" width="min(420px, 92vw)">
@@ -46,13 +66,21 @@ const list = ref([])
 const loading = ref(false)
 const dlg = ref(false)
 const saving = ref(false)
+const total = ref(0)
+const currentPage = ref(1)
+const pageSize = ref(10)
+const filters = reactive({ keyword: '' })
 const form = reactive({ id: null, name: '', slug: '' })
 
 const reload = async () => {
   loading.value = true
   try {
-    const resp = await adminTags({ size: 200 })
-    list.value = resp.data?.records || []
+    const params = { page: currentPage.value, size: pageSize.value }
+    if (filters.keyword) params.keyword = filters.keyword
+    const resp = await adminTags(params)
+    const data = resp.data || {}
+    list.value = data.records || []
+    total.value = data.total || 0
   } catch (_) {}
   loading.value = false
 }
@@ -88,6 +116,8 @@ onMounted(reload)
 
 <style scoped lang="scss">
 .header-bar { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+.toolbar { display: flex; gap: 10px; margin-bottom: 12px; }
 .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.pager { margin-top: 12px; justify-content: flex-end; display: flex; }
 @media (max-width: 480px) { :deep(.el-dialog) { width: 92vw !important; } }
 </style>

@@ -13,7 +13,6 @@ public class Project {
     @TableId(type = IdType.AUTO)
     private Long id;
     private String name;
-    private String kind;
     private String description;
     @TableField("tech_stack")
     private String techStack;
@@ -23,6 +22,10 @@ public class Project {
     private String githubUrl;
     @TableField("demo_url")
     private String demoUrl;
+    @TableField("cover_url")
+    private String coverUrl;
+    @TableField("category_id")
+    private Long categoryId;
     private Integer sortOrder;
     private Integer status;
     private LocalDateTime createTime;
@@ -37,8 +40,6 @@ public class Project {
     public void setId(Long id) { this.id = id; }
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
-    public String getKind() { return kind; }
-    public void setKind(String kind) { this.kind = kind; }
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
     public String getTechStack() { return techStack; }
@@ -51,6 +52,10 @@ public class Project {
     public void setGithubUrl(String githubUrl) { this.githubUrl = githubUrl; }
     public String getDemoUrl() { return demoUrl; }
     public void setDemoUrl(String demoUrl) { this.demoUrl = demoUrl; }
+    public String getCoverUrl() { return coverUrl; }
+    public void setCoverUrl(String coverUrl) { this.coverUrl = coverUrl; }
+    public Long getCategoryId() { return categoryId; }
+    public void setCategoryId(Long categoryId) { this.categoryId = categoryId; }
     public Integer getSortOrder() { return sortOrder; }
     public void setSortOrder(Integer sortOrder) { this.sortOrder = sortOrder; }
     public Integer getStatus() { return status; }

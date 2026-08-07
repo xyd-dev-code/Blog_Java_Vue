@@ -9,6 +9,8 @@ import com.blog.service.FriendLinkService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -58,14 +60,27 @@ public class AdminFriendLinkController {
     @DeleteMapping
     @Operation(summary = "批量删除")
     public R<Void> batchDelete(@RequestBody List<Long> ids) {
-        friendLinkService.batchDelete(ids);
+        if (ids == null || ids.isEmpty()) return R.ok();
+        if (ids.size() > 100) {
+            throw new com.blog.common.BizException("批量删除最多 100 条");
+        }
+        ids.stream().filter(java.util.Objects::nonNull).forEach(friendLinkService::delete);
         return R.ok();
     }
 
     @PutMapping("/{id}/status")
     @Operation(summary = "审核 0待审核 1已通过 2已拒绝")
-    public R<Void> review(@PathVariable Long id, @RequestParam Integer status) {
+    public R<Void> review(@PathVariable Long id,
+                          @RequestParam @Min(value = 0, message = "status 不合法") @Max(value = 2, message = "status 不合法") Integer status) {
         friendLinkService.updateStatus(id, status);
+        return R.ok();
+    }
+
+    @PutMapping("/{id}/recommended")
+    @Operation(summary = "设为/取消推荐")
+    public R<Void> setRecommended(@PathVariable Long id,
+                                  @RequestParam Boolean recommended) {
+        friendLinkService.setRecommended(id, Boolean.TRUE.equals(recommended));
         return R.ok();
     }
 }

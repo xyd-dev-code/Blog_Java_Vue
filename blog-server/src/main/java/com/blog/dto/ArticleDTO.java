@@ -1,21 +1,52 @@
 package com.blog.dto;
 
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 import java.util.List;
 
 public class ArticleDTO {
     private Long id;
-    @NotBlank private String title;
+
+    @NotBlank
+    @Size(max = 200, message = "标题不能超过 200 字符")
+    private String title;
+
+    @Size(max = 100)
+    @Pattern(regexp = "^([\\u4e00-\\u9fa5a-z0-9_-]{1,100})?$",
+             message = "slug 只能含中文/小写字母/数字/下划线/连字符")
     private String slug;
-    @NotBlank private String content;
+
+    @NotBlank
+    @Size(max = 200_000, message = "正文不能超过 200k 字符")
+    private String content;
+
+    @Size(max = 500)
     private String summary;
+
+    @Size(max = 500)
+    @Pattern(regexp = "^(https?://[^\\s]+)?$", message = "封面必须以 http/https 开头")
     private String coverImage;
+
     private Long categoryId;
+
+    @Min(0) @Max(2)
     private Integer status;
+
+    @Min(0) @Max(1)
     private Integer isTop;
+
+    @Min(0) @Max(1)
     private Integer isFeatured;
+
+    @Min(0) @Max(1)
     private Integer allowComment;
+
+    @Size(max = 128)
     private String password;
+
     private java.time.LocalDateTime publishTime;
     private List<Long> tagIds;
 

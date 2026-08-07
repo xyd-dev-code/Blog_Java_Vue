@@ -13,7 +13,10 @@ public class CacheConfig {
 
     @Bean
     public CacheManager cacheManager() {
-        CaffeineCacheManager mgr = new CaffeineCacheManager("articles", "categories", "tags", "pages");
+        // 注意：带 cacheNames 的构造器会关闭 dynamic 创建，
+        // 未在此登记的缓存名会让 @Cacheable 抛 "Cannot find cache named ..."。
+        CaffeineCacheManager mgr = new CaffeineCacheManager(
+                "articles", "categories", "tags", "projectCategories");
         mgr.setCaffeine(Caffeine.newBuilder()
                 .expireAfterWrite(5, TimeUnit.MINUTES)
                 .maximumSize(500));

@@ -1,10 +1,19 @@
 package com.blog.dto;
 
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
+
 public class FriendLinkQuery {
+    @Pattern(regexp = "^[012]$", message = "status 必须 0/1/2")
     private Integer status;
+
+    @Size(max = 50)
     private String keyword;
-    private long page = 1;
-    private long size = 10;
+
+    @Min(1) private long page = 1;
+    @Min(1) @Max(100) private long size = 10;
 
     public Integer getStatus() { return status; }
     public void setStatus(Integer status) { this.status = status; }

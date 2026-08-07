@@ -19,6 +19,7 @@ public class FriendLink {
     @TableField("link_group")
     private String linkGroup;
     private Integer sortOrder;
+    private Integer recommended;
     private Integer status;
     private LocalDateTime createTime;
     private LocalDateTime updateTime;
@@ -41,6 +42,8 @@ public class FriendLink {
     public void setLinkGroup(String linkGroup) { this.linkGroup = linkGroup; }
     public Integer getSortOrder() { return sortOrder; }
     public void setSortOrder(Integer sortOrder) { this.sortOrder = sortOrder; }
+    public Integer getRecommended() { return recommended; }
+    public void setRecommended(Integer recommended) { this.recommended = recommended; }
     public Integer getStatus() { return status; }
     public void setStatus(Integer status) { this.status = status; }
     public LocalDateTime getCreateTime() { return createTime; }

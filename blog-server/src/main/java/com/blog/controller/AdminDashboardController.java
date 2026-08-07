@@ -12,6 +12,7 @@ import com.blog.mapper.TagMapper;
 import com.blog.mapper.UserMapper;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.LinkedHashMap;
@@ -40,19 +41,37 @@ public class AdminDashboardController {
 
     @GetMapping
     @io.swagger.v3.oas.annotations.Operation(summary = "仪表盘聚合")
-    public R<Map<String, Object>> dashboard() {
+    public R<Map<String, Object>> dashboard(
+            @RequestParam(defaultValue = "1") long articlePage,
+            @RequestParam(defaultValue = "5") long articleSize,
+            @RequestParam(defaultValue = "1") long commentPage,
+            @RequestParam(defaultValue = "5") long commentSize) {
         Map<String, Object> map = new LinkedHashMap<>();
         map.put("stats", overviewStats());
-        Page<Article> p = Page.of(1, 10);
-        articleMapper.selectPage(p, new LambdaQueryWrapper<Article>()
+
+        // 最近文章(分页)
+        Page<Article> ap = Page.of(articlePage, articleSize);
+        articleMapper.selectPage(ap, new LambdaQueryWrapper<Article>()
                 .eq(Article::getStatus, 1)
                 .orderByDesc(Article::getCreateTime));
-        map.put("recentArticles", p.getRecords());
-        List<Comment> pendings = commentMapper.selectList(new LambdaQueryWrapper<Comment>()
+        map.put("recentArticles", ap.getRecords());
+        map.put("recentArticlesTotal", ap.getTotal());
+
+        // 最热阅读(按阅读量,前 5 名,固定不带分页)
+        Page<Article> tp = Page.of(1, 5);
+        articleMapper.selectPage(tp, new LambdaQueryWrapper<Article>()
+                .eq(Article::getStatus, 1)
+                .orderByDesc(Article::getViewCount));
+        map.put("topArticles", tp.getRecords());
+
+        // 待审核评论(分页)
+        Page<Comment> cp = Page.of(commentPage, commentSize);
+        commentMapper.selectPage(cp, new LambdaQueryWrapper<Comment>()
                 .eq(Comment::getStatus, 0)
-                .orderByDesc(Comment::getCreateTime)
-                .last("LIMIT 10"));
-        map.put("pendingComments", pendings);
+                .orderByDesc(Comment::getCreateTime));
+        map.put("pendingComments", cp.getRecords());
+        map.put("pendingCommentsTotal", cp.getTotal());
+
         return R.ok(map);
     }
 

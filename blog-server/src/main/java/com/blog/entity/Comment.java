@@ -20,6 +20,11 @@ public class Comment {
     private String avatar;
     private String ip;
     private Integer status;
+    private Integer likeCount;
+    private Integer reportCount;
+    private String ua;
+    private Integer contentType;
+    private Integer featured;
     private LocalDateTime createTime;
 
     @TableField(exist = false) private String articleTitle;
@@ -46,6 +51,16 @@ public class Comment {
     public void setIp(String ip) { this.ip = ip; }
     public Integer getStatus() { return status; }
     public void setStatus(Integer status) { this.status = status; }
+    public Integer getLikeCount() { return likeCount; }
+    public void setLikeCount(Integer likeCount) { this.likeCount = likeCount; }
+    public Integer getReportCount() { return reportCount; }
+    public void setReportCount(Integer reportCount) { this.reportCount = reportCount; }
+    public String getUa() { return ua; }
+    public void setUa(String ua) { this.ua = ua; }
+    public Integer getContentType() { return contentType; }
+    public void setContentType(Integer contentType) { this.contentType = contentType; }
+    public Integer getFeatured() { return featured; }
+    public void setFeatured(Integer featured) { this.featured = featured; }
     public LocalDateTime getCreateTime() { return createTime; }
     public void setCreateTime(LocalDateTime createTime) { this.createTime = createTime; }
     public String getArticleTitle() { return articleTitle; }

@@ -1,40 +1,57 @@
 <template>
   <div class="hero-about">
-    <!-- 光屏扫过 -->
-    <div class="ha-light-scan"></div>
-
-    <!-- 柔光背景层 -->
+    <GodRays :origin-y="55" />
+    <!-- 柔光光晕 -->
     <div class="ha-aura ha-aura-1"></div>
     <div class="ha-aura ha-aura-2"></div>
+    <div class="ha-aura ha-aura-3"></div>
 
-    <!-- 时间轴标记线 -->
-    <div class="ha-timeline-marks" aria-hidden="true">
-      <span v-for="i in 6" :key="i" class="ha-tl-mark" :style="{ animationDelay: i * 0.8 + 's' }"></span>
+    <!-- 光束（从顶部斜射） -->
+    <div class="ha-beam ha-beam-1"></div>
+    <div class="ha-beam ha-beam-2"></div>
+
+    <!-- 漂浮几何图形 -->
+    <div class="ha-shapes" aria-hidden="true">
+      <span class="ha-shape ha-shape-1"></span>
+      <span class="ha-shape ha-shape-2"></span>
+      <span class="ha-shape ha-shape-3"></span>
+      <span class="ha-shape ha-shape-4"></span>
+      <span class="ha-shape ha-shape-5"></span>
+      <span class="ha-shape ha-shape-6"></span>
     </div>
+
+    <!-- 散点星尘 -->
+    <div class="ha-dust" aria-hidden="true">
+      <span v-for="i in 18" :key="i" class="ha-d"
+        :style="{
+          left: (4 + (i * 13) % 96) + '%',
+          top: (6 + (i * 7) % 88) + '%',
+          width: (2 + (i % 3)) + 'px',
+          height: (2 + (i % 3)) + 'px',
+          animationDelay: (i * 0.45) % 5 + 's',
+          animationDuration: (3 + (i % 3) * 1.5) + 's'
+        }"
+      ></span>
+    </div>
+
+    <!-- 光屏扫过 -->
+    <div class="ha-light-scan"></div>
 
     <div class="container ha-inner">
       <p class="ha-eyebrow">about</p>
       <h1 class="ha-title">{{ title }}</h1>
-      <p class="ha-sub" v-if="subtitle">{{ subtitle }}</p>
-      <div class="ha-tagline">
+      <div class="ha-tagline" v-if="subtitle">
         <span class="ha-tagline-word" v-for="(w, i) in taglineWords" :key="i"
           :style="{ animationDelay: (0.6 + i * 0.15) + 's' }"
         >{{ w }}</span>
       </div>
     </div>
-
-    <!-- 波浪（单弧深波） -->
-    <svg class="wave ha-wave" viewBox="0 0 1440 120" preserveAspectRatio="none">
-      <path fill="currentColor" style="color:var(--c-bg);opacity:.95"
-        d="M0,90 C360,20 720,100 1080,35 C1200,15 1360,50 1440,60 L1440,120 L0,120 Z" />
-      <path fill="currentColor" style="color:rgba(255,255,255,.3)"
-        d="M0,105 C300,60 600,110 900,70 C1200,30 1360,80 1440,85 L1440,120 L0,120 Z" />
-    </svg>
   </div>
 </template>
 
 <script setup>
 import { computed } from 'vue'
+import GodRays from '@/components/effects/GodRays.vue'
 
 const props = defineProps({
   title: { type: String, required: true },
@@ -51,26 +68,174 @@ const taglineWords = computed(() => {
 <style scoped lang="scss">
 .hero-about {
   position: relative;
-  overflow: hidden;
+  /* 不裁切——光束和漂浮图形会溢出 */
+  /* 不铺不透明底色——让全局天空透上来 */
   background:
-    radial-gradient(ellipse 100% 70% at 50% 10%, rgba(56,189,248,0.22) 0%, transparent 55%),
-    radial-gradient(ellipse 60% 50% at 80% 70%, rgba(251,191,36,0.1) 0%, transparent 45%),
-    linear-gradient(180deg, #f0f9ff 0%, #ffffff 60%);
-  padding: 100px 0 120px;
+    radial-gradient(ellipse 100% 70% at 50% 10%, rgba(56,189,248,0.08) 0%, transparent 55%),
+    radial-gradient(ellipse 60% 50% at 80% 70%, rgba(251,191,36,0.04) 0%, transparent 45%);
+  padding: 56px 0 68px;
   text-align: center;
-  margin-bottom: 50px;
+  margin-bottom: 20px;
+  overflow: hidden;
 }
 
-/* 光屏扫描 */
+/* ===== 光晕 ===== */
+.ha-aura {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(70px);
+  pointer-events: none;
+}
+.ha-aura-1 {
+  top: -15%; left: 25%;
+  width: 280px; height: 280px;
+  background: rgba(56,189,248,0.14);
+  animation: aura-float 10s ease-in-out infinite;
+}
+.ha-aura-2 {
+  bottom: 5%; right: 8%;
+  width: 220px; height: 220px;
+  background: rgba(251,191,36,0.09);
+  animation: aura-float 14s ease-in-out infinite -5s;
+}
+.ha-aura-3 {
+  top: 40%; left: 60%;
+  width: 160px; height: 160px;
+  background: rgba(125,211,252,0.08);
+  animation: aura-float 12s ease-in-out infinite -3s;
+}
+@keyframes aura-float {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-20px) scale(1.08); }
+}
+
+/* ===== 光束 ===== */
+.ha-beam {
+  position: absolute;
+  top: -30%;
+  width: 1.5px;
+  height: 150%;
+  pointer-events: none;
+}
+.ha-beam-1 {
+  left: 22%;
+  background: linear-gradient(180deg,
+    transparent 0%,
+    rgba(56,189,248,0.20) 25%,
+    rgba(56,189,248,0.10) 55%,
+    transparent 100%);
+  transform: rotate(6deg);
+  animation: beam-sway 12s ease-in-out infinite;
+}
+.ha-beam-2 {
+  left: 72%;
+  width: 2px;
+  background: linear-gradient(180deg,
+    transparent 0%,
+    rgba(251,191,36,0.14) 30%,
+    rgba(251,191,36,0.06) 60%,
+    transparent 100%);
+  transform: rotate(-4deg);
+  animation: beam-sway 16s ease-in-out infinite -6s;
+}
+@keyframes beam-sway {
+  0%, 100% { transform: rotate(6deg) translateX(0); }
+  50% { transform: rotate(9deg) translateX(15px); }
+}
+
+/* ===== 漂浮几何图形 ===== */
+.ha-shapes {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+.ha-shape {
+  position: absolute;
+  border-radius: 50%;
+  opacity: 0;
+  animation: shape-float var(--dur, 8s) ease-in-out infinite;
+  animation-delay: var(--del, 0s);
+}
+/* 圆环 */
+.ha-shape-1 {
+  width: 48px; height: 48px;
+  border: 2px solid rgba(56,189,248,0.25);
+  background: transparent;
+  top: 12%; right: 18%;
+  --dur: 9s; --del: 0s;
+}
+.ha-shape-2 {
+  width: 28px; height: 28px;
+  border: 2px solid rgba(251,191,36,0.20);
+  background: transparent;
+  top: 55%; left: 10%;
+  --dur: 11s; --del: -3s;
+}
+/* 实心圆点 */
+.ha-shape-3 {
+  width: 10px; height: 10px;
+  background: rgba(56,189,248,0.35);
+  top: 28%; left: 35%;
+  --dur: 7s; --del: -1.5s;
+}
+.ha-shape-4 {
+  width: 6px; height: 6px;
+  background: rgba(251,191,36,0.30);
+  top: 68%; right: 32%;
+  --dur: 8s; --del: -4s;
+}
+/* 菱形（旋转正方形） */
+.ha-shape-5 {
+  width: 16px; height: 16px;
+  background: rgba(125,211,252,0.18);
+  border-radius: 3px;
+  top: 38%; right: 12%;
+  --dur: 10s; --del: -2s;
+  transform: rotate(45deg);
+}
+.ha-shape-6 {
+  width: 12px; height: 12px;
+  background: rgba(56,189,248,0.22);
+  border-radius: 3px;
+  top: 75%; left: 28%;
+  --dur: 9s; --del: -5.5s;
+  transform: rotate(30deg);
+}
+@keyframes shape-float {
+  0%   { opacity: 0; transform: translateY(20px) scale(0.8) rotate(var(--rot, 0deg)); }
+  20%  { opacity: 1; }
+  80%  { opacity: 0.8; }
+  100% { opacity: 0; transform: translateY(-25px) scale(1.1) rotate(calc(var(--rot, 0deg) + 30deg)); }
+}
+
+/* ===== 散点星尘 ===== */
+.ha-dust {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+.ha-d {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(56,189,248,0.45);
+  box-shadow: 0 0 3px rgba(56,189,248,0.25);
+  animation: dust-pulse 3.5s ease-in-out infinite;
+}
+@keyframes dust-pulse {
+  0%, 100% { opacity: 0.25; transform: scale(1); }
+  50% { opacity: 0.85; transform: scale(1.6); }
+}
+
+/* ===== 光屏扫描 ===== */
 .ha-light-scan {
   position: absolute;
-  top: 0;
-  left: -50%;
-  width: 200%;
-  height: 100%;
+  top: 0; left: -50%;
+  width: 200%; height: 100%;
   background: linear-gradient(105deg,
     transparent 0%, transparent 40%,
-    rgba(255,255,255,0.3) 45%, rgba(255,255,255,0.15) 48%,
+    rgba(255,255,255,0.25) 45%, rgba(255,255,255,0.10) 48%,
     transparent 50%, transparent 100%);
   z-index: 1;
   pointer-events: none;
@@ -81,61 +246,7 @@ const taglineWords = computed(() => {
   50% { transform: translateX(10%); }
 }
 
-/* 柔光 */
-.ha-aura {
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(80px);
-  pointer-events: none;
-}
-.ha-aura-1 {
-  top: -20%;
-  left: 30%;
-  width: 300px;
-  height: 300px;
-  background: rgba(56,189,248,0.12);
-  animation: float 10s ease-in-out infinite;
-}
-.ha-aura-2 {
-  bottom: 0;
-  right: 10%;
-  width: 250px;
-  height: 250px;
-  background: rgba(251,191,36,0.1);
-  animation: float 14s ease-in-out infinite -5s;
-}
-
-/* 时间轴标记线 */
-.ha-timeline-marks {
-  position: absolute;
-  left: 8%;
-  top: 15%;
-  bottom: 40%;
-  width: 2px;
-  background: rgba(56,189,248,0.08);
-  pointer-events: none;
-}
-.ha-tl-mark {
-  position: absolute;
-  left: -4px;
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: var(--c-botany-500);
-  box-shadow: 0 0 8px rgba(56,189,248,0.3);
-  animation: tl-fade 6s ease-in-out infinite;
-}
-@for $i from 1 through 6 {
-  .ha-tl-mark:nth-child(#{$i}) {
-    top: #{10 + ($i - 1) * 16}%;
-  }
-}
-@keyframes tl-fade {
-  0%, 100% { opacity: 0.2; transform: scale(0.8); }
-  50% { opacity: 0.7; transform: scale(1.3); }
-}
-
-/* 内容 */
+/* ===== 内容区 ===== */
 .ha-inner {
   position: relative;
   z-index: 2;
@@ -145,21 +256,16 @@ const taglineWords = computed(() => {
   letter-spacing: 0.25em;
   text-transform: uppercase;
   color: var(--c-botany-500);
-  margin: 0 0 12px;
+  margin: 0 0 8px;
   font-weight: 500;
 }
 .ha-title {
   font-family: var(--font-serif);
-  font-size: 44px;
+  font-size: clamp(32px, 4.5vw, 46px);
   font-weight: 700;
   color: var(--c-ink);
-  margin: 0 0 16px;
-}
-.ha-sub {
-  font-size: 16px;
-  color: var(--c-ink-soft);
-  margin: 0 0 20px;
-  font-weight: 300;
+  margin: 0 0 10px;
+  line-height: 1.2;
 }
 .ha-tagline {
   display: flex;
@@ -170,32 +276,19 @@ const taglineWords = computed(() => {
 .ha-tagline-word {
   display: inline-block;
   font-size: 14px;
-  color: var(--c-botany-500);
+  color: var(--c-botany-600);
   opacity: 0;
   animation: word-reveal 0.6s ease-out forwards;
 }
 @keyframes word-reveal {
   from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 0.7; transform: translateY(0); }
-}
-
-@keyframes float {
-  0%, 100% { transform: translateY(0) scale(1); }
-  50% { transform: translateY(-15px) scale(1.1); }
-}
-
-.ha-wave {
-  position: absolute;
-  bottom: -2px;
-  left: 0;
-  right: 0;
-  z-index: 1;
-  pointer-events: none;
+  to   { opacity: 0.75; transform: translateY(0); }
 }
 
 @media (max-width: 768px) {
-  .hero-about { padding: 70px 0 80px; }
-  .ha-title { font-size: 30px; }
-  .ha-timeline-marks { display: none; }
+  .hero-about { padding: 44px 0 52px; }
+  .ha-title { font-size: 28px; }
+  .ha-shapes { display: none; }
+  .ha-dust { display: none; }
 }
 </style>

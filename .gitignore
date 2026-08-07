@@ -49,3 +49,27 @@ _compile2.args
 _cp.txt
 update-jar.py
 dist.tgz
+
+# 临时诊断 / 辅助产物(编译/调试时手动生成,不进仓库)
+blog-server/cp.txt
+blog-server/libs.txt
+blog-server/libs_unix.txt
+blog-server/sources.txt
+blog-server/sources_list.txt
+blog-server/sources_unix.txt
+blog-server/sources_verify.txt
+blog-server/rebuild-jar.py
+blog-server/verify-compile.bat
+blog-server/package-lock.json
+blog-server/_compile.args
+blog-server/_compile2.args
+out/
+
+# 大型二进制数据文件(自行下载;仓库不启用 Git LFS)
+ip2region.xdb
+# 字体文件(自行安装)
+blog-server/src/main/resources/fonts/NotoSerifSC-VF.ttf
+blog-server/src/main/resources/fonts/NotoSerifCJKsc-Regular.otf
+
+# 本地启动脚本里的真实密钥(密钥不进仓库;留 start-backend.bat / .example 进仓作为模板)
+start-backend.local.bat

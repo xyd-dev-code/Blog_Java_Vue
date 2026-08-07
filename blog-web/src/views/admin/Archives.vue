@@ -51,17 +51,23 @@
             <el-table :data="filtered" stripe>
               <el-table-column type="index" label="#" width="60" align="center" />
               <el-table-column label="日期" width="100">
-                <template #default="{ row }">{{ fmtDate(row.createTime, 'MM-DD') }}</template>
+                <template #default="{ row }"><span class="cell-text">{{ fmtDate(row.createTime, 'MM-DD') }}</span></template>
               </el-table-column>
               <el-table-column label="标题" min-width="280">
                 <template #default="{ row }">
-                  <a class="art-title" @click="goEdit(row)">{{ row.title }}</a>
-                  <div class="art-meta-row">
-                    <el-tag v-if="row.categoryName" size="small" effect="plain" type="warning">
-                      {{ row.categoryName }}
-                    </el-tag>
-                    <el-tag v-for="t in (row.tags || []).slice(0, 3)" :key="t.id"
-                      size="small" effect="plain"># {{ t.name }}</el-tag>
+                  <div class="cell-flex">
+                    <a class="art-title" @click="goEdit(row)" :title="row.title">{{ row.title }}</a>
+                    <div class="art-meta-row">
+                      <el-tag v-if="row.categoryName" size="small" effect="plain" type="warning">
+                        {{ row.categoryName }}
+                      </el-tag>
+                      <el-tag v-for="t in (row.tags || []).slice(0, 3)" :key="t.id"
+                        size="small" effect="plain"># {{ t.name }}</el-tag>
+                      <el-tag v-if="(row.tags || []).length > 3" size="small" effect="plain" type="info"
+                        :title="(row.tags || []).slice(3).map(t => '#' + t.name).join(' ')">
+                        +{{ (row.tags || []).length - 3 }}
+                      </el-tag>
+                    </div>
                   </div>
                 </template>
               </el-table-column>
@@ -79,8 +85,10 @@
               </el-table-column>
               <el-table-column label="操作" width="160" fixed="right">
                 <template #default="{ row }">
-                  <el-button size="small" link type="primary" @click="goEdit(row)">编辑</el-button>
-                  <el-button size="small" link @click="preview(row)" v-if="row.status === 1">前台</el-button>
+                  <div class="cell-actions">
+                    <el-button size="small" link type="primary" @click="goEdit(row)">编辑</el-button>
+                    <el-button size="small" link @click="preview(row)" v-if="row.status === 1">前台</el-button>
+                  </div>
                 </template>
               </el-table-column>
             </el-table>
@@ -168,10 +176,12 @@ onMounted(reload)
 
 .archive-layout {
   display: grid;
-  grid-template-columns: 220px 1fr;
+  grid-template-columns: 240px 1fr;
   gap: 18px;
-  min-height: 540px;
+  /* 不再固定 min-height — 让两列各自按内容撑开 + overflow-y: auto 独立滚动 */
+  align-items: stretch;
 }
+.archive-layout > * { min-height: 0; }  /* grid 子项允许内容溢出,不会把父 grid 撑开 */
 
 /* 左：月份 */
 .month-aside {
@@ -179,6 +189,12 @@ onMounted(reload)
   border: 1px solid #e0f2fe;
   border-radius: 10px;
   padding: 14px;
+  /* 关键:固定高度 + 独立滚动 */
+  max-height: calc(100vh - 200px);  /* 减去 header + 边距,可视区高度 */
+  overflow-y: auto;
+  overflow-x: hidden;
+  position: sticky;
+  top: 80px;  /* 顶部 admin-topbar 高度 */
 }
 .aside-eyebrow {
   font-size: 11px;
@@ -241,6 +257,9 @@ onMounted(reload)
   padding: 16px 18px;
   display: flex;
   flex-direction: column;
+  /* 关键:独立滚动(不依赖整页 scroll) */
+  max-height: calc(100vh - 200px);
+  overflow: hidden;  /* 表格区域自己滚动,header 不滚 */
 }
 .pane-head {
   display: flex;
@@ -284,7 +303,13 @@ onMounted(reload)
   color: #b45309;
 }
 
-.art-table { flex: 1; }
+.art-table {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  /* 让 el-table 能撑开 + 内部滚动,而不是撑爆父 pane */
+  min-height: 0;
+}
 .art-title {
   color: var(--c-ink);
   font-weight: 500;
@@ -313,6 +338,10 @@ onMounted(reload)
 
 @media (max-width: 900px) {
   .archive-layout { grid-template-columns: 1fr; }
+  .month-aside, .article-pane {
+    max-height: none;
+    position: static;
+  }
   .month-aside { padding: 10px; }
   .month-list {
     flex-direction: row;
@@ -323,6 +352,7 @@ onMounted(reload)
     min-width: 110px;
     flex-shrink: 0;
   }
+  .art-table { overflow-y: visible; }
 }
 @media (max-width: 480px) {
   .header-bar { gap: 8px; }

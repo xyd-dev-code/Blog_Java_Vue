@@ -7,22 +7,42 @@
           <el-button type="primary" @click="openForm()"><el-icon><Plus /></el-icon> 新建分类</el-button>
         </div>
       </template>
+      <div class="toolbar">
+        <el-input v-model="filters.keyword" placeholder="搜索" clearable style="width: 200px" @keyup.enter="reload" @clear="reload" />
+        <el-button @click="reload">查询</el-button>
+      </div>
       <div class="table-scroll">
         <el-table :data="list" v-loading="loading">
-          <el-table-column type="index" label="序号" width="60" align="center" />
+          <el-table-column label="序号" width="60" align="center">
+            <template #default="{ $index }">
+              {{ (currentPage - 1) * pageSize + $index + 1 }}
+            </template>
+          </el-table-column>
           <el-table-column prop="name" label="名称" />
-          <el-table-column prop="slug" label="Slug" />
+          <el-table-column prop="slug" label="Slug" width="180" />
           <el-table-column prop="description" label="描述" show-overflow-tooltip />
-          <el-table-column prop="articleCount" label="文章数" width="100" />
-          <el-table-column prop="sortOrder" label="排序" width="80" />
-          <el-table-column label="操作" width="180">
+          <el-table-column prop="articleCount" label="文章数" width="100" align="center" />
+          <el-table-column prop="sortOrder" label="排序" width="80" align="center" />
+          <el-table-column label="操作" width="180" fixed="right">
             <template #default="{ row }">
-              <el-button size="small" link @click="openForm(row)">编辑</el-button>
-              <el-button size="small" link type="danger" @click="remove(row)">删除</el-button>
+              <div class="cell-actions">
+                <el-button size="small" link @click="openForm(row)">编辑</el-button>
+                <el-button size="small" link type="danger" @click="remove(row)">删除</el-button>
+              </div>
             </template>
           </el-table-column>
         </el-table>
       </div>
+      <el-pagination
+        v-if="total > pageSize"
+        class="pager"
+        background
+        layout="prev, pager, next, total"
+        :total="total"
+        :page-size="pageSize"
+        :current-page="currentPage"
+        @current-change="(p) => { currentPage = p; reload() }"
+      />
     </el-card>
 
     <el-dialog v-model="dlg" :title="form.id ? '编辑分类' : '新建分类'" width="min(480px, 92vw)">
@@ -61,15 +81,26 @@ const list = ref([])
 const loading = ref(false)
 const dlg = ref(false)
 const saving = ref(false)
+const total = ref(0)
+const currentPage = ref(1)
+const pageSize = ref(10)
+const filters = reactive({ keyword: '' })
 const form = reactive({ id: null, name: '', slug: '', description: '', color: '#38bdf8', sortOrder: 0 })
 
 const reload = async () => {
   loading.value = true
   try {
-    const resp = await adminCategories({ size: 100 })
-    list.value = resp.data?.records || []
-  } catch (_) {}
-  loading.value = false
+    const params = { page: currentPage.value, size: pageSize.value }
+    if (filters.keyword) params.keyword = filters.keyword
+    const resp = await adminCategories(params)
+    const data = resp.data || {}
+    list.value = data.records || []
+    total.value = data.total || 0
+  } catch (e) {
+    ElMessage.error('分类列表加载失败')
+  } finally {
+    loading.value = false
+  }
 }
 
 const openForm = (row) => {
@@ -103,6 +134,8 @@ onMounted(reload)
 
 <style scoped lang="scss">
 .header-bar { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+.toolbar { display: flex; gap: 10px; margin-bottom: 12px; }
 .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.pager { margin-top: 12px; justify-content: flex-end; display: flex; }
 @media (max-width: 480px) { :deep(.el-dialog) { width: 92vw !important; } }
 </style>

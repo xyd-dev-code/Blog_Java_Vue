@@ -3,775 +3,426 @@
     <!-- Hero -->
     <HeroGuestbook
       title="留言板"
-      :subtitle="`欢迎留下你的足迹，共 ${totalCount} 条留言`"
-      :stats="heroStats"
+      subtitle="写下你的想法，让这里多一点温度"
+      @publish="openForm"
     />
 
     <div class="container page-body">
-      <!-- 留言列表 · 便签墙 -->
-      <div class="gb-list gb-notes" v-if="list.length">
-        <StickyNote
-          v-for="(c, idx) in list"
-          :key="c.id"
-          :tone="noteTone(idx)"
-          :rotate="noteRotate(idx)"
-          class="gb-note"
-        >
-          <CommentItem :comment="c" :index="idx" variant="sticky" @reply="onReply" />
-        </StickyNote>
-      </div>
-      <el-empty v-else description="还没有留言，来抢沙发吧～" />
-
-      <!-- 写留言按钮 -->
-      <div class="gb-write-btn-wrap" v-if="!showForm">
-        <button class="gb-write-btn" @click="showForm = true">
-          <el-icon><EditPen /></el-icon>
-          <span>贴一张</span>
-        </button>
-      </div>
-
-      <!-- 留言表单 -->
-      <Transition name="form-slide">
-        <div class="gb-form-card" v-if="showForm">
-          <div class="form-cancel" @click="showForm = false">
-            <span>取消</span>
-          </div>
-          <div class="form-body">
-            <div v-if="replyTo" class="reply-to-bar">
-              <span>回复 <b>{{ replyTo.nickname }}</b></span>
-              <el-icon class="clear-reply" @click="replyTo = null"><Close /></el-icon>
-            </div>
-            <div class="form-row">
-              <div class="form-col">
-                <label class="form-label">昵称 <span class="required">*</span></label>
-                <el-input
-                  v-model="form.nickname"
-                  placeholder="你的昵称"
-                  maxlength="20"
-                  class="gb-input"
-                />
-              </div>
-              <div class="form-col">
-                <label class="form-label">邮箱 <span class="required">*</span> <span class="label-hint">（不会公开）</span></label>
-                <el-input
-                  v-model="form.email"
-                  placeholder="your@example.com"
-                  class="gb-input"
-                />
-              </div>
-            </div>
-
-            <div class="form-row-full">
-              <label class="form-label">网站 <span class="label-hint">（可选）</span></label>
-              <el-input
-                v-model="form.website"
-                placeholder="https://"
-                class="gb-input"
-              />
-            </div>
-
-            <div class="form-row-full">
-              <label class="form-label">头像 <span class="label-hint">（可选，不传则用 Gravatar）</span></label>
-              <div class="gb-avatar-row">
-                <el-avatar :src="form.avatar" :size="44" />
-                <el-upload
-                  :show-file-list="false"
-                  :before-upload="beforeAvatarUpload"
-                  :http-request="uploadAvatar"
-                  accept="image/*"
-                >
-                  <el-button size="small" :loading="avatarUploading">
-                    <el-icon><Plus /></el-icon>
-                    <span style="margin-left: 4px;">上传头像</span>
-                  </el-button>
-                </el-upload>
-                <el-button v-if="form.avatar" size="small" link @click="form.avatar = ''">清除</el-button>
-              </div>
-            </div>
-
-            <div class="form-row-full">
-              <label class="form-label">留言内容 <span class="required">*</span></label>
-              <el-input
-                v-model="form.content"
-                type="textarea"
-                :rows="5"
-                placeholder="写下你想说的话…（最多 1000 字）"
-                maxlength="1000"
-                show-word-limit
-                class="gb-textarea"
-              />
-            </div>
-
-            <div class="form-footer">
-              <span class="form-hint">留言经审核后显示，请文明交流。</span>
-              <el-button type="primary" @click="submit" :loading="submitting" class="submit-btn">
-                提交留言
-              </el-button>
-            </div>
-          </div>
+      <!-- 骨架 -->
+      <div v-if="loading && !allList.length" class="gb-skeleton">
+        <div class="sk-featured"></div>
+        <div class="sk-grid">
+          <div class="sk-card" v-for="i in 6" :key="i"></div>
         </div>
-      </Transition>
+      </div>
+
+      <!-- 空状态 -->
+      <el-empty v-else-if="!allList.length" description="还没有留言，来抢沙发吧～" />
+
+      <!-- 内容 -->
+      <template v-else>
+        <!-- 精选留言（点赞最多的一条） -->
+        <section v-if="featuredComment" class="gb-featured">
+          <CommentItem
+            :key="featuredComment.id"
+            :comment="featuredComment"
+            variant="card"
+            :featured="true"
+            @like="onLike"
+            @reply="onReply"
+            @report="onReport"
+            @mention="onMention"
+          />
+        </section>
+
+        <!-- 留言列表 -->
+        <section class="gb-list">
+          <div class="gb-grid">
+            <CommentItem
+              v-for="c in visibleGridList"
+              :key="c.id"
+              :comment="c"
+              variant="card"
+              @like="onLike"
+              @reply="onReply"
+              @report="onReport"
+              @mention="onMention"
+            />
+          </div>
+        </section>
+
+        <!-- 无限滚动哨兵 -->
+        <div ref="sentinel" class="gb-sentinel" v-if="hasMore">
+          <el-icon class="gb-spin"><Loading /></el-icon>
+          <span>展开更多 {{ gridList.length - visibleCount }} 条回复</span>
+        </div>
+
+        <!-- 底部：到底 + 总数 -->
+        <div class="gb-footer" v-if="allList.length">
+          <span class="gb-overline">— 已经到底啦 —</span>
+          <span class="gb-total">共 {{ totalCount }} 条回复</span>
+        </div>
+      </template>
     </div>
+
+    <!-- 移动端：悬浮写留言按钮 -->
+    <button class="gb-fab" v-if="isMobile" @click="openForm">
+      <el-icon><EditPen /></el-icon>
+    </button>
+
+    <!-- 写留言弹窗（桌面 + 移动端共用） -->
+    <el-dialog v-model="formVisible" :title="replyTo ? '回复 @' + replyTo.nickname : '写下你的留言'"
+      :width="replyTo ? '480px' : '560px'" :top="'84px'" class="gb-form-dialog" :close-on-click-modal="false"
+      @close="replyTo = null">
+      <GuestbookForm
+        :reply-to="replyTo"
+        :nicknames="nicknames"
+        :visible="formVisible"
+        @submitted="onSubmitted"
+        @cancel-reply="replyTo = null"
+      />
+    </el-dialog>
+
+    <!-- 举报弹窗 -->
+    <el-dialog v-model="reportVisible" title="举报留言" width="500px" :top="'84px'" class="gb-form-dialog">
+      <div class="report-body" v-if="reportTarget">
+        <p class="report-target">
+          举报 <b>@{{ reportTarget.nickname }}</b> 的留言：
+          <span class="report-quote">{{ excerpt(reportTarget.content, 60) }}</span>
+        </p>
+        <label class="form-label">举报原因 <span class="required">*</span></label>
+        <el-radio-group v-model="reportForm.reason" class="report-reasons">
+          <el-radio v-for="r in reportReasons" :key="r.value" :value="r.value" :label="r.value" border>{{ r.label }}</el-radio>
+        </el-radio-group>
+        <el-input
+          v-model="reportForm.detail"
+          type="textarea"
+          :rows="3"
+          maxlength="500"
+          show-word-limit
+          :placeholder="detailRequired ? '请补充具体内容（必填）' : '补充说明（选填）'"
+          class="report-detail" />
+        <label class="form-label">联系邮箱 <span class="required">*</span> <span class="label-hint">（便于回复处理进展）</span></label>
+        <el-input v-model="reportForm.email" placeholder="your@example.com" class="report-email" />
+      </div>
+      <template #footer>
+        <el-button @click="reportVisible = false">取消</el-button>
+        <el-button type="primary" :loading="reportSubmitting" @click="submitReport">提交举报</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, computed, nextTick } from 'vue'
-import { EditPen, Close, Plus } from '@element-plus/icons-vue'
+import { ref, reactive, computed, onMounted, onBeforeUnmount, nextTick } from 'vue'
+import { EditPen, Loading } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import CommentItem from '@/components/CommentItem.vue'
-import StickyNote from '@/components/StickyNote.vue'
 import HeroGuestbook from '@/components/HeroGuestbook.vue'
-import { guestbookComments, submitComment } from '@/api/front'
-import { uploadAvatar as uploadAvatarApi } from '@/api/admin'
+import GuestbookForm from '@/components/guestbook/GuestbookForm.vue'
+import { guestbookComments, likeComment, reportComment } from '@/api/front'
+import { excerpt } from '@/utils/format'
 
-const list = ref([])
-const submitting = ref(false)
-const showForm = ref(false)
+const allList = ref([])
+const visibleCount = ref(12)
+const loading = ref(false)
 const replyTo = ref(null)
-const form = reactive({ nickname: '', email: '', website: '', avatar: '', content: '' })
-const avatarUploading = ref(false)
+const isMobile = ref(false)
+const formVisible = ref(false)
+const sentinel = ref(null)
+let observer = null
 
-const beforeAvatarUpload = (file) => {
-  if (file.size > 5 * 1024 * 1024) {
-    ElMessage.warning('头像不能超过 5MB')
-    return false
-  }
-  if (!file.type.startsWith('image/')) {
-    ElMessage.warning('请选择图片文件')
-    return false
-  }
-  return true
-}
+const reportVisible = ref(false)
+const reportTarget = ref(null)
+const reportSubmitting = ref(false)
+const reportReasons = [
+  { value: 'spam',       label: '广告或垃圾信息' },
+  { value: 'abuse',      label: '辱骂或不友善' },
+  { value: 'porn',       label: '色情或违规内容' },
+  { value: 'plagiarism', label: '抄袭/未授权转载' },
+  { value: 'illegal',    label: '违法或政治敏感' },
+  { value: 'attack',     label: '人身攻击或造谣' },
+  { value: 'offtopic',   label: '与博客主题无关' },
+  { value: 'other',      label: '其他', needDetail: true }
+]
+const reportForm = reactive({ reason: 'spam', detail: '', email: '' })
 
-const uploadAvatar = async (options) => {
-  avatarUploading.value = true
-  try {
-    const resp = await uploadAvatarApi(options.file)
-    form.avatar = resp.data?.url || resp.url || ''
-    ElMessage.success('头像上传成功')
-  } catch (e) {
-    ElMessage.error(e?.response?.data?.msg || e?.response?.data?.message || '头像上传失败')
-  } finally {
-    avatarUploading.value = false
-  }
-}
+// 选了"其他"必须补充说明
+const detailRequired = computed(() =>
+  reportReasons.find(r => r.value === reportForm.reason)?.needDetail === true
+)
 
-// 便签卡随机旋转与色调
-const TONES = ['sky', 'cyan', 'sun', 'paper']
-const ROTATES = [-2.2, -1, -0.4, 0.6, 1.4, 2.4, -1.8, 0.2]
-const noteTone = (i) => TONES[i % TONES.length]
-const noteRotate = (i) => ROTATES[i % ROTATES.length]
+const PAGE_BATCH = 12
 
-const totalCount = computed(() => {
-  const count = (arr) => arr.reduce((n, c) => n + 1 + (c.replies ? count(c.replies) : 0), 0)
-  return count(list.value)
+// 仅顶层留言参与精选/网格判断
+const topLevelList = computed(() => allList.value.filter(c => !c.parentId))
+
+// 精选 = 仅人工置顶（featured=1），没人设就不显示精选区
+const featuredComment = computed(() => {
+  const manual = topLevelList.value.filter(c => c.featured === 1 || c.featured === true)
+  return manual.length ? manual[0] : null
 })
 
-const heroStats = computed(() => [
-  { label: '条留言', value: totalCount.value },
-  { label: '今日新贴', value: todayCount.value },
-  { label: '份心情', value: '∞' }
-])
+// 网格列表 = 排除精选的所有顶层留言
+const gridList = computed(() => {
+  if (!featuredComment.value) return topLevelList.value
+  return topLevelList.value.filter(c => c.id !== featuredComment.value.id)
+})
 
-const todayCount = computed(() => {
-  const today = new Date().toISOString().slice(0, 10)
-  const walk = (arr) => arr.reduce((n, c) => {
-    const d = (c.createTime || '').slice(0, 10)
-    return n + (d === today ? 1 : 0) + (c.replies ? walk(c.replies) : 0)
-  }, 0)
-  return walk(list.value)
+const visibleGridList = computed(() => gridList.value.slice(0, visibleCount.value))
+const hasMore = computed(() => visibleCount.value < gridList.value.length)
+
+const countAll = (arr) => arr.reduce((n, c) => n + 1 + (c.replies ? countAll(c.replies) : 0), 0)
+const totalCount = computed(() => countAll(allList.value))
+
+const nicknames = computed(() => {
+  const set = new Set()
+  const walk = (arr) => arr.forEach(c => { if (c.nickname) set.add(c.nickname); if (c.replies) walk(c.replies) })
+  walk(allList.value)
+  return [...set]
 })
 
 const load = async () => {
+  loading.value = true
   try {
     const resp = await guestbookComments()
-    list.value = resp.data || []
-  } catch (_) {}
+    allList.value = resp.data || []
+    visibleCount.value = Math.min(PAGE_BATCH, gridList.value.length) || 12
+  } catch (e) {
+    ElMessage.error('留言加载失败，请稍后重试')
+  } finally {
+    loading.value = false
+  }
 }
 
-const onReply = (c) => {
-  replyTo.value = c
-  showForm.value = true
-  ElMessage.info(`回复 ${c.nickname}，请填写内容后提交`)
-  nextTick(() => {
-    const formEl = document.querySelector('.gb-form-card')
-    if (formEl) formEl.scrollIntoView({ behavior: 'smooth', block: 'center' })
-  })
+const loadMore = () => {
+  if (visibleCount.value < gridList.value.length) {
+    visibleCount.value = Math.min(visibleCount.value + PAGE_BATCH, gridList.value.length)
+  }
 }
 
-const submit = async () => {
-  if (!form.nickname.trim()) return ElMessage.warning('请填写昵称')
-  if (!form.email.trim()) return ElMessage.warning('请填写邮箱')
-  if (!form.content.trim()) return ElMessage.warning('请填写留言内容')
+const setupObserver = () => {
+  if (!sentinel.value) return
+  observer = new IntersectionObserver((entries) => {
+    if (entries[0].isIntersecting) loadMore()
+  }, { rootMargin: '120px' })
+  observer.observe(sentinel.value)
+}
 
-  submitting.value = true
+const findNode = (arr, id) => {
+  for (const c of arr) {
+    if (c.id === id) return c
+    if (c.replies) { const f = findNode(c.replies, id); if (f) return f }
+  }
+  return null
+}
+
+const onLike = async (comment) => {
   try {
-    await submitComment({
-      articleId: 1,
-      nickname: form.nickname,
-      email: form.email,
-      website: form.website,
-      avatar: form.avatar,
-      content: form.content,
-      parentId: replyTo.value ? replyTo.value.id : 0
-    })
-    ElMessage.success('留言成功，等待审核')
-    form.content = ''
-    form.website = ''
-    form.avatar = ''
-    replyTo.value = null
-    showForm.value = false
-    setTimeout(load, 500)
-  } catch (_) {}
-  submitting.value = false
+    const resp = await likeComment(comment.id)
+    const d = resp.data || {}
+    comment.likeCount = d.likeCount
+    comment._liked = d.liked
+  } catch (e) {
+    const msg = e?.response?.data?.msg || e?.response?.data?.message || e?.message || '操作失败'
+    ElMessage.error(msg)
+  }
 }
 
-onMounted(load)
+// 回复：直接打开表单弹窗(桌面和移动端共用)
+const onReply = (comment) => {
+  replyTo.value = comment
+  formVisible.value = true
+}
+
+// @提及 → 滚动定位到对应留言
+const onMention = (name) => {
+  let targetId = null
+  const walk = (arr) => arr.forEach(c => {
+    if (!targetId && c.nickname === name) targetId = c.id
+    if (c.replies) walk(c.replies)
+  })
+  walk(allList.value)
+  if (targetId) {
+    nextTick(() => {
+      const el = document.getElementById(`comment-${targetId}`)
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    })
+  }
+}
+
+// 提交成功 → 乐观插入
+const onSubmitted = (saved) => {
+  if (!saved || !saved.id) { replyTo.value = null; return }
+  const node = { ...saved, _pending: true, replies: saved.replies || [] }
+  if (replyTo.value && saved.parentId && saved.parentId > 0) {
+    const parent = findNode(allList.value, saved.parentId)
+    if (parent) {
+      if (!parent.replies) parent.replies = []
+      parent.replies.unshift(node)
+    } else {
+      allList.value.unshift(node)
+    }
+  } else {
+    allList.value.unshift(node)
+    visibleCount.value = Math.max(visibleCount.value, 1)
+  }
+  replyTo.value = null
+  formVisible.value = false
+}
+
+const openForm = () => { replyTo.value = null; formVisible.value = true }
+
+// 举报
+const onReport = (comment) => {
+  reportTarget.value = comment
+  reportForm.reason = 'spam'
+  reportForm.detail = ''
+  reportForm.email = ''
+  reportVisible.value = true
+}
+const submitReport = async () => {
+  if (!reportTarget.value) return
+  const email = reportForm.email.trim()
+  if (!email) { ElMessage.warning('请填写联系邮箱'); return }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { ElMessage.warning('邮箱格式不正确'); return }
+  if (detailRequired.value && !reportForm.detail.trim()) {
+    ElMessage.warning('选择了「其他」必须补充说明'); return
+  }
+  reportSubmitting.value = true
+  try {
+    await reportComment(reportTarget.value.id, {
+      reason: reportForm.reason,
+      detail: reportForm.detail.trim(),
+      email
+    })
+    ElMessage.success('举报已提交，感谢你的反馈')
+    reportVisible.value = false
+  } catch (e) {
+    const msg = e?.response?.data?.msg || e?.response?.data?.message || e?.message || '举报失败'
+    ElMessage.error(msg)
+  } finally {
+    reportSubmitting.value = false
+  }
+}
+
+const checkMobile = () => { isMobile.value = window.matchMedia('(max-width: 899px)').matches }
+const onResize = () => checkMobile()
+
+onMounted(() => {
+  checkMobile()
+  window.addEventListener('resize', onResize)
+  load().then(() => nextTick(setupObserver))
+})
+onBeforeUnmount(() => {
+  window.removeEventListener('resize', onResize)
+  if (observer) observer.disconnect()
+})
 </script>
 
 <style scoped lang="scss">
-/* 页面头部 — 炫酷晴空光晕 */
-.gb-header {
+.page-body { position: relative; padding: 30px 0 80px; }
+
+/* 精选留言 */
+.gb-featured {
+  margin-bottom: 28px;
+}
+.gb-featured :deep(.ci-card) {
+  padding: 22px 26px 18px;
+  border: 1px solid var(--c-botany-200);
+  background: linear-gradient(135deg, var(--c-bg) 0%, var(--c-botany-50) 100%);
   position: relative;
-  overflow: hidden;
-  background:
-    radial-gradient(ellipse at 50% 20%, rgba(255, 255, 255, 0.35) 0%, transparent 50%),
-    radial-gradient(ellipse at 30% 70%, rgba(56, 189, 248, 0.4) 0%, transparent 45%),
-    radial-gradient(ellipse at 70% 30%, rgba(14, 165, 233, 0.35) 0%, transparent 50%),
-    radial-gradient(ellipse at 80% 80%, rgba(34, 211, 238, 0.25) 0%, transparent 40%),
-    linear-gradient(135deg, #075985 0%, #0369a1 25%, #0ea5e9 55%, #38bdf8 80%, #7dd3fc 100%);
-  color: #fff;
-  padding: 70px 0 100px;
-  text-align: center;
-  margin-bottom: 50px;
-  box-shadow: 0 10px 40px rgba(14, 165, 233, 0.18);
 }
 
-/* 头部背景网格纹理 — 更明显的线条网格 */
-.gb-header::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background-image:
-    linear-gradient(rgba(255,255,255,0.08) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,0.08) 1px, transparent 1px);
-  background-size: 60px 60px;
-  z-index: 0;
-  pointer-events: none;
+/* 留言网格（瀑布流：CSS columns，列高自适应避免被高卡撑出空白） */
+.gb-grid {
+  column-count: 3;
+  column-gap: 16px;
+}
+.gb-grid > * {
+  break-inside: avoid;
+  -webkit-column-break-inside: avoid;
+  page-break-inside: avoid;
+  margin-bottom: 16px;
 }
 
-/* 大型光晕球 */
-.gb-header .orb-1,
-.gb-header .orb-2,
-.gb-header .orb-3 {
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(80px);
-  pointer-events: none;
-  z-index: 0;
-  opacity: 0.7;
+/* 骨架 */
+.gb-skeleton { display: flex; flex-direction: column; gap: 28px; }
+.sk-featured {
+  height: 160px; border-radius: var(--radius);
+  background: linear-gradient(100deg, var(--c-line-soft) 30%, var(--c-botany-50) 50%, var(--c-line-soft) 70%);
+  background-size: 200% 100%; animation: sk 1.3s ease-in-out infinite;
 }
-.gb-header .orb-1 {
-  width: 400px; height: 400px;
-  background: radial-gradient(circle, rgba(56,189,248,0.5), transparent 70%);
-  top: -80px; right: 5%;
-  animation: orb-float 12s ease-in-out infinite;
+.sk-grid { column-count: 3; column-gap: 16px; }
+.sk-grid > .sk-card {
+  break-inside: avoid;
+  -webkit-column-break-inside: avoid;
+  page-break-inside: avoid;
+  margin-bottom: 16px;
+  height: 120px; border-radius: var(--radius);
+  background: linear-gradient(100deg, var(--c-line-soft) 30%, var(--c-botany-50) 50%, var(--c-line-soft) 70%);
+  background-size: 200% 100%; animation: sk 1.3s ease-in-out infinite;
 }
-.gb-header .orb-2 {
-  width: 300px; height: 300px;
-  background: radial-gradient(circle, rgba(34,211,238,0.4), transparent 70%);
-  bottom: 10px; left: 0%;
-  animation: orb-float 15s ease-in-out infinite -3s;
-}
-.gb-header .orb-3 {
-  width: 250px; height: 250px;
-  background: radial-gradient(circle, rgba(255,255,255,0.3), transparent 70%);
-  top: 25%; left: 35%;
-  animation: orb-float 18s ease-in-out infinite -6s;
-}
+@keyframes sk { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 
-@keyframes orb-float {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  25% { transform: translate(20px, -15px) scale(1.05); }
-  50% { transform: translate(-10px, 10px) scale(0.95); }
-  75% { transform: translate(15px, 5px) scale(1.03); }
+/* 无限滚动哨兵 */
+.gb-sentinel {
+  text-align: center; color: var(--c-ink-300); font-size: 13px;
+  padding: 32px 0 12px; display: flex; align-items: center; justify-content: center; gap: 8px;
+  cursor: pointer;
+  transition: color 0.2s;
 }
+.gb-sentinel:hover { color: var(--c-botany-500); }
+.gb-spin { animation: spin 1.2s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
 
-/* 头部浮动粒子 — 更多更亮 */
-.gb-header .particles {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  overflow: hidden;
-}
-.gb-header .particles span {
-  position: absolute;
-  width: 5px; height: 5px;
-  background: rgba(255,255,255,0.7);
-  border-radius: 50%;
-  animation: particle-rise 8s linear infinite;
-}
-@keyframes particle-rise {
-  0% { transform: translateY(100%) scale(0); opacity: 0; }
-  20% { opacity: 1; transform: translateY(80%) scale(1); }
-  80% { opacity: 0.6; }
-  100% { transform: translateY(-20%) scale(0); opacity: 0; }
-}
-
-.gb-header-inner {
-  max-width: 880px;
-  margin: 0 auto;
-  padding: 0 24px;
-  position: relative;
-  z-index: 2;
-}
-
-/* 浮动云 */
-.cloud {
-  position: absolute;
-  z-index: 0;
-  pointer-events: none;
-}
-.cloud-1 { top: 10%; right: 8%; width: 200px; animation-delay: 0s; }
-.cloud-2 { top: 45%; left: 5%; width: 140px; animation-delay: -3s; }
-
-/* 波浪 */
-.wave {
-  position: absolute;
-  bottom: -2px; left: 0; right: 0;
-  z-index: 1;
-  pointer-events: none;
-}
-
-.gb-pretitle {
-  font-size: 13px;
-  color: rgba(255,255,255,0.85);
-  letter-spacing: 4px;
-  margin: 0 0 10px;
-  font-weight: 500;
-}
-
-.gb-title {
-  font-family: var(--font-serif);
-  font-size: 42px;
-  font-weight: 700;
-  color: #fff;
-  margin: 0 0 12px;
-  letter-spacing: 2px;
-  text-shadow: 0 0 30px rgba(255,255,255,0.4), 0 2px 12px rgba(2, 132, 199, 0.3);
-}
-
-.gb-subtitle {
-  font-size: 14px;
-  color: rgba(255,255,255,0.85);
-  margin: 0;
-}
-
-.gb-count {
-  color: #fff;
-  font-weight: 600;
-}
-
-/* 页面主体 — 星空网格背景 */
-.page-body {
-  position: relative;
-  padding: 20px 0 80px;
-}
-
-/* 留言统计卡 — 晴空 v2 渐变描边 */
-.gb-stats-card {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 36px;
-  padding: 22px 28px;
-  margin-bottom: 32px;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.7) 0%, rgba(240, 249, 255, 0.5) 100%);
-  border: 1px solid rgba(125, 211, 252, 0.5);
-  border-radius: 18px;
-  backdrop-filter: blur(10px);
-  box-shadow:
-    0 4px 20px rgba(14, 165, 233, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.7);
-}
-.gb-stats-card::before {
-  content: '';
-  position: absolute;
-  inset: -1px;
-  border-radius: 18px;
-  padding: 1px;
-  background: linear-gradient(135deg, #38bdf8, #fbbf24);
-  -webkit-mask:
-    linear-gradient(#fff 0 0) content-box,
-    linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-          mask-composite: exclude;
-  pointer-events: none;
-}
-.gb-stat {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-}
-.gb-stat-num {
-  font-family: var(--font-serif);
-  font-size: 28px;
-  font-weight: 700;
-  line-height: 1;
-  background: linear-gradient(135deg, #0369a1, #38bdf8);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-          background-clip: text;
-}
-.gb-stat-sun .gb-stat-num {
-  background: linear-gradient(135deg, #f59e0b, #fbbf24);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-          background-clip: text;
-}
-.gb-stat-label {
-  font-size: 12px;
-  color: var(--c-ink-soft);
+/* 底部 */
+.gb-footer {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 24px 18px 0; margin-top: 8px;
+  border-top: 1px dashed var(--c-line);
+  font-size: 12px; color: var(--c-ink-300);
   letter-spacing: 0.05em;
 }
-.gb-stat-sep {
-  width: 1px;
-  height: 32px;
-  background: linear-gradient(180deg, transparent, rgba(56, 189, 248, 0.3), transparent);
-}
+.gb-overline { letter-spacing: 0.2em; }
+.gb-total { font-weight: 500; color: var(--c-ink-500); }
 
-/* 便签墙样式 */
-.gb-list.gb-notes {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(280px, 100%), 1fr));
-  gap: 32px 24px;
-  padding: 32px 8px;
-  align-items: start;
-}
-.gb-note {
-  padding: 8px;
-}
-.gb-note :deep(.comment-item) {
-  background: transparent;
-  box-shadow: none;
-  border: none;
-  padding: 0;
-}
-
-.page-body::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  background-image:
-    radial-gradient(circle at 25% 25%, rgba(56, 189, 248, 0.04) 0%, transparent 50%),
-    radial-gradient(circle at 75% 75%, rgba(14, 165, 233, 0.03) 0%, transparent 50%),
-    radial-gradient(circle at 50% 50%, rgba(34, 211, 238, 0.03) 0%, transparent 60%);
-  background-size: 100% 100%;
-  background-attachment: fixed;
-}
-
-/* 主体区域浮动光斑 */
-.page-body::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  background-image:
-    radial-gradient(circle at 15% 30%, rgba(56, 189, 248, 0.06) 0%, transparent 30%),
-    radial-gradient(circle at 85% 60%, rgba(14, 165, 233, 0.05) 0%, transparent 35%),
-    radial-gradient(circle at 40% 80%, rgba(34, 211, 238, 0.04) 0%, transparent 40%);
-  animation: bg-shift 20s ease-in-out infinite;
-}
-
-@keyframes bg-shift {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.8; transform: scale(1.05); }
-}
-
-/* 写留言按钮 */
-.gb-write-btn-wrap {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  justify-content: center;
-  margin-top: 40px;
-}
-
-.gb-write-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 12px 32px;
+/* 移动端 FAB */
+.gb-fab {
+  position: fixed; right: 20px; bottom: 28px; z-index: 50;
+  width: 54px; height: 54px; border-radius: 50%; border: none;
   background: linear-gradient(135deg, var(--c-botany-500), var(--c-botany-700));
-  color: #fff;
-  font-size: 14px;
-  font-weight: 500;
-  border: none;
-  border-radius: 999px;
-  cursor: pointer;
-  box-shadow:
-    0 4px 14px rgba(14, 165, 233, 0.3),
-    0 0 20px rgba(56, 189, 248, 0.15);
-  transition: all 0.3s ease;
-  position: relative;
-  overflow: hidden;
+  color: #fff; font-size: 22px; cursor: pointer;
+  box-shadow: 0 8px 24px rgba(14, 165, 233, 0.4);
+  display: flex; align-items: center; justify-content: center;
+  transition: transform 0.2s ease;
 }
+.gb-fab:active { transform: scale(0.92); }
 
-.gb-write-btn::before {
-  content: '';
-  position: absolute;
-  top: 0; left: -100%;
-  width: 100%; height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-  transition: left 0.5s ease;
+/* 举报弹窗 */
+.report-body { display: flex; flex-direction: column; gap: 12px; }
+.report-target { font-size: 13px; color: var(--c-ink-500); margin: 0; }
+.report-quote {
+  display: block; margin-top: 4px; color: var(--c-ink-300);
+  background: var(--c-botany-50); padding: 8px 10px; border-radius: 8px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
+.report-reasons { display: flex; flex-wrap: wrap; gap: 8px; }
+.report-detail, .report-email { margin-top: 2px; }
+.report-body .form-label { margin-top: 4px; }
 
-.gb-write-btn:hover {
-  transform: translateY(-2px);
-  box-shadow:
-    0 6px 24px rgba(14, 165, 233, 0.4),
-    0 0 30px rgba(56, 189, 248, 0.2);
-}
-
-.gb-write-btn:hover::before {
-  left: 100%;
-}
-
-.gb-write-btn:active {
-  transform: translateY(0);
-}
-
-.gb-write-btn .el-icon {
-  font-size: 15px;
-}
-
-/* 表单卡片 — 高级玻璃拟态 */
-.gb-form-card {
-  position: relative;
-  z-index: 1;
-  background: var(--c-paper);
-  border: 1px solid var(--c-line-soft);
-  border-radius: 16px;
-  padding: 28px 32px 24px;
-  margin-top: 36px;
-  box-shadow: var(--shadow-soft);
-  transition: box-shadow 0.3s ease;
-}
-
-.gb-form-card:hover {
-  box-shadow:
-    0 6px 30px rgba(14, 165, 233, 0.12),
-    0 0 80px rgba(56, 189, 248, 0.06),
-    inset 0 1px 0 rgba(255,255,255,0.7);
-}
-
-.form-cancel {
-  text-align: center;
-  margin-bottom: 16px;
-  cursor: pointer;
-}
-
-.form-cancel span {
-  font-size: 13px;
-  color: var(--c-ink-soft);
-  transition: color 0.2s ease;
-}
-
-.form-cancel:hover span {
-  color: var(--c-ink);
-}
-
-.form-body {
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-}
-
-.reply-to-bar {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 14px;
-  background: var(--c-botany-50);
-  border-radius: 8px;
-  font-size: 13px;
-  color: var(--c-ink-soft);
-}
-
-.reply-to-bar b {
-  color: var(--c-botany-700);
-}
-
-.clear-reply {
-  margin-left: auto;
-  cursor: pointer;
-  color: var(--c-ink-soft);
-  font-size: 14px;
-  transition: color 0.2s ease;
-}
-
-.clear-reply:hover {
-  color: var(--c-ink);
-}
-
-.form-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px;
-}
-
-.form-col {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.form-row-full {
-  margin-bottom: 18px;
-}
-.gb-avatar-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.form-label {
-  font-size: 13px;
-  color: var(--c-ink-500);
-  font-weight: 500;
-}
-
-.required {
-  color: var(--c-autumn-500);
-}
-
-.label-hint {
-  font-size: 12px;
-  color: var(--c-ink-300);
-  font-weight: 400;
-}
-
-/* 覆盖 Element Plus 输入框样式 */
-.gb-input :deep(.el-input__wrapper) {
-  border-radius: 10px;
-  box-shadow: 0 0 0 1px var(--c-line) inset;
-  padding: 0 14px;
-  transition: box-shadow 0.2s ease;
-}
-
-.gb-input :deep(.el-input__wrapper:hover) {
-  box-shadow: 0 0 0 1px var(--c-ink-300) inset;
-}
-
-.gb-input :deep(.el-input__wrapper.is-focus) {
-  box-shadow: 0 0 0 1px var(--c-botany-500) inset;
-}
-
-.gb-textarea :deep(.el-textarea__inner) {
-  border-radius: 10px;
-  border: 1px solid var(--c-line);
-  padding: 12px 14px;
-  resize: vertical;
-  transition: border-color 0.2s ease;
-}
-
-.gb-textarea :deep(.el-textarea__inner:hover) {
-  border-color: var(--c-ink-300);
-}
-
-.gb-textarea :deep(.el-textarea__inner:focus) {
-  border-color: var(--c-botany-500);
-  outline: none;
-}
-
-.gb-textarea :deep(.el-input__count) {
-  background: transparent;
-  color: var(--c-ink-300);
-  font-size: 12px;
-}
-
-/* 表单底部 */
-.form-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 6px;
-}
-
-.form-hint {
-  font-size: 12px;
-  color: var(--c-ink-300);
-}
-
-.submit-btn {
-  border-radius: 999px;
-  padding: 0 24px;
-  height: 38px;
-  font-weight: 500;
-}
-
-/* 留言列表 — 气泡墙/便利贴布局 */
-.gb-list {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 20px;
-  padding: 20px 0 10px;
-}
-
-/* 表单展开动画 */
-.form-slide-enter-active,
-.form-slide-leave-active {
-  transition: all 0.35s ease;
-}
-
-.form-slide-enter-from {
-  opacity: 0;
-  transform: translateY(-10px);
-}
-
-.form-slide-leave-to {
-  opacity: 0;
-  transform: translateY(-10px);
-}
-
+/* 弹窗在窄屏恢复 92% */
 @media (max-width: 640px) {
-  .gb-header {
-    padding: 40px 0 36px;
-  }
+  :deep(.gb-form-dialog) { width: 92% !important; }
+}
 
-  .gb-title {
-    font-size: 32px;
-  }
-
-  .gb-form-card {
-    padding: 20px 18px 18px;
-    margin-bottom: 24px;
-  }
-
-  .form-row {
-    grid-template-columns: 1fr;
-    gap: 14px;
-  }
-
-  .form-footer {
-    flex-direction: column;
-    gap: 12px;
-    align-items: stretch;
-  }
-
-  .submit-btn {
-    width: 100%;
-  }
+@media (max-width: 1199px) {
+  .gb-grid, .sk-grid { column-count: 2; }
+}
+@media (max-width: 640px) {
+  .gb-grid, .sk-grid { column-count: 1; gap: 12px; }
+  .gb-featured { margin-bottom: 20px; }
+  .gb-featured :deep(.ci-card) { padding: 18px 18px 14px; }
+  .gb-footer { padding: 18px 12px 0; font-size: 11px; }
 }
 </style>

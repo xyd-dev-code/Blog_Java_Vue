@@ -82,6 +82,12 @@
                 </el-form-item>
               </el-col>
             </el-row>
+            <el-form-item label="技术栈标签">
+              <el-input v-model="siteForm.aboutSkills" type="textarea" :rows="2"
+                placeholder="用逗号分隔，如：Java, Spring Boot, Vue 3, TypeScript" />
+              <div class="form-tip">显示在「关于我」页面的技术栈区域，留空则使用默认列表</div>
+            </el-form-item>
+
             <el-form-item>
               <el-button type="primary" :loading="siteSaving" @click="saveSite">保存站点信息</el-button>
             </el-form-item>
@@ -155,6 +161,7 @@ const uploadInput = ref(null)
 const cropperRef = ref(null)
 const cropVisible = ref(false)
 const cropSrc = ref('')
+const cropSrcMime = ref('image/jpeg')
 
 // 记录旧头像 URL，保存后删除
 const oldAvatar = ref('')
@@ -171,7 +178,8 @@ const pwdForm = reactive({
 
 const siteForm = reactive({
   siteName: '', motto: '', description: '', keywords: '',
-  beian: '', comment_audit: '1', github: '', email: ''
+  beian: '', comment_audit: '1', github: '', email: '',
+  aboutSkills: ''
 })
 
 // ---- 文件选择 → 裁剪 ----
@@ -179,6 +187,7 @@ const siteForm = reactive({
 const onFileSelected = (e) => {
   const file = e.target.files?.[0]
   if (!file) return
+  cropSrcMime.value = file.type || 'image/jpeg'
   cropSrc.value = URL.createObjectURL(file)
   cropVisible.value = true
   uploadInput.value.value = ''
@@ -186,8 +195,8 @@ const onFileSelected = (e) => {
 
 // ---- 裁剪并上传 ----
 
-// 将裁剪后的 canvas 缩放为合适尺寸，并压缩输出为 JPEG，避免上传过大导致网络/服务端错误
-const canvasToFile = (sourceCanvas, maxSize = 512, quality = 0.92) => {
+// 将裁剪后的 canvas 缩放为合适尺寸并压缩输出。PNG 输入保留 PNG(透明不丢),其他格式走 JPEG 节省体积。
+const canvasToFile = (sourceCanvas, sourceMime, maxSize = 512, quality = 0.92) => {
   return new Promise((resolve, reject) => {
     const { width: sw, height: sh } = sourceCanvas
     let dw = sw
@@ -201,14 +210,20 @@ const canvasToFile = (sourceCanvas, maxSize = 512, quality = 0.92) => {
     canvas.width = dw
     canvas.height = dh
     const ctx = canvas.getContext('2d')
-    ctx.fillStyle = '#ffffff'
-    ctx.fillRect(0, 0, dw, dh)
+    const isPng = sourceMime === 'image/png'
+    if (!isPng) {
+      // 仅 JPEG 走白底(避免透明填黑色)
+      ctx.fillStyle = '#ffffff'
+      ctx.fillRect(0, 0, dw, dh)
+    }
     ctx.drawImage(sourceCanvas, 0, 0, dw, dh)
 
+    const outMime = isPng ? 'image/png' : 'image/jpeg'
+    const outName = isPng ? 'avatar.png' : 'avatar.jpg'
     canvas.toBlob((blob) => {
       if (!blob) { reject(new Error('无法生成裁剪图片')); return }
-      resolve(new File([blob], 'avatar.jpg', { type: 'image/jpeg' }))
-    }, 'image/jpeg', quality)
+      resolve(new File([blob], outName, { type: outMime }))
+    }, outMime, isPng ? undefined : quality)
   })
 }
 
@@ -220,8 +235,8 @@ const doCrop = async () => {
     if (!canvas || canvas.width === 0 || canvas.height === 0) {
       throw new Error('裁剪区域无效，请重新选择图片')
     }
-    // 缩放到最大 512px 并压缩，防止原图过大导致网络/服务端拒绝
-    const file = await canvasToFile(canvas, 512, 0.92)
+    // 缩放到最大 512px 并压缩,防止原图过大导致网络/服务端拒绝;PNG 原样保留(透明不丢)
+    const file = await canvasToFile(canvas, cropSrcMime.value, 512, 0.92)
     if (file.size > 5 * 1024 * 1024) {
       throw new Error('裁剪后图片仍超过 5MB，请选择更小的图片')
     }
@@ -314,7 +329,19 @@ const savePassword = async () => {
 const saveSite = async () => {
   siteSaving.value = true
   try {
-    await adminSaveSiteConfig(siteForm)
+    // 仅提交白名单内的 key,避免把数据库里残留的 site_name 等额外 key 一并发出去被后端拒绝
+    const payload = {
+      siteName: siteForm.siteName,
+      motto: siteForm.motto,
+      description: siteForm.description,
+      keywords: siteForm.keywords,
+      beian: siteForm.beian,
+      comment_audit: siteForm.comment_audit,
+      github: siteForm.github,
+      email: siteForm.email,
+      aboutSkills: siteForm.aboutSkills
+    }
+    await adminSaveSiteConfig(payload)
     ElMessage.success('站点信息已保存')
     // 刷新 front 页面的站点缓存
     siteStore.loaded = false
@@ -344,6 +371,10 @@ onMounted(async () => {
     const resp = await adminSiteConfig()
     const cfg = resp.data || {}
     Object.assign(siteForm, cfg)
+    // 兼容旧 seed key:老数据用 site_name,新代码/前台读 siteName
+    if (!siteForm.siteName && cfg.site_name) siteForm.siteName = cfg.site_name
+    // 移除残留的 site_name 等额外 key,避免提交时连同发出去被后端拒绝
+    if (cfg.site_name) delete siteForm.site_name
     // 同步站点 logo 到全局站点状态
     if (cfg.siteLogo && siteStore.info) {
       siteStore.info = { ...siteStore.info, siteLogo: cfg.siteLogo }
@@ -357,13 +388,17 @@ onMounted(async () => {
   display: grid;
   grid-template-columns: 360px 1fr;
   gap: 20px;
-  align-items: start;
+  align-items: stretch;
 }
 @media (max-width: 960px) {
   .profile-grid { grid-template-columns: 1fr; }
 }
 @media (max-width: 480px) {
   :deep(.el-dialog) { width: 92vw !important; }
+}
+.form-tip {
+  font-size: 12px; color: var(--c-ink-soft, #94a3b8);
+  line-height: 1.6; margin-top: 4px;
 }
 
 .profile-card { margin-bottom: 0; }

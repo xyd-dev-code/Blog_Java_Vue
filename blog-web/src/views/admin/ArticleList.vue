@@ -16,6 +16,24 @@
               <el-icon><Plus /></el-icon>
               <span class="btn-text">新建文章</span>
             </el-button>
+            <el-dropdown trigger="click" @command="onExportAll">
+              <el-button :loading="exporting">
+                <el-icon><Download /></el-icon>
+                <span class="btn-text">导出全部</span>
+                <el-icon class="is-opened"><ArrowDown /></el-icon>
+              </el-button>
+              <template #dropdown>
+                <el-dropdown-menu>
+                  <el-dropdown-item command="md">Markdown (.md)</el-dropdown-item>
+                  <el-dropdown-item command="docx">Word (.docx)</el-dropdown-item>
+                  <el-dropdown-item command="pdf">PDF (.pdf)</el-dropdown-item>
+                </el-dropdown-menu>
+              </template>
+            </el-dropdown>
+            <el-button @click="importDialog = true">
+              <el-icon><Upload /></el-icon>
+              <span class="btn-text">导入 .md</span>
+            </el-button>
           </div>
         </div>
       </template>
@@ -24,17 +42,29 @@
       <div class="table-scroll">
         <el-table :data="list" v-loading="loading" @selection-change="onSel" class="desktop-table">
           <el-table-column type="selection" width="50" />
-          <el-table-column type="index" label="序号" width="60" align="center" />
-          <el-table-column label="标题" min-width="280">
+          <el-table-column label="序号" width="60" align="center">
+            <template #default="{ $index }">
+              {{ (query.page - 1) * query.size + $index + 1 }}
+            </template>
+          </el-table-column>
+          <el-table-column label="标题" min-width="300">
             <template #default="{ row }">
-              <a class="art-title" @click="$router.push(`/admin/articles/${row.id}/edit`)">{{ row.title }}</a>
-              <div class="art-tags">
-                <el-tag v-for="t in row.tags" :key="t.id" size="small" effect="plain" style="margin-right: 4px;">{{ t.name }}</el-tag>
+              <div class="cell-flex">
+                <a class="art-title" @click="$router.push(`/admin/articles/${row.id}/edit`)"
+                  :title="row.title">{{ row.title }}</a>
+                <div class="art-tags">
+                  <el-tag v-for="t in (row.tags || []).slice(0, 3)" :key="t.id" size="small"
+                    effect="plain" class="m-r">{{ t.name }}</el-tag>
+                  <el-tag v-if="(row.tags || []).length > 3" size="small" effect="plain" type="info" class="m-r"
+                    :title="(row.tags || []).slice(3).map(t => t.name).join(' / ')">
+                    +{{ (row.tags || []).length - 3 }}
+                  </el-tag>
+                </div>
               </div>
             </template>
           </el-table-column>
           <el-table-column prop="category.name" label="分类" width="120">
-            <template #default="{ row }">{{ row.category?.name || '-' }}</template>
+            <template #default="{ row }"><span class="cell-text">{{ row.category?.name || '-' }}</span></template>
           </el-table-column>
           <el-table-column label="状态" width="100">
             <template #default="{ row }">
@@ -52,16 +82,32 @@
               <el-switch :model-value="row.isFeatured === 1" @change="(v) => toggleFeatured(row, v)" />
             </template>
           </el-table-column>
-          <el-table-column prop="viewCount" label="阅读" width="80" />
-          <el-table-column prop="createTime" label="创建时间" width="160">
-            <template #default="{ row }">{{ fmtDate(row.createTime) }}</template>
+          <el-table-column prop="viewCount" label="阅读" width="80">
+            <template #default="{ row }"><span class="cell-text">{{ row.viewCount }}</span></template>
           </el-table-column>
-          <el-table-column label="操作" width="260" fixed="right">
+          <el-table-column prop="createTime" label="创建时间" width="160">
+            <template #default="{ row }"><span class="cell-text">{{ fmtDate(row.createTime) }}</span></template>
+          </el-table-column>
+          <el-table-column label="操作" width="320" fixed="right">
             <template #default="{ row }">
-              <el-button size="small" link @click="$router.push(`/admin/articles/${row.id}/edit`)">编辑</el-button>
-              <el-button size="small" link @click="preview(row)" v-if="row.status === 1">预览</el-button>
-              <el-button size="small" link @click="openAdjustView(row)">阅读量</el-button>
-              <el-button size="small" link type="danger" @click="remove(row)">删除</el-button>
+              <div class="cell-actions">
+                <el-button size="small" link @click="$router.push(`/admin/articles/${row.id}/edit`)">编辑</el-button>
+                <el-button size="small" link @click="preview(row)" v-if="row.status === 1">预览</el-button>
+                <el-button size="small" link @click="openAdjustView(row)">阅读量</el-button>
+                <el-dropdown trigger="click" @command="(fmt) => onExportOne(row, fmt)">
+                  <el-button size="small" link>
+                    导出<el-icon class="is-opened"><ArrowDown /></el-icon>
+                  </el-button>
+                  <template #dropdown>
+                    <el-dropdown-menu>
+                      <el-dropdown-item command="md">Markdown (.md)</el-dropdown-item>
+                      <el-dropdown-item command="docx">Word (.docx)</el-dropdown-item>
+                      <el-dropdown-item command="pdf">PDF (.pdf)</el-dropdown-item>
+                    </el-dropdown-menu>
+                  </template>
+                </el-dropdown>
+                <el-button size="small" link type="danger" @click="remove(row)">删除</el-button>
+              </div>
             </template>
           </el-table-column>
         </el-table>
@@ -101,6 +147,16 @@
             <el-button size="small" type="primary" @click="$router.push(`/admin/articles/${row.id}/edit`)">编辑</el-button>
             <el-button size="small" v-if="row.status === 1" @click="preview(row)">预览</el-button>
             <el-button size="small" @click="openAdjustView(row)">阅读量</el-button>
+            <el-dropdown trigger="click" @command="(fmt) => onExportOne(row, fmt)">
+              <el-button size="small">导出<el-icon class="is-opened"><ArrowDown /></el-icon></el-button>
+              <template #dropdown>
+                <el-dropdown-menu>
+                  <el-dropdown-item command="md">.md</el-dropdown-item>
+                  <el-dropdown-item command="docx">.docx</el-dropdown-item>
+                  <el-dropdown-item command="pdf">.pdf</el-dropdown-item>
+                </el-dropdown-menu>
+              </template>
+            </el-dropdown>
             <el-button size="small" type="danger" @click="remove(row)">删除</el-button>
           </div>
         </div>
@@ -115,7 +171,7 @@
         </div>
         <el-pagination background layout="prev, pager, next, total"
           :current-page="query.page" :page-size="query.size" :total="total"
-          @current-change="(p) => { query.page = p; reload() }" />
+          @current-change="(p) => { query.page = p; reload(false) }" />
       </div>
     </el-card>
 
@@ -142,20 +198,38 @@
         <el-button type="primary" :loading="adjustDialog.loading" @click="submitAdjust">确认</el-button>
       </template>
     </el-dialog>
+
+    <ArticleImportDialog v-model="importDialog" @imported="onImported" />
   </div>
 </template>
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
-import { Plus } from '@element-plus/icons-vue'
+import { Plus, Download, Upload, ArrowDown } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { adminArticles, adminDeleteArticle, adminBatchDeleteArticles, adminUpdateArticleStatus, adminUpdateArticleTop, adminUpdateArticleFeatured, adminSetArticleViewCount, adminAdjustArticleViewCount } from '@/api/admin'
+import {
+  adminArticles,
+  adminDeleteArticle,
+  adminBatchDeleteArticles,
+  adminUpdateArticleStatus,
+  adminUpdateArticleTop,
+  adminUpdateArticleFeatured,
+  adminSetArticleViewCount,
+  adminAdjustArticleViewCount,
+  adminExportArticle,
+  adminExportAllArticles,
+  triggerDownload
+} from '@/api/admin'
 import { fmtDate } from '@/utils/format'
+import ArticleImportDialog from '@/views/admin/components/ArticleImportDialog.vue'
 
 const list = ref([])
 const total = ref(0)
 const loading = ref(false)
 const selected = ref([])
+
+const importDialog = ref(false)
+const exporting = ref(false)
 
 const adjustDialog = reactive({
   open: false,
@@ -201,8 +275,10 @@ const submitAdjust = async () => {
 
 const query = reactive({ page: 1, size: 10, keyword: '', status: '' })
 
-const reload = async () => {
+const reload = async (resetPage = true) => {
   loading.value = true
+  // 分页器回调里传 false,避免「翻页后切筛选状态时跳到第 1 页」的预期行为被打破
+  if (resetPage) query.page = 1
   try {
     const resp = await adminArticles(query)
     list.value = resp.data?.records || []
@@ -249,6 +325,48 @@ const preview = (row) => {
   window.open(`/articles/${row.slug}`, '_blank')
 }
 
+const onExportOne = async (row, fmt = 'md') => {
+  try {
+    const blob = await adminExportArticle(row.id, fmt)
+    const base = filesafeBase(row.title) || row.slug || `article-${row.id}`
+    triggerDownload(blob, `${base}.${fmt}`)
+  } catch (err) {
+    ElMessage.error(err?.message || '导出失败')
+  }
+}
+
+/** 把文章标题清洗成可作文件名的字符串:去 Win/Mac 非法字符 + 控符 + 首尾空白/点,长度截断 100 */
+const filesafeBase = (name) => {
+  if (!name) return ''
+  let s = String(name)
+    // Windows / Mac / Linux 都不允许的字符
+    .replace(/[<>:"/\\|?*\x00-\x1f]/g, '')
+    // Windows 不允许结尾的点或空格
+    .replace(/[\s.]+$/, '')
+    .trim()
+  if (!s) return ''
+  if (s.length > 100) s = s.slice(0, 100).trim()
+  return s
+}
+
+const onExportAll = async (fmt = 'md') => {
+  if (exporting.value) return
+  exporting.value = true
+  try {
+    const blob = await adminExportAllArticles(fmt)
+    const stamp = new Date().toISOString().slice(0, 10)
+    triggerDownload(blob, `articles-${stamp}.${fmt}.zip`)
+  } catch (err) {
+    ElMessage.error(err?.message || '导出失败')
+  } finally {
+    exporting.value = false
+  }
+}
+
+const onImported = (result) => {
+  reload()
+}
+
 onMounted(reload)
 </script>
 
@@ -264,9 +382,25 @@ onMounted(reload)
 .search-input { width: 240px; }
 .status-select { width: 120px; }
 
-.art-title { font-weight: 500; color: var(--c-ink); cursor: pointer; }
+.art-title {
+  font-weight: 500;
+  color: var(--c-ink);
+  cursor: pointer;
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  line-height: 1.4;
+}
 .art-title:hover { color: var(--c-botany-500); }
-.art-tags { margin-top: 4px; }
+.art-tags { margin-top: 2px; display: flex; align-items: center; flex-wrap: nowrap; overflow: hidden; }
+.art-tags .el-tag {
+  max-width: 90px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.m-r { margin-right: 4px; }
 .footer-bar {
   display: flex;
   justify-content: space-between;

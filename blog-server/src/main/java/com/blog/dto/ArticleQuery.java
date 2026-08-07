@@ -1,12 +1,23 @@
 package com.blog.dto;
 
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
+
 public class ArticleQuery {
+    @Pattern(regexp = "^[012]$", message = "status 必须 0/1/2")
     private Integer status;
-    private Long categoryId;
-    private Long tagId;
+
+    @Min(1) private Long categoryId;
+    @Min(1) private Long tagId;
+
+    @Size(max = 50, message = "keyword 过长")
     private String keyword;
-    private long page = 1;
-    private long size = 10;
+
+    @Min(1) private long page = 1;
+    @Min(1) @Max(100) private long size = 10;
+
     private boolean featuredOnly;
     private boolean topOnly;
     private String sortField = "publish_time";

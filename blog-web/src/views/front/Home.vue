@@ -127,10 +127,10 @@ const heroSubtitle = computed(() =>
 const heroStats = computed(() => {
   const s = homeData.value?.stats || {}
   return [
-    { label: '文章', value: s.articleCount || 87 },
-    { label: '分类', value: s.categoryCount || 12 },
-    { label: '标签', value: s.tagCount || 12 },
-    { label: '阅读', value: s.viewCount || 0 }
+    { label: '文章', value: s.articleCount ?? 0 },
+    { label: '分类', value: s.categoryCount ?? 0 },
+    { label: '标签', value: s.tagCount ?? 0 },
+    { label: '阅读', value: s.viewCount ?? 0 }
   ]
 })
 
@@ -139,13 +139,20 @@ const goAbout = () => router.push('/about')
 
 onMounted(async () => {
   try {
-    const [homeResp, tagsResp] = await Promise.all([home(), tagsAll().catch(() => ({ data: [] }))])
-    homeData.value = homeResp.data
-    featured.value = (homeResp.data.featured || []).slice(0, 3)
-    latest.value = (homeResp.data.latest || []).slice(0, 4)
+    const [homeResp, tagsResp] = await Promise.all([
+      home().catch((e) => { console.error('[Home] /home 接口请求失败:', e); return null }),
+      tagsAll().catch(() => ({ data: [] }))
+    ])
+    if (homeResp && homeResp.data) {
+      homeData.value = homeResp.data
+      featured.value = (homeResp.data.featured || []).slice(0, 3)
+      latest.value = (homeResp.data.latest || []).slice(0, 4)
+    } else {
+      console.warn('[Home] /home 返回为空或请求失败，stats 将显示 0')
+    }
     tags.value = (tagsResp.data || []).slice(0, 14)
-  } catch (_) {
-    // 接口失败时 fallback 数据由模板里的 v-else 处理
+  } catch (e) {
+    console.error('[Home] 首页数据加载异常:', e)
   }
 })
 </script>
