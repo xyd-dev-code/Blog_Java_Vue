@@ -71,5 +71,11 @@ ip2region.xdb
 blog-server/src/main/resources/fonts/NotoSerifSC-VF.ttf
 blog-server/src/main/resources/fonts/NotoSerifCJKsc-Regular.otf
 
+# 部署脚本(包含真实服务器 IP,仅在本地使用)
+deploy.bat
+deploy.ps1
+# 内部设计/规划文档(不进公开仓库)
+docs/superpowers/specs/
+
 # 本地启动脚本里的真实密钥(密钥不进仓库;留 start-backend.bat / .example 进仓作为模板)
 start-backend.local.bat
