@@ -1,5 +1,6 @@
 <template>
   <div class="hero-articles">
+    <GodRays :origin-y="60" />
     <!-- 光柱 -->
     <div class="ha-beam ha-beam-1"></div>
     <div class="ha-beam ha-beam-2"></div>
@@ -24,18 +25,11 @@
       </h1>
       <p class="ha-sub" v-if="subtitle">{{ subtitle }}</p>
     </div>
-
-    <!-- 波浪（柔和长波） -->
-    <svg class="wave ha-wave" viewBox="0 0 1440 120" preserveAspectRatio="none">
-      <path fill="currentColor" style="color:var(--c-bg);opacity:.95"
-        d="M0,60 C180,30 360,80 540,50 C720,20 900,60 1080,45 C1260,30 1380,55 1440,50 L1440,120 L0,120 Z" />
-      <path fill="currentColor" style="color:#fff;opacity:.25"
-        d="M0,80 C240,50 480,90 720,70 C960,50 1200,80 1440,65 L1440,120 L0,120 Z" />
-    </svg>
   </div>
 </template>
 
 <script setup>
+import GodRays from '@/components/effects/GodRays.vue'
 defineProps({
   title: { type: String, required: true },
   subtitle: { type: String, default: '' }
@@ -45,14 +39,21 @@ defineProps({
 <style scoped lang="scss">
 .hero-articles {
   position: relative;
-  overflow: hidden;
+  /* 不裁切——光束从 top:-30%/height:160% 开始、阳光圆斑 blur(15px) 会溢出，
+     overflow:hidden 在视口边缘形成硬截断线 */
+  /* 不铺不透明底色——让全局天空渐变透上来实现一体感；
+     只留极淡的 alpha 光斑作为装饰 */
   background:
-    radial-gradient(ellipse 120% 80% at 50% -10%, rgba(56,189,248,0.25) 0%, transparent 60%),
-    radial-gradient(ellipse 60% 50% at 20% 80%, rgba(251,191,36,0.12) 0%, transparent 50%),
-    linear-gradient(175deg, #e0f7ff 0%, #f0f9ff 40%, #ffffff 100%);
-  padding: 90px 0 110px;
+    radial-gradient(ellipse 120% 80% at 50% -10%, rgba(56,189,248,0.08) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 20% 80%, rgba(251,191,36,0.04) 0%, transparent 50%);
+  padding: 36px 0 24px;
   text-align: center;
-  margin-bottom: 50px;
+  margin-bottom: 16px;
+  /* useFoldFit 会按屏高写入 min-height，让首行文章卡刚好落在折痕之上。
+     这里用 flex 居中，撑高后标题仍在视觉中心而不是黏在顶部 */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 /* 柔和光柱 */
@@ -136,10 +137,10 @@ defineProps({
 }
 .ha-title {
   font-family: var(--font-serif);
-  font-size: 44px;
+  font-size: clamp(30px, 4vw, 42px);
   font-weight: 700;
   color: var(--c-ink);
-  margin: 0 0 16px;
+  margin: 0 0 10px;
   line-height: 1.2;
 }
 .ha-cursor {
@@ -159,14 +160,7 @@ defineProps({
   font-weight: 300;
 }
 
-.ha-wave {
-  position: absolute;
-  bottom: -2px;
-  left: 0;
-  right: 0;
-  z-index: 1;
-  pointer-events: none;
-}
+/* 波浪已移除——不再画分隔线，hero 与内容区自然共融 */
 
 @media (max-width: 768px) {
   .hero-articles { padding: 60px 0 70px; }

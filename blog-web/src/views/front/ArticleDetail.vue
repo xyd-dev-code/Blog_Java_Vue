@@ -57,14 +57,27 @@
         </GradientBorderCard>
       </div>
 
-      <svg class="wave" viewBox="0 0 1440 80" preserveAspectRatio="none">
-        <path d="M0,40 C240,80 480,0 720,40 C960,80 1200,0 1440,40 L1440,80 L0,80 Z" fill="#ffffff" />
-      </svg>
+      <!-- 装饰圆角软分隔:代替原来会导致切割线的白色波浪 -->
+      <div class="hero-divider" aria-hidden="true"></div>
     </header>
 
     <div class="container-narrow art-body">
-      <!-- 正文 -->
-      <article class="art-content markdown-body" v-html="rendered"></article>
+      <!-- 面包屑：首页 / 文章 / 标题 -->
+      <nav class="art-breadcrumb" aria-label="面包屑导航">
+        <router-link to="/" class="bc-item">首页</router-link>
+        <span class="bc-sep">/</span>
+        <router-link to="/articles" class="bc-item">文章</router-link>
+        <span class="bc-sep">/</span>
+        <span class="bc-item bc-current" aria-current="page">{{ article.title }}</span>
+      </nav>
+
+      <!-- 正文（与后台 MdEditor 渲染一致） -->
+      <article class="art-content md-preview-wrap">
+        <MdPreview
+          :model-value="article.content"
+          v-bind="previewProps"
+        />
+      </article>
 
       <!-- 标签条（正文末尾） -->
       <div class="art-tags-foot reveal" v-if="article.tags?.length">
@@ -73,6 +86,9 @@
           # {{ t.name }}
         </router-link>
       </div>
+
+      <!-- 分享条 -->
+      <ShareBar :article="article" />
 
       <!-- 上下篇 -->
       <div class="art-footer-nav">
@@ -105,13 +121,22 @@ import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { Calendar, View, ChatDotRound, Folder } from '@element-plus/icons-vue'
 import { articleBySlug } from '@/api/front'
-import { renderMarkdown } from '@/utils/markdown'
+import { MdPreview } from 'md-editor-v3'
+import 'md-editor-v3/lib/preview.css'
 import { fmtDate } from '@/utils/format'
 import { useAuthor } from '@/composables/useAuthor'
 import { useWeather } from '@/composables/useWeather'
 import GradientBorderCard from '@/components/GradientBorderCard.vue'
 import RelatedArticles from '@/components/RelatedArticles.vue'
 import CommentSection from '@/components/CommentSection.vue'
+import ShareBar from '@/components/ShareBar.vue'
+
+const previewProps = {
+  theme: 'light',
+  previewTheme: 'default',
+  codeTheme: 'atom-one-light',
+  showOutline: false
+}
 
 const route = useRoute()
 const article = ref(null)
@@ -121,8 +146,6 @@ const related = ref([])
 
 const { authorName, authorAvatar, initial } = useAuthor(article)
 const { temp, desc, location } = useWeather()
-
-const rendered = computed(() => renderMarkdown(article.value?.content || ''))
 
 const readMinutes = computed(() => {
   const words = (article.value?.content || '').length
@@ -175,8 +198,10 @@ onUnmounted(() => { window.removeEventListener('scroll', onScroll) })
   padding: 60px 0 80px;
   background: linear-gradient(180deg, #e0f7ff 0%, #f0f9ff 60%, #ffffff 100%);
 }
+/* 有封面时:深蓝底色 + 底部留出柔和过渡到白色正文区,
+   不再硬切,避免与下方 body 形成明显切割线。 */
 .art-hero.has-cover {
-  background: #0c4a6e;
+  background: linear-gradient(180deg, #0c4a6e 0%, #0c4a6e 70%, #075985 88%, #38bdf8 96%, #ffffff 100%);
   color: #f0f9ff;
 }
 .hero-bg { position: absolute; inset: 0; pointer-events: none; }
@@ -402,15 +427,90 @@ onUnmounted(() => { window.removeEventListener('scroll', onScroll) })
   font-weight: 600;
 }
 
-/* ===== 波浪分隔 ===== */
-.wave {
+/* ===== Hero→Body 软分隔 =====
+   之前的 .wave 是一个白色 SVG,会在深色 hero 底部留下一道硬切线。
+   改用纯 CSS 渐变 + 微圆角,把 hero 与正文区柔和过渡。 */
+.hero-divider {
   position: absolute;
-  bottom: -1px; left: 0; right: 0;
-  width: 100%; height: 60px;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 40px;
+  pointer-events: none;
+  background: linear-gradient(180deg,
+    rgba(255, 255, 255, 0)   0%,
+    rgba(255, 255, 255, 0.35) 60%,
+    rgba(255, 255, 255, 0.85) 100%);
+  border-radius: 24px 24px 0 0;
 }
+.art-hero.has-cover .hero-divider {
+  background: linear-gradient(180deg,
+    rgba(255, 255, 255, 0)   0%,
+    rgba(56, 189, 248, 0.25) 55%,
+    rgba(240, 249, 255, 0.95) 100%);
+}
+/* wave 类已全站移除 */
 
 /* ===== 正文容器 ===== */
-.art-body { padding: 40px 0 80px; position: relative; }
+.art-body {
+  /* .art-body 与 .container-narrow 复合在同一个 div 上,
+     此前 .art-body 的 padding: 40px 0 80px 把 .container-narrow
+     的水平 padding 0 24px 覆盖,导致内容贴到屏幕边缘。
+     显式保留水平 padding,移动端缩到 16px。 */
+  padding: 40px 24px 80px;
+  position: relative;
+  background: linear-gradient(180deg, #ffffff 0%, #f0f9ff 60%, #e0f7ff 100%);
+}
+@media (max-width: 768px) {
+  .art-body { padding: 32px 16px 60px; }
+}
+/* 桌面端(>1024px):正文区扩到 1100px 居中,让阅读体验更接近图一的"宽屏但留呼吸"效果。
+   平板/手机仍走 .container-narrow 的 880px 或全屏,不影响移动端适配。 */
+@media (min-width: 1025px) {
+  .art-body { max-width: 1100px; }
+}
+
+/* ===== 面包屑 ===== */
+.art-breadcrumb {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 24px;
+  font-size: 13px;
+}
+.bc-item {
+  color: var(--c-ink-soft);
+  text-decoration: none;
+  padding: 3px 6px;
+  border-radius: 7px;
+  transition: color 0.2s ease, background 0.2s ease;
+  max-width: 280px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.bc-item:hover {
+  color: var(--c-botany-500);
+  background: var(--c-botany-50);
+}
+.bc-current {
+  color: var(--c-ink);
+  font-weight: 600;
+  cursor: default;
+  max-width: 420px;
+}
+.bc-current:hover { background: transparent; }
+.bc-sep {
+  color: #cbd5e1;
+  user-select: none;
+}
+@media (max-width: 480px) {
+  .art-breadcrumb { font-size: 12px; margin-bottom: 18px; }
+  .bc-item { max-width: 160px; }
+  .bc-current { max-width: 200px; }
+}
+
 .cover {
   margin-bottom: 36px;
   border-radius: 18px;
@@ -425,177 +525,25 @@ onUnmounted(() => { window.removeEventListener('scroll', onScroll) })
   color: var(--c-ink);
   padding: 16px 0;
 }
-
-/* Markdown 样式（晴空 v2 配色） */
-:deep(.markdown-body) h1, :deep(.markdown-body) h2, :deep(.markdown-body) h3 {
-  margin: 36px 0 16px;
-  font-family: var(--font-serif);
-  color: #0369a1;
-  font-weight: 600;
-}
-:deep(.markdown-body) h2 {
-  font-size: 26px;
-  padding-bottom: 10px;
-  border-bottom: 1px dashed #bae6fd;
-  position: relative;
-}
-:deep(.markdown-body) h2::before {
-  content: '';
-  position: absolute;
-  left: 0; bottom: -1px;
-  width: 60px; height: 3px;
-  background: linear-gradient(90deg, #38bdf8, #fbbf24);
-  border-radius: 2px;
-}
-:deep(.markdown-body) h3 {
-  font-size: 20px;
-  color: #0c4a6e;
-  padding-left: 12px;
-  border-left: 4px solid #fbbf24;
-}
-:deep(.markdown-body) p { margin: 18px 0; }
-:deep(.markdown-body) img {
+/* 防止 Markdown 内嵌图片/表格/代码块撑出屏幕 */
+.art-content :deep(img),
+.art-content :deep(video),
+.art-content :deep(iframe) {
   max-width: 100%;
-  border-radius: 12px;
-  box-shadow: 0 6px 24px rgba(15, 23, 42, 0.08);
-  margin: 20px 0;
+  height: auto;
 }
-:deep(.markdown-body) code {
-  background: rgba(56, 189, 248, 0.1);
-  padding: 2px 8px;
-  border-radius: 5px;
-  font-size: 14px;
-  color: #0369a1;
-  border: 1px solid rgba(56, 189, 248, 0.2);
-}
-:deep(.markdown-body) pre {
-  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-  color: #e2e8f0;
-  padding: 20px 24px;
-  border-radius: 12px;
+.art-content :deep(pre) {
+  max-width: 100%;
   overflow-x: auto;
-  line-height: 1.7;
-  border: 1px solid rgba(125, 211, 252, 0.2);
-  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.15);
-  margin: 24px 0;
+  -webkit-overflow-scrolling: touch;
 }
-:deep(.markdown-body) pre code {
-  background: transparent;
-  color: inherit;
-  padding: 0;
-  border: none;
-}
-:deep(.markdown-body) blockquote {
-  margin: 24px 0;
-  padding: 14px 22px;
-  background: linear-gradient(90deg, rgba(56, 189, 248, 0.08), transparent);
-  border-left: 4px solid #38bdf8;
-  color: var(--c-ink-soft);
-  border-radius: 0 10px 10px 0;
-  font-style: italic;
-}
-:deep(.markdown-body) ul, :deep(.markdown-body) ol {
-  padding-left: 26px;
-  margin: 14px 0;
-}
-:deep(.markdown-body) li { margin: 8px 0; }
-:deep(.markdown-body) a {
-  color: #0ea5e9;
-  border-bottom: 1px dashed #7dd3fc;
-  transition: color 0.2s ease;
-}
-:deep(.markdown-body) a:hover { color: #0369a1; border-bottom-color: #0369a1; }
-:deep(.markdown-body) table {
-  width: 100%;
-  border-collapse: separate;
-  border-spacing: 0;
-  margin: 28px 0;
-  border-radius: 10px;
-  overflow: hidden;
-  border: 2px solid #bae6fd;
-  box-shadow: 0 4px 16px rgba(14, 165, 233, 0.08);
-  background: #ffffff;
-  table-layout: auto;
-}
-:deep(.markdown-body) th, :deep(.markdown-body) td {
-  padding: 10px 12px;
-  border: 1px solid #bae6fd;
-  font-size: 14px;
-  line-height: 1.55;
-  word-break: break-word;
-  overflow-wrap: anywhere;
-  vertical-align: middle;
-}
-:deep(.markdown-body) th {
-  background: linear-gradient(135deg, #0c4a6e 0%, #0369a1 100%) !important;
-  font-weight: 600 !important;
-  color: #ffffff !important;
-  text-align: left;
-  letter-spacing: 0.02em;
-  border-color: #0c4a6e !important;
-  white-space: normal;
-}
-:deep(.markdown-body) th > *,
-:deep(.markdown-body) th p,
-:deep(.markdown-body) th strong,
-:deep(.markdown-body) th span,
-:deep(.markdown-body) td > *,
-:deep(.markdown-body) td p,
-:deep(.markdown-body) td strong,
-:deep(.markdown-body) td span {
-  margin: 0 !important;
-  padding: 0 !important;
-  color: inherit !important;
-  font-weight: inherit !important;
-  background: transparent !important;
-  text-shadow: none !important;
-}
-:deep(.markdown-body) td {
-  color: #0f172a !important;
-  vertical-align: top;
-  background: #ffffff;
-}
-:deep(.markdown-body) thead th,
-:deep(.markdown-body) tbody tr:first-child th,
-:deep(.markdown-body) tbody > tr:first-child > th {
-  background: linear-gradient(135deg, #0c4a6e 0%, #0369a1 100%) !important;
-  color: #ffffff !important;
-}
-:deep(.markdown-body) tbody tr:nth-child(even) td {
-  background: #f0f9ff !important;
-}
-:deep(.markdown-body) tbody tr:hover td {
-  background: #e0f7ff;
-  transition: background 0.15s ease;
-}
-:deep(.markdown-body) .table-wrap,
-:deep(.table-wrap) {
+.art-content :deep(table) {
+  display: block;
+  max-width: 100%;
   overflow-x: auto;
-  margin: 28px 0;
-  border-radius: 10px;
-  border: 2px solid #bae6fd;
-  box-shadow: 0 4px 16px rgba(14, 165, 233, 0.08);
-  background: #ffffff;
+  -webkit-overflow-scrolling: touch;
 }
-:deep(.table-wrap) th {
-  background: linear-gradient(135deg, #0c4a6e 0%, #0369a1 100%) !important;
-  color: #ffffff !important;
-}
-:deep(.table-wrap) td {
-  background: #ffffff !important;
-}
-:deep(.table-wrap) tbody tr:nth-child(even) td {
-  background: #f0f9ff !important;
-}
-:deep(.table-wrap) tbody tr:hover td {
-  background: #e0f7ff !important;
-}
-@media (max-width: 720px) {
-  :deep(.markdown-body) th, :deep(.markdown-body) td {
-    padding: 8px 10px;
-    font-size: 13px;
-  }
-}
+
 
 /* 标签条 */
 .art-tags-foot {
@@ -639,11 +587,18 @@ onUnmounted(() => { window.removeEventListener('scroll', onScroll) })
   font-family: var(--font-serif);
   font-size: 15px;
   color: var(--c-ink);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  max-width: 100%;
   transition: color 0.2s ease;
+  /* flex 子项默认 min-width:auto,会被长文本撑爆父容器;
+     这里强制 min-width:0 允许收缩,再配合两行省略号。 */
+  min-width: 0;
+  max-width: 100%;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+  word-break: break-word;
+  line-height: 1.45;
 }
 .nav-card:hover .t { color: #0369a1; }
 
@@ -655,7 +610,8 @@ onUnmounted(() => { window.removeEventListener('scroll', onScroll) })
 }
 .reveal.visible { opacity: 1; transform: translateY(0); }
 
-.loading-page { padding: 80px 0; }
+.loading-page { padding: 80px 24px; }
+@media (max-width: 768px) { .loading-page { padding: 60px 16px; } }
 
 @media (max-width: 768px) {
   .art-title { font-size: 28px; }
@@ -666,8 +622,6 @@ onUnmounted(() => { window.removeEventListener('scroll', onScroll) })
 @media (max-width: 480px) {
   .art-title { font-size: 22px; line-height: 1.3; }
   .art-content { font-size: 15px; }
-  :deep(.markdown-body) pre { padding: 14px 16px; font-size: 13px; }
-  :deep(.markdown-body) blockquote { padding: 12px 16px; font-size: 14px; }
   .art-author { flex-direction: column; text-align: center; padding: 24px 18px; }
   .author-avatar { width: 80px; height: 80px; }
   .nav-card { padding: 16px 18px; }

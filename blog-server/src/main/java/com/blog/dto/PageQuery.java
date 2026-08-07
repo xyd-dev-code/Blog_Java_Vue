@@ -1,9 +1,17 @@
 package com.blog.dto;
 
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Pattern;
+
 public class PageQuery {
-    private long page = 1;
-    private long size = 10;
+    @Min(1) private long page = 1;
+    @Min(1) @Max(100) private long size = 10;
+
+    @Pattern(regexp = "^[a-zA-Z_]{1,30}$", message = "sort 字段名不合法")
     private String sort;
+
+    @Pattern(regexp = "^(asc|desc)$", message = "order 必须 asc/desc")
     private String order = "desc";
 
     public long getPage() { return page; }

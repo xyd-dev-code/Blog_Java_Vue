@@ -1,7 +1,7 @@
 <template>
-  <header class="app-header" :class="{ scrolled }">
+  <header class="app-header">
     <div class="container nav-inner">
-      <router-link to="/" class="brand">
+      <router-link to="/" class="brand" @mouseenter="prefetchByName('home')">
         <img v-if="siteLogo" :src="siteLogo" class="brand-mark brand-mark-img" alt="logo" />
         <span v-else-if="siteName" class="brand-mark">{{ brandMark }}</span>
         <span class="brand-text">
@@ -11,16 +11,19 @@
       </router-link>
 
       <nav class="nav-menu">
-        <router-link to="/" class="nav-item" exact-active-class="active">首页</router-link>
-        <router-link to="/articles" class="nav-item" active-class="active">文章</router-link>
-        <router-link to="/projects" class="nav-item" active-class="active">项目</router-link>
-        <router-link to="/friends" class="nav-item" active-class="active">友链</router-link>
-        <router-link to="/guestbook" class="nav-item" active-class="active">留言</router-link>
-        <router-link to="/about" class="nav-item" active-class="active">关于</router-link>
+        <router-link to="/" class="nav-item" exact-active-class="active" @mouseenter="prefetchByName('home')">首页</router-link>
+        <router-link to="/articles" class="nav-item" active-class="active" @mouseenter="prefetchByName('articles')">文章</router-link>
+        <router-link to="/projects" class="nav-item" active-class="active" @mouseenter="prefetchByName('projects')">项目</router-link>
+        <router-link to="/tools" class="nav-item" active-class="active" @mouseenter="prefetchByName('tools')">工具</router-link>
+        <router-link to="/friends" class="nav-item" active-class="active" @mouseenter="prefetchByName('friends')">友链</router-link>
+        <router-link to="/guestbook" class="nav-item" active-class="active" @mouseenter="prefetchByName('guestbook')">留言</router-link>
+        <router-link to="/about" class="nav-item" active-class="active" @mouseenter="prefetchByName('about')">关于</router-link>
       </nav>
 
       <div class="nav-tools">
-        <el-input v-model="kw" placeholder="搜点什么…" size="default" clearable class="search-box"
+        <el-input v-model="kw" placeholder="搜点什么…" size="default" clearable
+          class="search-box" :class="{ 'is-focused': searchFocused }"
+          @focus="searchFocused = true" @blur="searchFocused = false"
           @keyup.enter="goSearch">
           <template #prefix><el-icon><Search /></el-icon></template>
         </el-input>
@@ -52,12 +55,13 @@
             </el-input>
           </div>
           <nav class="drawer-nav">
-            <router-link to="/" class="drawer-link" @click="toggleDrawer">首页</router-link>
-            <router-link to="/articles" class="drawer-link" @click="toggleDrawer">文章</router-link>
-            <router-link to="/projects" class="drawer-link" @click="toggleDrawer">项目</router-link>
-            <router-link to="/friends" class="drawer-link" @click="toggleDrawer">友链</router-link>
-            <router-link to="/guestbook" class="drawer-link" @click="toggleDrawer">留言</router-link>
-            <router-link to="/about" class="drawer-link" @click="toggleDrawer">关于</router-link>
+            <router-link to="/" class="drawer-link" @click="toggleDrawer" @touchstart="prefetchByName('home')">首页</router-link>
+            <router-link to="/articles" class="drawer-link" @click="toggleDrawer" @touchstart="prefetchByName('articles')">文章</router-link>
+            <router-link to="/projects" class="drawer-link" @click="toggleDrawer" @touchstart="prefetchByName('projects')">项目</router-link>
+            <router-link to="/tools" class="drawer-link" @click="toggleDrawer" @touchstart="prefetchByName('tools')">工具</router-link>
+            <router-link to="/friends" class="drawer-link" @click="toggleDrawer" @touchstart="prefetchByName('friends')">友链</router-link>
+            <router-link to="/guestbook" class="drawer-link" @click="toggleDrawer" @touchstart="prefetchByName('guestbook')">留言</router-link>
+            <router-link to="/about" class="drawer-link" @click="toggleDrawer" @touchstart="prefetchByName('about')">关于</router-link>
           </nav>
           <div class="drawer-foot">
             <router-link to="/admin/login" class="drawer-admin" @click="toggleDrawer">
@@ -73,8 +77,9 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import { prefetchByName } from '@/router'
 import { Search } from '@element-plus/icons-vue'
 import { useSiteStore } from '@/stores/site'
 
@@ -82,8 +87,8 @@ const router = useRouter()
 const route = useRoute()
 const siteStore = useSiteStore()
 const kw = ref('')
-const scrolled = ref(false)
 const drawerOpen = ref(false)
+const searchFocused = ref(false)
 
 const siteName = computed(() => siteStore.info?.siteName || '个人博客')
 const siteMotto = computed(() => siteStore.info?.motto || '')
@@ -91,10 +96,8 @@ const siteLogo = computed(() => siteStore.info?.siteLogo || '')
 // 站点 mark 默认字符:取站点名第一个汉字或字母
 const brandMark = computed(() => {
   const s = siteName.value || ''
-  return s ? s.charAt(0).toUpperCase() : '·'
+    return s ? s.charAt(0).toUpperCase() : '·'
 })
-
-const onScroll = () => { scrolled.value = window.scrollY > 24 }
 
 const goSearch = () => {
   if (!kw.value.trim()) return
@@ -105,9 +108,16 @@ const goSearchAndClose = () => {
   drawerOpen.value = false
   goSearch()
 }
-const toggleDrawer = () => { drawerOpen.value = !drawerOpen.value }
-
-// 路由变化时关闭抽屉,并清空搜索词防止误触
+const toggleDrawer = () => {
+  drawerOpen.value = !drawerOpen.value
+  document.body.style.overflow = drawerOpen.value ? 'hidden' : ''
+}
+onMounted(async () => {
+  // 不再监听滚动事件 — 用户明确不要滚动收缩/变色
+})
+onUnmounted(() => {
+  if (typeof document !== 'undefined') document.body.style.overflow = ''
+})
 watch(() => route.fullPath, () => {
   drawerOpen.value = false
   kw.value = ''
@@ -120,32 +130,34 @@ watch(drawerOpen, (v) => {
   }
 })
 
-onMounted(() => window.addEventListener('scroll', onScroll, { passive: true }))
-onUnmounted(() => {
-  window.removeEventListener('scroll', onScroll)
-  if (typeof document !== 'undefined') document.body.style.overflow = ''
-})
 </script>
 
 <style scoped lang="scss">
 .app-header {
-  position: sticky;
+  position: fixed;
   top: 0;
+  left: 0;
+  right: 0;
   z-index: 100;
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(12px);
-  border-bottom: 1px solid transparent;
-  transition: all 0.3s ease;
-}
-.app-header.scrolled {
-  background: rgba(255, 255, 255, 0.96);
-  border-bottom-color: var(--c-line);
-  box-shadow: 0 2px 16px rgba(14, 165, 233, 0.08);
+  padding-top: 12px;
+  background: transparent;
+  /* 提升为独立合成层:背景 8 层特效持续动画时,
+     导航不再被每帧重绘,避免点击跳转卡顿 */
+  will-change: transform;
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
 .nav-inner {
   display: flex;
   align-items: center;
-  height: 72px;
+  height: 64px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.65);
+  box-shadow: 0 6px 24px rgba(14, 165, 233, 0.12);
+  /* 不再有任何 scrolled 态变化 —— 用户明确不要滚动收缩/变色 */
 }
 .brand {
   flex: 1;
@@ -181,7 +193,15 @@ onUnmounted(() => {
 }
 .brand-text { display: flex; flex-direction: column; line-height: 1.1; }
 .brand-name { font-family: var(--font-serif); font-size: 20px; font-weight: 600; color: var(--c-ink); }
-.brand-motto { font-size: 11px; color: var(--c-ink-soft); letter-spacing: 0.05em; margin-top: 3px; }
+.brand-motto {
+  font-size: 11px;
+  color: var(--c-ink-soft);
+  letter-spacing: 0.05em;
+  margin-top: 3px;
+  overflow: hidden;
+  max-height: 20px;
+  transition: opacity 0.25s ease, max-height 0.3s ease, margin-top 0.3s ease;
+}
 
 .nav-menu {
   display: flex;
@@ -192,35 +212,76 @@ onUnmounted(() => {
   border-radius: 8px;
   font-size: 15px;
   color: var(--c-ink-soft);
-  transition: all 0.2s ease;
+  transition: color 0.2s ease, background 0.2s ease;
   position: relative;
 }
-.nav-item:hover { color: var(--c-botany-500); background: var(--c-botany-50); }
+/* hover 下划线：从中心向两边展开 */
+.nav-item::after {
+  content: '';
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  bottom: 4px;
+  height: 2px;
+  border-radius: 1px;
+  background: linear-gradient(90deg, var(--c-botany-500), var(--c-botany-700));
+  transform: scaleX(0);
+  transform-origin: center;
+  transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+  pointer-events: none;
+}
+.nav-item:hover {
+  color: var(--c-botany-700);
+  background: var(--c-botany-50);
+}
+.nav-item:hover::after { transform: scaleX(1); }
+
 .nav-item.active {
   color: var(--c-botany-700);
   font-weight: 500;
 }
+/* 激活项：暖阳金短横，常驻不参与 hover 动画 */
 .nav-item.active::after {
-  content: '';
-  position: absolute;
-  bottom: -2px; left: 50%;
-  transform: translateX(-50%);
-  width: 20px; height: 2px;
   background: var(--c-autumn-500);
-  border-radius: 1px;
+  transform: scaleX(1);
+  left: 50%;
+  right: auto;
+  width: 20px;
+  margin-left: -10px;
+  bottom: 3px;
+}
+.nav-item.active:hover::after {
+  background: linear-gradient(90deg, var(--c-autumn-500), var(--c-botany-500));
+  width: 28px;
+  margin-left: -14px;
+  transition: width 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+              margin-left 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+              background 0.28s ease;
 }
 
 .nav-tools { flex: 1; min-width: 0; display: flex; align-items: center; justify-content: flex-end; gap: 8px; }
+/* 聚焦时平滑横向拓宽，失焦收回 */
 .search-box {
   width: 200px;
+  transition: width 0.34s cubic-bezier(0.22, 1, 0.36, 1);
+
+  &.is-focused { width: 300px; }
+
   :deep(.el-input__wrapper) {
     background: var(--c-line-soft);
     box-shadow: none;
     border-radius: 999px;
+    transition: background 0.25s ease, box-shadow 0.25s ease;
   }
-  :deep(.el-input__wrapper):hover, :deep(.el-input__wrapper.is-focus) {
+  :deep(.el-input__wrapper):hover {
     background: #fff;
     box-shadow: 0 0 0 1px var(--c-botany-300);
+  }
+  :deep(.el-input__wrapper.is-focus) {
+    background: #fff;
+    box-shadow:
+      0 0 0 1px var(--c-botany-500),
+      0 4px 16px rgba(56, 189, 248, 0.18);
   }
 }
 
@@ -328,15 +389,21 @@ onUnmounted(() => {
 
 @media (max-width: 900px) {
   .nav-menu { display: none; }
-  .search-box { width: 160px; }
+  .search-box {
+    width: 160px;
+    &.is-focused { width: 220px; }
+  }
   .brand-motto { display: none; }
   .hamburger { display: flex; }
 }
+/* 窄屏空间紧张，聚焦拉伸幅度收敛，避免挤压 logo */
+@media (max-width: 1100px) and (min-width: 901px) {
+  .search-box.is-focused { width: 250px; }
+}
 @media (max-width: 480px) {
-  .brand-text .brand-name { font-size: 17px; }
-  .brand-mark { width: 36px; height: 36px; font-size: 19px; }
+  .brand-text .brand-name { font-size: 18px; }
+  /* logo / nav-inner 高度不变 —— 用户明确"不要变小" */
   .search-box { display: none; }   // 桌面端搜索框;移动端用抽屉里的
   .hamburger { width: 44px; height: 44px; }
-  .nav-inner { height: 60px; }
 }
 </style>

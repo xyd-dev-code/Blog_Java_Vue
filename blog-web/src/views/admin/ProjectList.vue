@@ -7,16 +7,41 @@
           <el-button type="primary" @click="openForm()"><el-icon><Plus /></el-icon> 新建项目</el-button>
         </div>
       </template>
-
+      <div class="toolbar">
+        <el-input v-model="filters.keyword" placeholder="搜索" clearable style="width: 200px" @keyup.enter="reload" @clear="reload" />
+        <el-button @click="reload">查询</el-button>
+      </div>
       <div class="table-scroll">
         <el-table :data="list" v-loading="loading" row-key="id">
-          <el-table-column type="index" label="序号" width="60" align="center" />
-          <el-table-column prop="name" label="名称" min-width="140" />
-          <el-table-column prop="kind" label="分类" width="90" />
-          <el-table-column prop="description" label="简介" show-overflow-tooltip min-width="200" />
-          <el-table-column label="技术栈" min-width="180">
+          <el-table-column label="序号" width="60" align="center">
+            <template #default="{ $index }">
+              {{ (currentPage - 1) * pageSize + $index + 1 }}
+            </template>
+          </el-table-column>
+          <el-table-column label="封面" width="96">
             <template #default="{ row }">
-              <el-tag v-for="t in (row.stack || [])" :key="t" size="small" class="m-r">{{ t }}</el-tag>
+              <img v-if="row.coverUrl" :src="row.coverUrl" class="cover-thumb" alt="封面" />
+              <span v-else class="cover-none">无</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="名称" min-width="120">
+            <template #default="{ row }"><span class="cell-text">{{ row.name }}</span></template>
+          </el-table-column>
+          <el-table-column label="分类" width="100">
+            <template #default="{ row }"><span class="cell-text">{{ catName(row) }}</span></template>
+          </el-table-column>
+          <el-table-column prop="description" label="简介" show-overflow-tooltip min-width="200">
+            <template #default="{ row }">{{ row.description }}</template>
+          </el-table-column>
+          <el-table-column label="技术栈" min-width="200">
+            <template #default="{ row }">
+              <div class="stack-cell">
+                <el-tag v-for="t in (row.stack || []).slice(0, 3)" :key="t" size="small" class="m-r">{{ t }}</el-tag>
+                <el-tag v-if="(row.stack || []).length > 3" size="small" type="info" class="m-r"
+                  :title="(row.stack || []).slice(3).join(' / ')">
+                  +{{ (row.stack || []).length - 3 }}
+                </el-tag>
+              </div>
             </template>
           </el-table-column>
           <el-table-column label="状态" width="90">
@@ -24,7 +49,9 @@
               <el-tag :type="row.status === 1 ? 'success' : 'info'">{{ row.status === 1 ? '已发布' : '已下架' }}</el-tag>
             </template>
           </el-table-column>
-          <el-table-column prop="sortOrder" label="排序" width="70" />
+          <el-table-column prop="sortOrder" label="排序" width="70">
+            <template #default="{ row }"><span class="cell-text">{{ row.sortOrder }}</span></template>
+          </el-table-column>
           <el-table-column label="操作" width="200" fixed="right">
             <template #default="{ row }">
               <el-button size="small" link @click="openForm(row)">编辑</el-button>
@@ -34,6 +61,16 @@
           </el-table-column>
         </el-table>
       </div>
+      <el-pagination
+        v-if="total > pageSize"
+        class="pager"
+        background
+        layout="prev, pager, next, total"
+        :total="total"
+        :page-size="pageSize"
+        :current-page="currentPage"
+        @current-change="(p) => { currentPage = p; reload() }"
+      />
     </el-card>
 
     <el-dialog v-model="dlg" :title="form.id ? '编辑项目' : '新建项目'" width="min(560px, 92vw)">
@@ -42,11 +79,27 @@
           <el-input v-model="form.name" />
         </el-form-item>
         <el-form-item label="分类">
-          <el-select v-model="form.kind" placeholder="选择分类">
-            <el-option label="开源" value="开源" />
-            <el-option label="工具" value="工具" />
-            <el-option label="实验" value="实验" />
+          <el-select v-model="form.categoryId" placeholder="选择项目分类" clearable filterable style="width: 100%">
+            <el-option v-for="c in categoriesAll" :key="c.id" :label="c.name" :value="c.id" />
           </el-select>
+        </el-form-item>
+        <el-form-item label="封面图">
+          <div class="cover-uploader">
+            <el-upload
+              :show-file-list="false"
+              accept="image/*"
+              :before-upload="beforeCover"
+              :http-request="uploadCover"
+            >
+              <img v-if="form.coverUrl" :src="form.coverUrl" class="cover-prev" alt="封面预览" />
+              <div v-else class="cover-placeholder">
+                <el-icon><Plus /></el-icon>
+                <span>上传封面</span>
+              </div>
+            </el-upload>
+            <el-button v-if="form.coverUrl" size="small" text type="danger" class="cover-clear" @click="form.coverUrl = ''">移除</el-button>
+          </div>
+          <div class="cover-tip">建议 16:9，图片将上传至图床</div>
         </el-form-item>
         <el-form-item label="简介">
           <el-input v-model="form.description" type="textarea" :rows="3" />
@@ -84,29 +137,76 @@ import { ref, reactive, onMounted } from 'vue'
 import { Plus } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
-  adminProjects, adminCreateProject, adminUpdateProject, adminDeleteProject, adminUpdateProjectStatus
+  adminProjects, adminCreateProject, adminUpdateProject, adminDeleteProject, adminUpdateProjectStatus,
+  adminProjectCategoriesAll, adminUpload,
 } from '@/api/admin'
 
 const list = ref([])
 const loading = ref(false)
 const dlg = ref(false)
 const saving = ref(false)
-const emptyForm = () => ({ id: null, name: '', kind: '工具', description: '', stack: [], icon: 'Folder', color: '#38bdf8', githubUrl: '', demoUrl: '', sortOrder: 0 })
+const total = ref(0)
+const currentPage = ref(1)
+const pageSize = ref(10)
+const filters = reactive({ keyword: '' })
+
+const categoriesAll = ref([])
+
+const emptyForm = () => ({
+  id: null, name: '', categoryId: null, description: '', stack: [],
+  icon: 'Folder', color: '#38bdf8', coverUrl: '', githubUrl: '', demoUrl: '', sortOrder: 0,
+})
 const form = reactive(emptyForm())
+
+const catName = (row) => {
+  if (!row.categoryId) return '未分类'
+  const c = categoriesAll.value.find((x) => x.id === row.categoryId)
+  return c ? c.name : '未分类'
+}
 
 const reload = async () => {
   loading.value = true
   try {
-    const resp = await adminProjects({ size: 100 })
-    list.value = resp.data?.records || []
+    const params = { page: currentPage.value, size: pageSize.value }
+    if (filters.keyword) params.keyword = filters.keyword
+    const resp = await adminProjects(params)
+    const data = resp.data || {}
+    list.value = data.records || []
+    total.value = data.total || 0
   } catch (_) {}
   loading.value = false
+}
+
+const fetchCategories = async () => {
+  try {
+    const resp = await adminProjectCategoriesAll()
+    categoriesAll.value = resp.data || []
+  } catch (_) { categoriesAll.value = [] }
 }
 
 const openForm = (row) => {
   Object.assign(form, emptyForm())
   if (row) Object.assign(form, row, { stack: Array.isArray(row.stack) ? [...row.stack] : [] })
   dlg.value = true
+}
+
+const beforeCover = (file) => {
+  const okType = file.type.startsWith('image/')
+  if (!okType) { ElMessage.error('请上传图片文件'); return false }
+  const okSize = file.size / 1024 / 1024 < 3
+  if (!okSize) { ElMessage.error('封面图不能超过 3MB'); return false }
+  return true
+}
+
+const uploadCover = async (req) => {
+  try {
+    const resp = await adminUpload(req.file)
+    form.coverUrl = resp.data?.url || resp.data?.link || ''
+    if (!form.coverUrl) throw new Error('上传返回缺少 url')
+    ElMessage.success('封面上传成功')
+  } catch (_) {
+    ElMessage.error('封面上传失败')
+  }
 }
 
 const submit = async () => {
@@ -132,18 +232,59 @@ const toggle = async (row) => {
 }
 
 const remove = async (row) => {
-  await ElMessageBox.confirm(`确定删除项目 “${row.name}”?`, '提示', { type: 'warning' })
-  await adminDeleteProject(row.id)
-  ElMessage.success('已删除')
-  reload()
+  try {
+    await ElMessageBox.confirm(`确定删除项目 “${row.name}”?`, '提示', { type: 'warning' })
+  } catch (_) {
+    return // 用户取消
+  }
+  try {
+    await adminDeleteProject(row.id)
+    ElMessage.success('已删除')
+    reload()
+  } catch (_) {}
 }
 
-onMounted(reload)
+onMounted(() => {
+  fetchCategories()
+  reload()
+})
 </script>
 
 <style scoped lang="scss">
 .header-bar { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+.toolbar { display: flex; gap: 10px; margin-bottom: 12px; }
 .m-r { margin-right: 4px; }
+.stack-cell {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+.stack-cell .el-tag {
+  max-width: 110px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-@media (max-width: 480px) { :deep(.el-dialog) { width: 92vw !important; } }
+.pager { margin-top: 12px; justify-content: flex-end; display: flex; }
+.cover-thumb { width: 72px; height: 40px; object-fit: cover; border-radius: 6px; background: #eef6ff; }
+.cover-none { color: var(--c-ink-300); font-size: 12px; }
+
+.cover-uploader { display: flex; align-items: center; gap: 12px; }
+.cover-prev { width: 160px; height: 90px; object-fit: cover; border-radius: 10px; border: 1px solid var(--c-line); display: block; }
+.cover-placeholder {
+  width: 160px; height: 90px;
+  border: 1px dashed var(--c-botany-300);
+  border-radius: 10px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 4px; color: var(--c-ink-300); cursor: pointer; background: var(--c-botany-50);
+  transition: all 0.2s ease;
+}
+.cover-placeholder:hover { border-color: var(--c-botany-500); color: var(--c-botany-700); }
+.cover-clear { margin-left: 4px; }
+.cover-tip { font-size: 12px; color: var(--c-ink-300); margin-top: 6px; }
 </style>

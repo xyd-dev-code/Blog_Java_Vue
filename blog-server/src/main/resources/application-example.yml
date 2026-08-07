@@ -4,6 +4,7 @@ spring:
   datasource:
     url: jdbc:mysql://localhost:3306/blog_java_vue?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
     # 改用环境变量,不要把真实密码写进仓库
+    # example 文件里用占位符;真正部署时复制为 application.yml 然后设置环境变量
     username: ${DB_USERNAME:root}
     password: ${DB_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -32,3 +33,43 @@ blog:
     # 本地开发示例;生产请用绝对路径并保证 nginx/www-data 有读权限
     dir: ${UPLOAD_DIR:./uploads/img}
     base-url: ${IMG_BASE_URL:https://img.yourdomain.com}
+  visit-log:
+    # 生产默认 false:本地/回环 IP 不计入统计。
+    # dev 环境设为 true,解决 Vite 代理导致后端看到 127.0.0.1 而统计恒空的问题。
+    include-local-ip: false
+    # 会话级去重窗口(秒)。同一 IP+UA 在此窗口内无论刷新/访问多少接口,只记一次。
+    # 默认 30 秒;若内容更新快可调小,若被刷可调大(如 300)。
+    session-interval-seconds: 30
+  ip2-region:
+    # ip2region 离线数据文件路径。注意:仓库里文件名是 ip2region_v4.xdb(约 11MB),
+    # 不是 ip2region.xdb(该文件不存在,下载会拿到错误页)。
+    # 下载地址: https://raw.githubusercontent.com/lionsoul2014/ip2region/master/data/ip2region_v4.xdb
+    # 放入 src/main/resources 下即可用默认 classpath:ip2region.xdb;也可配绝对路径(如 /opt/blog/data/ip2region.xdb)。
+    # 注:gitee/某些 CDN 的 raw 直链对大文件会返回 47 字节错误页,且仓库 xdb 走 Git LFS,
+    # git clone 默认拉不到真实数据,请直接下载上述 raw 文件。
+    db-path: classpath:ip2region.xdb
+  # 站点对外可访问的根 URL(评论/友链通知邮件里的审核/详情链接会拼接这个地址)
+  # 部署时改成 https://yourdomain.com;dev 通常是 http://localhost:5173
+  site:
+    url: ${SITE_URL:https://yourdomain.com}
+  mail:
+    # 发件人邮箱;留空/未配置 SMTP 时 MailService 不会真正发送
+    from-email: ${MAIL_FROM:}
+    from-name: ${MAIL_FROM_NAME:Blog}
+    enabled: ${MAIL_ENABLED:false}
+    # 评论/留言/友链通知收件人(站长邮箱)
+    admin-email: ${MAIL_ADMIN_EMAIL:}
+
+# ──────────────────────────────────────────────────────────────
+# 生产环境：经 Nginx 反代时拿真实访客 IP（访问统计 / 限流依赖真实 IP）
+#   步骤 1：主域 Nginx 反代 /api 时加   proxy_set_header X-Real-IP $remote_addr;
+#           模板见 server-config/blog.example.nginx.conf
+#   步骤 2(可选)：ClientIpResolver 已自动识别可信反代(127.0.0.1/::1)传来的 X-Real-IP,
+#                一般无需再配 RemoteIpValve。如需双保险,可启用：
+# server:
+#   tomcat:
+#     remoteip:
+#       remote-ip-header: X-Real-IP
+#       internal-proxies: 127\.0\.0\.1|::1|10\.\d+\.\d+\.\d+|192\.168\.\d+\.\d+
+# 注意：dev 本地无反代，不要开启 RemoteIpValve，否则 getRemoteAddr() 会是 127.0.0.1；
+#       开发环境靠 blog.visit-log.include-local-ip=true 解决统计空数据问题。

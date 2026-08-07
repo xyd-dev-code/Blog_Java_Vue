@@ -10,6 +10,7 @@ const TITLE_MAP = {
   'category': '分类',
   'tag': '标签',
   'projects': '项目',
+  'tools': '工具',
   'friends': '友链',
   'archives': '归档',
   'search': '搜索',
@@ -22,13 +23,14 @@ const TITLE_MAP = {
   'admin-archives': '归档管理',
   'admin-article-new': '写文章',
   'admin-article-edit': '编辑文章',
-  'admin-categories': '分类管理',
-  'admin-tags': '标签管理',
+  'admin-taxonomy': '分类管理',
   'admin-comments': '评论管理',
   'admin-guestbook': '留言管理',
   'admin-pages': '页面管理',
   'admin-projects': '项目管理',
+  'admin-tools': '工具管理',
   'admin-friend-links': '友链管理',
+  'admin-stats': '访问统计',
   'admin-profile': '个人资料'
 }
 
@@ -43,10 +45,10 @@ const routes = [
       { path: 'categories/:slug', name: 'category', component: () => import('@/views/front/Category.vue') },
       { path: 'tags/:slug', name: 'tag', component: () => import('@/views/front/Tag.vue') },
       { path: 'projects', name: 'projects', component: () => import('@/views/front/Projects.vue') },
+      { path: 'tools', name: 'tools', component: () => import('@/views/front/Tools.vue') },
       { path: 'friends', name: 'friends', component: () => import('@/views/front/Friends.vue') },
       { path: 'archives', name: 'archives', component: () => import('@/views/front/Archives.vue') },
       { path: 'search', name: 'search', component: () => import('@/views/front/Search.vue') },
-      { path: 'page/:slug', name: 'page', component: () => import('@/views/front/Page.vue') },
       { path: 'guestbook', name: 'guestbook', component: () => import('@/views/front/Guestbook.vue') },
       { path: 'about', name: 'about', component: () => import('@/views/front/About.vue') }
     ]
@@ -63,17 +65,17 @@ const routes = [
     children: [
       { path: '', redirect: '/admin/dashboard' },
       { path: 'dashboard', name: 'admin-dashboard', component: () => import('@/views/admin/Dashboard.vue') },
-      { path: 'articles', name: 'admin-articles', component: () => import('@/views/admin/ArticleList.vue') },
+      { path: 'articles', name: 'admin-articles', component: () => import('@/views/admin/ArticleManagement.vue') },
       { path: 'archives', name: 'admin-archives', component: () => import('@/views/admin/Archives.vue') },
       { path: 'articles/new', name: 'admin-article-new', component: () => import('@/views/admin/ArticleEdit.vue') },
       { path: 'articles/:id/edit', name: 'admin-article-edit', component: () => import('@/views/admin/ArticleEdit.vue') },
-      { path: 'categories', name: 'admin-categories', component: () => import('@/views/admin/CategoryList.vue') },
-      { path: 'tags', name: 'admin-tags', component: () => import('@/views/admin/TagList.vue') },
-      { path: 'comments', name: 'admin-comments', component: () => import('@/views/admin/CommentList.vue') },
+      { path: 'comments', name: 'admin-comments', component: () => import('@/views/admin/CommentManagement.vue') },
+      { path: 'reports', redirect: '/admin/comments?tab=report' },
       { path: 'guestbook', name: 'admin-guestbook', component: () => import('@/views/admin/GuestbookList.vue') },
-      { path: 'pages', name: 'admin-pages', component: () => import('@/views/admin/PageList.vue') },
-      { path: 'projects', name: 'admin-projects', component: () => import('@/views/admin/ProjectList.vue') },
+      { path: 'projects', name: 'admin-projects', component: () => import('@/views/admin/ProjectManagement.vue') },
+      { path: 'tools', name: 'admin-tools', component: () => import('@/views/admin/ToolManagement.vue') },
       { path: 'friend-links', name: 'admin-friend-links', component: () => import('@/views/admin/FriendLinkList.vue') },
+      { path: 'stats', name: 'admin-stats', component: () => import('@/views/admin/Stats.vue') },
       { path: 'profile', name: 'admin-profile', component: () => import('@/views/admin/Profile.vue') }
     ]
   },
@@ -85,7 +87,8 @@ const router = createRouter({
   routes,
   scrollBehavior(to, from, saved) {
     if (saved) return saved
-    return { top: 0, behavior: 'smooth' }
+    // 瞬时回到顶部，避免平滑滚动在每次路由切换时造成"跳转慢"的体感
+    return { top: 0 }
   }
 })
 
@@ -126,6 +129,28 @@ router.push = function (target) {
     if (err && err.name !== 'NavigationDuplicated') throw err
     return err
   })
+}
+
+// ── 导航预取：hover / touch 时提前触发目标路由组件的 import()，
+//    把懒加载 chunk 拉进浏览器缓存；点击跳转时组件已就绪，消除"点击后才开始下载"的延迟体感。
+//    直接复用原始 route record 上的 `() => import(...)`，不需要再维护一份 loader 映射。
+const __prefetched = new Set()
+function collectRecords() {
+  const list = []
+  routes.forEach((r) => {
+    if (r.children && r.children.length) list.push(...r.children)
+    else list.push(r)
+  })
+  return list
+}
+export function prefetchByName(name) {
+  if (!name || __prefetched.has(name)) return
+  const rec = collectRecords().find((r) => r.name === name)
+  if (rec && typeof rec.component === 'function') {
+    __prefetched.add(name)
+    // 触发懒加载即可；忽略失败（预取失败不应影响真实跳转）
+    rec.component().catch(() => {})
+  }
 }
 
 export default router

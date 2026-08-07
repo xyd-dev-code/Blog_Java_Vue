@@ -10,6 +10,9 @@ import com.blog.service.CommentService;
 import com.blog.service.SiteConfigService;
 import com.blog.service.TagService;
 import io.swagger.v3.oas.annotations.Operation;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Pattern;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -78,23 +81,23 @@ public class HomeController {
 
     @Operation(summary = "归档按月")
     @GetMapping("/archives/{ym}")
-    public R<List<Article>> archiveMonth(@PathVariable String ym) {
+    public R<List<Article>> archiveMonth(@PathVariable @Pattern(regexp = "^\\d{4}-\\d{2}$", message = "ym 格式须为 YYYY-MM") String ym) {
         return R.ok(articleService.listByMonth(ym));
     }
 
     @Operation(summary = "按分类分页")
     @GetMapping("/categories/{slug}/articles")
     public R<Page<Article>> articlesByCategory(@PathVariable String slug,
-                                              @RequestParam(defaultValue = "1") long page,
-                                              @RequestParam(defaultValue = "10") long size) {
+                                              @RequestParam(defaultValue = "1") @Min(1) long page,
+                                              @RequestParam(defaultValue = "10") @Min(1) @Max(100) long size) {
         return R.ok(articleService.pageByCategorySlug(slug, page, size));
     }
 
     @Operation(summary = "按标签分页")
     @GetMapping("/tags/{slug}/articles")
     public R<Page<Article>> articlesByTag(@PathVariable String slug,
-                                          @RequestParam(defaultValue = "1") long page,
-                                          @RequestParam(defaultValue = "10") long size) {
+                                          @RequestParam(defaultValue = "1") @Min(1) long page,
+                                          @RequestParam(defaultValue = "10") @Min(1) @Max(100) long size) {
         return R.ok(articleService.pageByTagSlug(slug, page, size));
     }
 }

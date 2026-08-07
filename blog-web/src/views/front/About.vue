@@ -30,7 +30,7 @@
 
           <!-- 统计面板 -->
           <div class="stats-row">
-            <div class="stat-item" v-for="s in statsList" :key="s.label">
+            <div class="stat-item" v-for="(s, si) in statsList" :key="s.label" :style="{ '--idx': si }">
               <div class="stat-icon">
                 <svg v-if="s.key === 'article'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
                 <svg v-if="s.key === 'category'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
@@ -53,9 +53,17 @@
       </section>
 
       <!-- ④ 我的故事（CMS Markdown） -->
-      <section class="section container-narrow reveal" v-if="rendered">
+      <section class="section container-narrow reveal" v-if="processedMd">
         <h3 class="sec-title"><span class="sec-line"></span>我的故事<span class="sec-line"></span></h3>
-        <div class="story-card markdown-body" v-html="rendered"></div>
+        <div class="story-card">
+          <MdPreview
+            :model-value="processedMd"
+            theme="light"
+            preview-theme="default"
+            code-theme="atom-one-light"
+            :show-outline="false"
+          />
+        </div>
       </section>
 
       <!-- ⑤ 成长轨迹时间线 -->
@@ -108,20 +116,39 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
-import { pageBySlug, home } from '@/api/front'
-import { renderMarkdown } from '@/utils/markdown'
+import { ref, onMounted, computed, watch } from 'vue'
+import { home } from '@/api/front'
+import { MdPreview } from 'md-editor-v3'
+import 'md-editor-v3/lib/preview.css'
 import HeroAbout from '@/components/HeroAbout.vue'
 import { useSiteStore } from '@/stores/site'
 
 const siteStore = useSiteStore()
-const page = ref(null)
-const rendered = ref('')
+const processedMd = ref('')
+
+// 关于页正文：页面管理功能已下线，此处内联静态内容（保留 greeting/昵称/邮箱/github 动态替换）
+const ABOUT_MD = `# 你好，我是站长
+
+一个普通的工程师与写作者。
+白天写代码，晚上偶尔写点别的。
+
+## 在这里
+
+- 记录日常开发里值得记下来的事
+- 整理阅读时划线过的句子
+- 偶尔发一些摄影与生活片段
+
+## 怎么联系我
+
+- Email：见页脚
+- GitHub：见页脚
+
+如果只是想聊聊天，欢迎在 [留言板](/guestbook) 留下几句话。`
 const loading = ref(true)
 const homeData = ref({})
 
 // 站点配置
-const siteEmail = computed(() => siteStore.info?.email || 'author@example.com')
+const siteEmail = computed(() => siteStore.info?.email || 'site_email@example.com')
 const siteGithub = computed(() => siteStore.info?.github || 'https://github.com/DemoAuthor')
 const siteAvatar = computed(() => siteStore.info?.siteLogo || 'https://api.dicebear.com/7.x/notionists/svg?seed=author&backgroundColor=e0f2fe')
 // About 页展示用的昵称 / 简介:跟随后端 admin 用户的资料,后端未填则用站点名做兜底
@@ -148,12 +175,18 @@ const statsList = computed(() => {
   ]
 })
 
-// 技能标签
-const skills = [
+// 技术标签：从站点配置读取（后台 Profile 页可编辑），逗号分隔
+// 未配置时 fallback 到默认列表
+const DEFAULT_SKILLS = [
   'Java', 'Spring Boot', 'Vue 3', 'TypeScript', 'MySQL', 'Redis',
   'MyBatis-Plus', 'Element Plus', 'Nginx', 'Docker', 'Git', 'Linux',
   'Kotlin', 'Rust', 'Python', 'Markdown', 'Figma', 'VS Code'
 ]
+const skills = computed(() => {
+  const raw = siteStore.info?.aboutSkills
+  if (!raw || !raw.trim()) return DEFAULT_SKILLS
+  return raw.split(/[,，]/).map(s => s.trim()).filter(Boolean)
+})
 
 // 时间线
 const timeline = [
@@ -182,25 +215,21 @@ const timeline = [
 onMounted(async () => {
   try {
     if (!siteStore.loaded) await siteStore.load()
-    const [pageResp, homeResp] = await Promise.all([
-      pageBySlug('about'),
-      home().catch(() => ({ data: {} }))
-    ])
-    page.value = pageResp.data
-    const rawMd = pageResp.data?.contentMd || pageResp.data?.content || ''
+    const homeResp = await home().catch(() => ({ data: {} }))
     const greeting = siteStore.info?.greeting
-    // 用后端 greeting 动态替换 CMS 页面中的硬编码问候语
-    let processedMd = rawMd
+    // 用后端 greeting 动态替换静态正文里的硬编码问候语
+    let mdStr = ABOUT_MD
     if (greeting) {
-      processedMd = processedMd.replace(/^#\s*你好，我是[^\n]*/m, '# ' + greeting)
+      mdStr = mdStr.replace(/^#\s*你好，我是[^\n]*/m, '# ' + greeting)
     }
-    // 其余"站长"字面统一替为 admin 昵称
-    processedMd = processedMd.replace(/站长/g, authorName.value)
-    rendered.value = renderMarkdown(processedMd)
+    // "站长"字面统一替为 admin 昵称 + 邮箱/github 占位符替换
+    mdStr = mdStr
+      .replace(/站长/g, authorName.value)
       .replace(/you@example\.com/g, siteEmail.value)
       .replace(/admin@blog\.local/g, siteEmail.value)
       .replace(/\[EMAIL\]/g, siteEmail.value)
       .replace(/\[GITHUB_URL\]/g, siteGithub.value)
+    processedMd.value = mdStr
     homeData.value = homeResp.data || {}
   } catch (_) {}
   loading.value = false
@@ -226,44 +255,76 @@ function initReveal() {
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-pop);
   border: 1px solid var(--c-line-soft);
-  padding: 44px 44px 32px;
+  padding: 0;
   position: relative;
   overflow: hidden;
 }
+/* 顶部渐变 banner */
 .profile-card::before {
   content: '';
-  position: absolute; top: 0; left: 0; right: 0; height: 4px;
-  background: linear-gradient(90deg, var(--c-botany-500), var(--c-autumn-500), var(--c-botany-300));
-  background-size: 200% 100%;
-  animation: shimmer-bar 3s ease-in-out infinite;
+  position: absolute; top: 0; left: 0; right: 0; height: 100px;
+  background:
+    radial-gradient(ellipse 80% 100% at 20% 0%, rgba(56,189,248,0.15) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 100% at 85% 10%, rgba(251,191,36,0.10) 0%, transparent 55%),
+    linear-gradient(135deg, rgba(56,189,248,0.06) 0%, rgba(125,211,252,0.04) 50%, rgba(251,191,36,0.05) 100%);
+  z-index: 0;
 }
-@keyframes shimmer-bar {
-  0%, 100% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-}
+/* 底部彩虹描边已移除——用户不需要 */
+/* shimmer-bar 动画已移除（底部彩虹条已删） */
 
 .profile-top {
-  display: flex; gap: 36px; align-items: center; margin-bottom: 30px;
+  display: flex; gap: 24px; align-items: center; margin-bottom: 18px;
+  position: relative; z-index: 1;
+  padding: 20px 32px 0;   /* 顶部留出 banner 空间 */
 }
 
-.avatar-wrap { flex-shrink: 0; width: 130px; height: 130px; }
+.avatar-wrap {
+  flex-shrink: 0; width: 104px; height: 104px;
+  position: relative;
+}
+/* 头像外圈光晕环 */
+.avatar-wrap::before {
+  content: '';
+  position: absolute; inset: -6px;
+  border-radius: 50%;
+  background: conic-gradient(
+    from 180deg,
+    rgba(56,189,248,0.35),
+    rgba(125,211,252,0.20),
+    rgba(251,191,36,0.30),
+    rgba(56,189,248,0.35)
+  );
+  animation: ring-spin 8s linear infinite;
+  opacity: 0.7;
+}
+.avatar-wrap::after {
+  content: '';
+  position: absolute; inset: -3px;
+  border-radius: 50%;
+  background: var(--c-paper);
+  z-index: 1;
+}
+@keyframes ring-spin {
+  to { transform: rotate(360deg); }
+}
 .avatar {
   width: 100%; height: 100%; border-radius: 50%; object-fit: cover;
   border: 4px solid var(--c-paper);
   box-shadow: 0 4px 24px rgba(14, 165, 233, 0.12), 0 0 0 3px var(--c-botany-100);
+  position: relative; z-index: 2;
 }
 
 .profile-info { flex: 1; }
-.name-row { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; flex-wrap: wrap; }
+.name-row { display: flex; align-items: center; gap: 12px; margin-bottom: 6px; flex-wrap: wrap; }
 .name-row h2 {
-  font-family: var(--font-serif); font-size: 30px; font-weight: 600; margin: 0; color: var(--c-ink);
+  font-family: var(--font-serif); font-size: 24px; font-weight: 600; margin: 0; color: var(--c-ink);
 }
 .role-badge {
   padding: 4px 14px; background: linear-gradient(135deg, var(--c-botany-50), var(--c-autumn-50));
   color: var(--c-botany-700); border-radius: 999px; font-size: 13px;
   border: 1px solid var(--c-botany-100); font-weight: 500;
 }
-.bio { font-size: 15px; color: var(--c-ink-soft); line-height: 1.8; margin: 0 0 14px; max-width: 500px; }
+.bio { font-size: 15px; color: var(--c-ink-soft); line-height: 1.8; margin: 0 0 10px; max-width: 500px; }
 .social-row { display: flex; gap: 8px; }
 
 .soc-btn {
@@ -280,24 +341,43 @@ function initReveal() {
 
 /* 统计面板 */
 .stats-row {
-  display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;
-  padding-top: 24px; border-top: 1px solid var(--c-line-soft);
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;
+  padding: 18px 32px 22px;
+  border-top: 1px solid var(--c-line-soft);
+  position: relative; z-index: 1;
 }
-.stat-item { text-align: center; padding: 14px 8px; border-radius: var(--radius); transition: all .3s ease; }
+.stat-item { text-align: center; padding: 10px 6px; border-radius: var(--radius); transition: all .3s ease; }
 .stat-item:hover { background: var(--c-botany-50); transform: translateY(-3px); }
 .stat-icon {
   width: 42px; height: 42px; margin: 0 auto 8px; display: grid; place-items: center;
   border-radius: 10px; background: var(--c-botany-50); border: 1px solid var(--c-botany-100);
   color: var(--c-botany-700);
+  transition: all .3s ease;
   svg { width: 20px; height: 20px; }
 }
-.stat-num { font-family: var(--font-serif); font-size: 26px; font-weight: 600; color: var(--c-botany-700); line-height: 1.2; }
+.stat-item:hover .stat-icon {
+  background: var(--c-botany-500);
+  border-color: var(--c-botany-500);
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(56,189,248,0.25);
+}
+.stat-num {
+  font-family: var(--font-serif); font-size: 26px; font-weight: 700;
+  color: var(--c-botany-700); line-height: 1.2;
+  /* 数字入场微动效 */
+  opacity: 0; transform: translateY(8px);
+  animation: stat-in 0.5s ease-out forwards;
+  animation-delay: calc(var(--idx, 0) * 0.1s);
+}
+@keyframes stat-in {
+  to { opacity: 1; transform: translateY(0); }
+}
 .stat-label { font-size: 13px; color: var(--c-ink-soft); margin-top: 4px; }
 
 /* ③ 技能标签云 */
 .sec-title {
   font-family: var(--font-serif); font-size: 20px; font-weight: 600; color: var(--c-ink-700);
-  display: flex; align-items: center; justify-content: center; gap: 14px; margin: 0 0 24px;
+  display: flex; align-items: center; justify-content: center; gap: 14px; margin: 0 0 18px;
 }
 .sec-line { width: 44px; height: 1px; background: linear-gradient(90deg, transparent, var(--c-botany-300), transparent); }
 
@@ -316,7 +396,7 @@ function initReveal() {
 .story-card {
   background: var(--c-paper); border-radius: var(--radius-lg);
   box-shadow: var(--shadow-soft); border: 1px solid var(--c-line-soft);
-  padding: 36px 40px; font-size: 15px; line-height: 1.9;
+  padding: 28px 32px; font-size: 15px; line-height: 1.9;
 }
 
 /* Markdown 深度样式 */
@@ -386,17 +466,21 @@ function initReveal() {
 .reveal.visible { opacity: 1; transform: translateY(0); }
 
 .loading-page { padding: 80px 24px; }
-.section { padding: 16px 0 50px; }
+.section { padding: 6px 0 36px; }
 
 @media (max-width: 900px) {
   .profile-top { flex-direction: column; text-align: center; }
-  .avatar-wrap { width: 100px; height: 100px; }
+  .avatar-wrap { width: 90px; height: 90px; }
   .name-row { justify-content: center; }
   .social-row { justify-content: center; }
-  .stats-row { grid-template-columns: repeat(2, 1fr); }
+  .stats-row { grid-template-columns: repeat(2, 1fr); padding: 16px 20px 18px; }
   .contact-grid { grid-template-columns: 1fr; }
-  .profile-card { padding: 32px 24px 28px; }
+  .profile-card .profile-top { padding: 16px 20px 0; }
+  .stats-row { padding: 14px 20px 18px; }
   .story-card { padding: 24px; }
+}
+@media (max-width: 768px) {
+  .contact-grid { grid-template-columns: 1fr; }
 }
 @media (max-width: 600px) {
   .name-row h2 { font-size: 24px; }
@@ -405,5 +489,12 @@ function initReveal() {
   .tl-dot { left: -14px; width: 14px; height: 14px; }
   .sec-title { font-size: 17px; }
   .sec-line { width: 32px; }
+  .story-card { padding: 20px 16px; }
+}
+@media (max-width: 480px) {
+  .timeline { padding-left: 10px; }
+  .tl-item { padding-left: 22px; padding-bottom: 20px; }
+  .tl-dot { left: -11px; width: 12px; height: 12px; top: 5px; }
+  .tl-card { padding: 14px; }
 }
 </style>

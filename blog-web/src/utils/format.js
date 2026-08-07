@@ -22,3 +22,35 @@ export const excerpt = (html, len = 120) => {
   const s = stripHtml(html)
   return s.length > len ? s.slice(0, len) + '…' : s
 }
+
+// 转义 HTML，防止 XSS（评论内容先经后端 Jsoup 清洗，这里再做一次前端兜底）
+export const escapeHtml = (s) => {
+  if (!s) return ''
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
+
+/**
+ * 将评论正文渲染为安全 HTML：
+ * - 先转义所有 HTML（杜绝注入）
+ * - 识别 http(s) 链接并转为可点击外链
+ * - 识别 @昵称 并渲染为可点击的高亮标签（data-name 供父组件定位）
+ * - 换行转为 <br>
+ */
+export const renderComment = (text) => {
+  if (!text) return ''
+  let s = escapeHtml(text)
+  // URL 识别
+  s = s.replace(/(https?:\/\/[^\s<]+)/g,
+    '<a class="cmt-link" href="$1" target="_blank" rel="noopener noreferrer">$1</a>')
+  // @提及
+  s = s.replace(/@([^\s@<]{1,20})/g,
+    '<a class="cmt-mention" data-name="$1">@$1</a>')
+  // 换行
+  s = s.replace(/\n/g, '<br>')
+  return s
+}

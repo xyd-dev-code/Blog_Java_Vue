@@ -21,26 +21,23 @@
         <router-link to="/admin/archives" class="nav-item">
           <el-icon><Clock /></el-icon><span v-if="!collapsed">归档管理</span>
         </router-link>
-        <router-link to="/admin/categories" class="nav-item">
-          <el-icon><Folder /></el-icon><span v-if="!collapsed">分类管理</span>
-        </router-link>
-        <router-link to="/admin/tags" class="nav-item">
-          <el-icon><CollectionTag /></el-icon><span v-if="!collapsed">标签管理</span>
-        </router-link>
         <router-link to="/admin/comments" class="nav-item">
           <el-icon><ChatDotRound /></el-icon><span v-if="!collapsed">评论管理</span>
         </router-link>
         <router-link to="/admin/guestbook" class="nav-item">
           <el-icon><ChatLineSquare /></el-icon><span v-if="!collapsed">留言管理</span>
         </router-link>
-        <router-link to="/admin/pages" class="nav-item">
-          <el-icon><Files /></el-icon><span v-if="!collapsed">页面管理</span>
-        </router-link>
         <router-link to="/admin/projects" class="nav-item">
           <el-icon><Box /></el-icon><span v-if="!collapsed">项目管理</span>
         </router-link>
+        <router-link to="/admin/tools" class="nav-item">
+          <el-icon><Tools /></el-icon><span v-if="!collapsed">工具管理</span>
+        </router-link>
         <router-link to="/admin/friend-links" class="nav-item">
           <el-icon><Link /></el-icon><span v-if="!collapsed">友链管理</span>
+        </router-link>
+        <router-link to="/admin/stats" class="nav-item">
+          <el-icon><DataAnalysis /></el-icon><span v-if="!collapsed">访问统计</span>
         </router-link>
         <div class="nav-sep" />
         <router-link to="/admin/profile" class="nav-item">
@@ -92,8 +89,8 @@
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
-  Expand, Fold, DataLine, Document, Folder, CollectionTag,
-  ChatDotRound, ChatLineSquare, Files, View, ArrowDown, Box, Link, User, Clock
+  Expand, Fold, DataLine, DataAnalysis, Document,
+  ChatDotRound, ChatLineSquare, Files, View, ArrowDown, Box, Link, User, Clock, Tools,
 } from '@element-plus/icons-vue'
 import { useUserStore } from '@/stores/user'
 import { useSiteStore } from '@/stores/site'
@@ -106,6 +103,7 @@ const siteStore = useSiteStore()
 const collapsed = ref(false)
 const drawerOpen = ref(false)
 const isMobile = ref(false)
+const isToolsActive = computed(() => route.path.startsWith('/admin/tools') || route.path.startsWith('/admin/tool-categories'))
 const userInitial = computed(() => (userStore.userInfo?.username || 'A')[0].toUpperCase())
 const siteLogo = computed(() => siteStore.info?.siteLogo || '')
 
@@ -129,13 +127,13 @@ const titles = {
   'admin-archives': '归档管理',
   'admin-article-new': '写文章',
   'admin-article-edit': '编辑文章',
-  'admin-categories': '分类管理',
-  'admin-tags': '标签管理',
   'admin-comments': '评论管理',
   'admin-guestbook': '留言管理',
   'admin-pages': '页面管理',
   'admin-projects': '项目管理',
+  'admin-tools': '工具管理',
   'admin-friend-links': '友链管理',
+  'admin-stats': '访问统计',
   'admin-profile': '个人中心'
 }
 const pageTitle = computed(() => titles[route.name] || '后台')
@@ -160,11 +158,14 @@ onUnmounted(() => window.removeEventListener('resize', checkMobile))
 <style scoped lang="scss">
 .admin-layout {
   display: flex;
-  min-height: 100vh;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
   background: linear-gradient(180deg, #f0f9ff 0%, #f8fafc 100%);
 }
 .admin-aside {
   width: 220px;
+  height: 100%;
   background: #fff;
   border-right: 1px solid var(--c-line);
   display: flex;
@@ -172,6 +173,7 @@ onUnmounted(() => window.removeEventListener('resize', checkMobile))
   transition: width 0.25s ease;
 }
 .admin-aside.collapsed { width: 64px; }
+.admin-aside.collapsed .nav-group-items { display: none; }
 .aside-brand {
   display: flex;
   align-items: center;
@@ -238,7 +240,7 @@ onUnmounted(() => window.removeEventListener('resize', checkMobile))
   color: var(--c-ink-soft);
 }
 
-.admin-main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.admin-main { flex: 1; display: flex; flex-direction: column; min-width: 0; height: 100%; }
 .admin-topbar {
   background: #fff;
   height: 56px;
@@ -266,7 +268,7 @@ onUnmounted(() => window.removeEventListener('resize', checkMobile))
   border-radius: 8px;
 }
 .user-trigger:hover { background: var(--c-botany-50); }
-.admin-content { flex: 1; padding: 24px; overflow: auto; }
+.admin-content { flex: 1; padding: 24px; overflow-y: auto; overflow-x: hidden; }
 
 .admin-hamburger {
   display: none;

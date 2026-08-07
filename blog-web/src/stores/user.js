@@ -14,8 +14,8 @@ export const useUserStore = defineStore('user', {
   actions: {
     async doLogin(form) {
       const resp = await login(form)
-      // 拦截器返回的是后端 R 对象；真正的 token / user 在 resp.data 里
-      const payload = resp.data || {}
+      // 拦截器 return data 后,await 拿到的是 R 对象本身:{code, message, data:{token, user, tokenInfo}}
+      const payload = (resp && resp.data) || {}
       this.token = payload.token || ''
       this.userInfo = payload.user || null
       if (this.token) localStorage.setItem('token', this.token)

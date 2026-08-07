@@ -59,23 +59,33 @@ public class ArticleService {
     }
 
     public Page<Article> pageAdmin(ArticleQuery q) {
-        Page<Article> p = Page.of(q.getPage(), q.getSize());
+        // cap size 防单请求拉全表(size=1_000_000 等)
+        long size = Math.max(1, Math.min(q.getSize(), 100));
+        long page = Math.max(1, q.getPage());
+        Page<Article> p = Page.of(page, size);
         LambdaQueryWrapper<Article> w = new LambdaQueryWrapper<>();
         if (q.getStatus() != null) w.eq(Article::getStatus, q.getStatus());
         if (q.getCategoryId() != null) w.eq(Article::getCategoryId, q.getCategoryId());
         if (StringUtils.hasText(q.getKeyword())) {
-            w.and(z -> z.like(Article::getTitle, q.getKeyword())
-                        .or().like(Article::getSummary, q.getKeyword()));
+            // keyword 长度上限,防止 LIKE 性能炸弹;且需要 final 变量给 lambda 用
+            final String kw;
+            String raw = q.getKeyword().trim();
+            if (raw.length() > 50) raw = raw.substring(0, 50);
+            kw = raw;
+            w.and(z -> z.like(Article::getTitle, kw)
+                        .or().like(Article::getSummary, kw));
         }
         w.orderByDesc(Article::getIsTop).orderByDesc(Article::getCreateTime);
         return articleMapper.selectPage(p, w);
     }
 
     public List<Article> listFeatured(int limit) {
+        // 防御性 cap,public front-controller 直接传 limit 给前端
+        int safeLimit = Math.max(1, Math.min(limit, 50));
         List<Article> list = articleMapper.selectList(new LambdaQueryWrapper<Article>()
                 .eq(Article::getStatus, 1).eq(Article::getIsFeatured, 1)
                 .orderByDesc(Article::getPublishTime)
-                .last("LIMIT " + Math.max(1, limit)));
+                .last("LIMIT " + safeLimit));
         User admin = userMapper.selectById(1L);
         for (Article a : list) setAuthor(a, admin);
         return list;
@@ -137,11 +147,15 @@ public class ArticleService {
 
     public List<Article> search(String kw, int limit) {
         if (!StringUtils.hasText(kw)) return List.of();
+        String safeKw = kw.trim();
+        if (safeKw.length() < 2 || safeKw.length() > 50) return List.of();
+        int safeLimit = Math.max(1, Math.min(limit, 50));
+        final String likeKw = safeKw;
         List<Article> list = articleMapper.selectList(new LambdaQueryWrapper<Article>()
                 .eq(Article::getStatus, 1)
-                .and(z -> z.like(Article::getTitle, kw).or().like(Article::getContent, kw))
+                .and(z -> z.like(Article::getTitle, likeKw).or().like(Article::getSummary, likeKw))
                 .orderByDesc(Article::getPublishTime)
-                .last("LIMIT " + Math.max(1, limit)));
+                .last("LIMIT " + safeLimit));
         User admin = userMapper.selectById(1L);
         for (Article a : list) setAuthor(a, admin);
         return list;
@@ -232,7 +246,7 @@ public class ArticleService {
 
     @CacheEvict(value = "articles", allEntries = true)
     public void setViewCount(Long id, long value) {
-        if (value < 0) throw new BizException("阅读量不能为负");
+        if (value < 0 || value > 10_000_000L) throw new BizException("阅读量必须在 0 ~ 10,000,000 之间");
         Article cur = articleMapper.selectById(id);
         if (cur == null) throw new BizException(404, "文章不存在");
         int n = articleMapper.setViewCount(id, value);
@@ -241,11 +255,14 @@ public class ArticleService {
 
     @CacheEvict(value = "articles", allEntries = true)
     public void incrViewBy(Long id, long delta) {
+        if (delta < -10_000L || delta > 10_000L) {
+            throw new BizException("单次调整幅度必须在 -10000 ~ 10000 之间");
+        }
         Article cur = articleMapper.selectById(id);
         if (cur == null) throw new BizException(404, "文章不存在");
         long curVal = cur.getViewCount() == null ? 0L : cur.getViewCount();
         long next = curVal + delta;
-        if (next < 0) throw new BizException("调整后阅读量不能为负");
+        if (next < 0 || next > 10_000_000L) throw new BizException("调整后阅读量超出允许范围");
         int n = articleMapper.incrByView(id, delta);
         if (n == 0) throw new BizException(404, "文章不存在");
     }

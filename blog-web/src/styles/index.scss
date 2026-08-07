@@ -44,23 +44,82 @@
 
 * { box-sizing: border-box; }
 
+/* 全局平滑滚动 — 锚点跳转、返回顶部均受益 */
+html {
+  scroll-behavior: smooth;
+  /* 固定导航遮挡补偿：锚点定位时预留导航高度 */
+  scroll-padding-top: 92px;
+}
+
+/* 尊重系统「减弱动效」偏好：关闭平滑滚动与装饰动画 */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 html, body, #app {
   margin: 0;
   padding: 0;
-  background: linear-gradient(180deg, var(--c-bg) 0%, #e0f7ff 40%, #ffffff 80%);
-  background-size: 100% 100%;
+  background:
+    radial-gradient(ellipse 110% 50% at 50% 0%, rgba(125,211,252,0.22) 0%, transparent 65%),
+    radial-gradient(ellipse 70% 40% at 100% 30%, rgba(251,191,36,0.06) 0%, transparent 70%),
+    linear-gradient(180deg,
+      #d8eeff 0%,
+      #e6f4ff 22%,
+      #f0f9ff 50%,
+      #f7fcff 78%,
+      #ffffff 100%);
   color: var(--c-ink);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   min-height: 100vh;
-  animation: sky-shift 12s ease-in-out infinite alternate;
+  background-attachment: fixed;
+}
+/* 防横向溢出滚动：用 clip 而非 hidden。
+   ⚠️ 曾用 `max-width: 100vw` + `overflow-x: hidden`：竖直滚动条出现时
+   100vw 比可见区宽出滚动条宽，#app 被硬切出右侧截断线（本截断真凶）。
+   clip 不创建滚动容器、不会把另一轴算成 auto，故不拖慢 fixed 导航与重绘。 */
+html, body {
+  overflow-x: clip;
 }
 
-@keyframes sky-shift {
-  0% { background-position: 0% 0%; }
-  100% { background-position: 0% 30%; }
+/* 整页星空底纹（散落的彩色小点 — 友链/留言/关于 等浅蓝页面共享） */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image:
+    radial-gradient(2px 2px at 8% 14%,  rgba(125,211,252,0.55), transparent 60%),
+    radial-gradient(3px 3px at 18% 38%, rgba(14,165,233,0.45),  transparent 60%),
+    radial-gradient(2px 2px at 28%  8%, rgba(56,189,248,0.50),  transparent 60%),
+    radial-gradient(4px 4px at 36% 62%, rgba(125,211,252,0.45), transparent 60%),
+    radial-gradient(2px 2px at 46% 24%, rgba(14,165,233,0.40),  transparent 60%),
+    radial-gradient(3px 3px at 58% 78%, rgba(251,191,36,0.45),  transparent 60%),
+    radial-gradient(2px 2px at 66% 12%, rgba(125,211,252,0.50), transparent 60%),
+    radial-gradient(3px 3px at 74% 46%, rgba(56,189,248,0.45),  transparent 60%),
+    radial-gradient(2px 2px at 82% 84%, rgba(14,165,233,0.40),  transparent 60%),
+    radial-gradient(2px 2px at 90% 28%, rgba(251,191,36,0.40),  transparent 60%),
+    radial-gradient(3px 3px at 12% 88%, rgba(125,211,252,0.45), transparent 60%),
+    radial-gradient(2px 2px at 52% 56%, rgba(56,189,248,0.40),  transparent 60%);
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  opacity: 0.85;
 }
+/* 手机端去掉 12 层固定伪元素背景，省电池省重绘 */
+@media (max-width: 768px) {
+  body::before { display: none; }
+}
+#app { position: relative; z-index: 1; }
 
 /* 自定义光标 + 涟漪 */
 .cursor-dot {
@@ -85,7 +144,7 @@ html, body, #app {
 .cursor-click .cursor-dot { transform: scale(0.5); }
 .cursor-click .cursor-ring { transform: scale(1.5); opacity: 0.3; }
 
-@media (max-width: 768px) {
+@media (max-width: 768px), (hover: none) and (pointer: coarse) {
   .cursor-dot, .cursor-ring { display: none; }
 }
 
@@ -144,9 +203,15 @@ h1, h2, h3, h4 { font-family: var(--font-serif); color: var(--c-ink); letter-spa
   border-radius: var(--radius);
   box-shadow: var(--shadow-soft);
   border: 1px solid var(--c-line-soft);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+              box-shadow 0.35s ease,
+              border-color 0.3s ease;
 }
-.card:hover { transform: translateY(-3px); box-shadow: var(--shadow-pop); }
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-pop);
+  border-color: rgba(56, 189, 248, 0.28);
+}
 
 .btn-link {
   display: inline-flex;
@@ -178,6 +243,17 @@ h1, h2, h3, h4 { font-family: var(--font-serif); color: var(--c-ink); letter-spa
 }
 
 /* el overrides */
+
+/* ElMessage 全局抬高 z-index，避免被 AppHeader(z-index:100) 之类的
+   sticky 层遮挡。Element Plus 默认 z-index=1 太低 */
+.el-message,
+.el-message-box,
+.el-notification {
+  z-index: 9999 !important;
+  /* 强制 fixed 重新进入视口坐标系，避免被祖先 backdrop-filter 创建的
+     stacking context 限制导致视觉位置错乱 */
+  position: fixed !important;
+}
 .el-button--primary {
   --el-button-bg-color: var(--c-botany-500);
   --el-button-border-color: var(--c-botany-500);
@@ -231,13 +307,7 @@ h1, h2, h3, h4 { font-family: var(--font-serif); color: var(--c-ink); letter-spa
   bottom: -80px; right: 5%;
   animation: float 8s ease-in-out infinite -4s;
 }
-/* SVG 波浪底部 */
-.sky-page-head .wave {
-  position: absolute;
-  bottom: -2px; left: 0; right: 0;
-  z-index: 1;
-  pointer-events: none;
-}
+/* SVG 波浪已移除——不再画分隔线 */
 /* 浮动云 */
 .sky-page-head .cloud {
   position: absolute;
@@ -331,7 +401,7 @@ h1, h2, h3, h4 { font-family: var(--font-serif); color: var(--c-ink); letter-spa
   50% { box-shadow: 0 0 0 12px rgba(56, 189, 248, 0); }
 }
 
-/* 鼠标跟随光晕卡片 */
+/* 鼠标跟随光晕卡片 — 增强版：双光晕层叠，暖金+晴蓝 */
 .glow-card {
   position: relative;
   overflow: hidden;
@@ -341,14 +411,27 @@ h1, h2, h3, h4 { font-family: var(--font-serif); color: var(--c-ink); letter-spa
   position: absolute;
   top: var(--my, 50%); left: var(--mx, 50%);
   width: 300px; height: 300px;
-  background: radial-gradient(circle, rgba(56,189,248,.15) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(251, 191, 36, 0.18) 0%, rgba(56, 189, 248, 0.12) 35%, transparent 70%);
   transform: translate(-50%, -50%);
   pointer-events: none;
   opacity: 0;
-  transition: opacity 0.3s ease;
+  transition: opacity 0.4s ease;
+  z-index: 0;
+}
+.glow-card::after {
+  content: '';
+  position: absolute;
+  top: var(--my, 50%); left: var(--mx, 50%);
+  width: 100px; height: 100px;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.35) 0%, transparent 70%);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.4s ease;
   z-index: 0;
 }
 .glow-card:hover::before { opacity: 1; }
+.glow-card:hover::after { opacity: 1; }
 .glow-card > * { position: relative; z-index: 1; }
 
 /* 浮动装饰云 */
@@ -519,5 +602,77 @@ h1, h2, h3, h4 { font-family: var(--font-serif); color: var(--c-ink); letter-spa
     padding: 8px 10px;
     font-size: 13px;
     min-width: 64px;
+  }
+}
+
+/* ============================================================
+   管理后台表格行高统一
+   ------------------------------------------------------------
+   目标：.admin-content 下的所有 el-table 行高统一为 60px，
+   单元格内容默认单行省略 + 垂直居中。
+   需要保留多行（tag、头像+昵称嵌套等）的列，
+   在 template 内手动加 <div class="cell-flex"> 即可解除限制。
+   ============================================================ */
+.admin-content .el-table {
+  --el-table-row-height: 60px;
+
+  /* 行 tr */
+  .el-table__row {
+    height: 60px;
+  }
+  /* 单元格 td：固定高度 + 垂直居中 */
+  .el-table__cell {
+    height: 60px;
+    padding: 8px 0;
+    vertical-align: middle;
+  }
+  /* 单元格内层 .cell：默认单行省略，垂直居中 */
+  .cell {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    line-height: 24px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  /* 文字列：保证纯文本截断 */
+  .cell > .cell-text {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  /* 多行内容：解除单行限制，按内容自然换行 */
+  .cell > .cell-flex {
+    flex: 1;
+    min-width: 0;
+    display: block;
+    white-space: normal;
+    overflow: visible;
+    line-height: 1.5;
+  }
+  /* cell-flex 内的子元素如 .el-tag 不会因 nowrap 串到一行 */
+  .cell > .cell-flex .el-tag {
+    margin: 2px 4px 2px 0;
+  }
+  /* 操作列按钮组：取消单元格省略，让按钮自由排 */
+  .cell > .cell-actions {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 0;
+    overflow: hidden;
+  }
+  .cell > .cell-actions .el-button { margin: 2px 4px; }
+  /* 表头稍高一点更易读 */
+  th.el-table__cell {
+    height: 48px;
+    background: var(--c-botany-50);
+    color: var(--c-ink);
+    font-weight: 600;
   }
 }

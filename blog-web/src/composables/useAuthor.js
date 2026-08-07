@@ -1,13 +1,12 @@
-import { ref, computed, onMounted, watch } from 'vue'
+import { computed } from 'vue'
 import { useUserStore } from '@/stores/user'
 import { useSiteStore } from '@/stores/site'
-import { siteConfig } from '@/api/front'
 
 /**
- * 全站统一解析作者信息（最终方案）:
+ * 全站统一解析作者信息:
  *   1) 文章对象自带的 author 字段优先（后端 ArticleService.decorate 注入 admin 昵称）
  *   2) 后台已登录 admin → useUserStore.userInfo.nickname
- *   3) 未登录前台 → 实时从后端 site config 取 authorName
+ *   3) 未登录前台 → site store 中的 authorName(由 site store 统一加载,避免重复请求)
  *   4) 兜底 '博主'
  *
  * 返回 { authorName, authorAvatar, initial }
@@ -16,27 +15,8 @@ export function useAuthor(article = null) {
   const userStore = useUserStore()
   const siteStore = useSiteStore()
 
-  // 本地 ref,组件挂载时再拉一次,绕开任何 store 缓存
-  const liveAuthorName = ref('')
-
-  // 触发 store 刷新
+  // 触发 store 加载(若已加载则为 no-op),避免重复请求 /api/v1/site
   siteStore.load()
-
-  onMounted(async () => {
-    try {
-      const resp = await siteConfig()
-      if (resp?.data?.authorName) {
-        liveAuthorName.value = resp.data.authorName
-      }
-    } catch (_) {}
-  })
-
-  // watch store 实时同步
-  watch(
-    () => siteStore.info?.authorName,
-    (v) => { if (v) liveAuthorName.value = v },
-    { immediate: true }
-  )
 
   const authorName = computed(() => {
     // 1) 文章对象自带 author 字段(后端在 ArticleService.decorate 中注入 admin.nickname)
@@ -47,8 +27,8 @@ export function useAuthor(article = null) {
     if (userStore.userInfo?.nickname && userStore.userInfo?.role === 'ADMIN') {
       return userStore.userInfo.nickname
     }
-    // 3) 实时拉取的 authorName
-    return liveAuthorName.value || '博主'
+    // 3) 站点配置中的 authorName
+    return siteStore.info?.authorName || '博主'
   })
 
   const authorAvatar = computed(() => {

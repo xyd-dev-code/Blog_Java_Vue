@@ -1,0 +1,27 @@
+mybatis-plus:
+  configuration:
+    # dev 下打 SQL 方便调试;prod 保持 NoLoggingImpl(基线 application.yml)
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+logging:
+  level:
+    com.blog: debug
+    org.springframework.security: debug
+
+# 开发环境放开本地 IP 过滤：前端 API 经 Vite 代理转发到 localhost:8080,
+# 后端 getRemoteAddr() 看到的是 127.0.0.1,默认会被跳过 -> 开发时统计恒空。
+# 设为 true 后开发阶段能看到数据流动;生产务必保持默认 false(在 application.yml / prod 不配置)。
+# session-interval-seconds 默认 30 秒,dev 下如需更频繁观察可改为 5。
+blog:
+  visit-log:
+    include-local-ip: true
+    session-interval-seconds: 30
+  # dev 环境默认站点根 URL 指向 Vite 前端,通知邮件里的审核链接会跳到这
+  site:
+    url: http://localhost:5173
+  mail:
+    # dev 默认关闭邮件,如需本地测通知把 enabled 改为 true 并补 SMTP
+    enabled: false
+    from-email: ""
+    from-name: Blog
+    admin-email: ""

@@ -15,13 +15,52 @@
       ></span>
     </div>
 
-    <!-- 装饰条：晴空 v2 渐变细线 -->
-    <div class="container">
-      <div class="sky-divider reveal"></div>
+    <!-- 文章搜索 & 装饰条 -->
+    <div class="container articles-search-row reveal">
+      <div class="articles-search">
+        <el-input
+          v-model="kw"
+          placeholder="搜索文章标题、内容或标签…（回车搜索）"
+          clearable
+          size="default"
+          @keyup.enter="doSearch"
+          @clear="exitSearch"
+        >
+          <template #prefix><el-icon><Search /></el-icon></template>
+        </el-input>
+      </div>
+
+      <!-- 搜索态提示条：结果就地展示，不再跳转独立页面 -->
+      <p v-if="searchTip" class="search-tip">{{ searchTip }}</p>
+      <div v-else-if="isSearch" class="search-status">
+        <span class="ss-text">
+          「<b>{{ activeKw }}</b>」找到 <b>{{ results.length }}</b> 篇
+        </span>
+        <button type="button" class="ss-exit" @click="exitSearch">清除搜索</button>
+      </div>
+
+      <div class="sky-divider"></div>
     </div>
 
     <div class="container page-body">
-      <div class="article-list">
+      <!-- 搜索结果：就地展示，卡片样式与列表一致 -->
+      <template v-if="isSearch">
+        <div v-if="searching" class="loading">
+          <el-skeleton :rows="3" animated />
+        </div>
+        <el-empty v-else-if="!results.length" description="没有找到相关文章" />
+        <div v-else class="article-list">
+          <PostCardSky
+            v-for="(a, i) in results"
+            :key="a.id"
+            :article="a"
+            class="reveal"
+            :style="{ transitionDelay: `${(i % 6) * 60}ms` }"
+          />
+        </div>
+      </template>
+
+      <div v-else class="article-list">
         <div v-if="loading" class="loading">
           <el-skeleton :rows="3" animated />
         </div>
@@ -46,15 +85,66 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { Search } from '@element-plus/icons-vue'
 import PostCardSky from '@/components/PostCardSky.vue'
 import HeroArticles from '@/components/HeroArticles.vue'
-import { articles } from '@/api/front'
+import { articles, search } from '@/api/front'
+import { useFoldFit } from '@/composables/useFoldFit'
 
 const list = ref([])
 const total = ref(0)
 const page = ref(1)
 const pageSize = ref(12)
 const loading = ref(false)
+
+// 首屏折痕对齐：撑高 hero，让第一行文章卡完整可见、第二行藏到折痕下
+// pad 需小于卡片行间距（.article-list gap: 24px）；搜索态无 .post-card-sky，
+// useFoldFit 取不到卡片会自动还原 hero 自然高度，正好符合预期
+const { refit } = useFoldFit({
+  hero: '.articles-page .hero-articles',
+  item: '.articles-page .post-card-sky',
+  min: 150,
+  max: 560,
+  pad: 14
+})
+
+/* ---------- 站内搜索：结果就地展示 ---------- */
+const kw = ref('')
+const isSearch = ref(false)     // 是否处于搜索态
+const activeKw = ref('')        // 已生效的关键词（不随输入框实时变）
+const searching = ref(false)
+const results = ref([])
+const searchTip = ref('')       // 校验提示（后端要求 2~50 字）
+
+const doSearch = async () => {
+  const k = kw.value.trim()
+  if (!k) return exitSearch()
+  if (k.length < 2) {
+    searchTip.value = '搜索关键词至少 2 个字'
+    return
+  }
+  searchTip.value = ''
+  isSearch.value = true
+  activeKw.value = k
+  searching.value = true
+  try {
+    const resp = await search({ kw: k, limit: 50 })
+    results.value = resp.data?.records || resp.data || []
+  } catch (_) {
+    results.value = []
+  }
+  searching.value = false
+  refit()
+}
+
+const exitSearch = () => {
+  isSearch.value = false
+  activeKw.value = ''
+  searchTip.value = ''
+  results.value = []
+  kw.value = ''
+  refit()
+}
 
 const reload = async () => {
   loading.value = true
@@ -64,6 +154,7 @@ const reload = async () => {
     total.value = resp.data?.total || list.value.length
   } catch (_) {}
   loading.value = false
+  refit()
 }
 
 onMounted(reload)
@@ -92,10 +183,115 @@ onMounted(reload)
   85% { opacity: 0.15; }
   100% { transform: translateY(100vh) scale(0.5); opacity: 0; }
 }
+/* 手机端关掉 12 个连续 CSS 动画粒子，省电省重绘 */
+@media (max-width: 600px) {
+  .af-motes { display: none; }
+}
+
+.articles-page :deep(.hero-articles) {
+  margin-bottom: 0;
+  padding-bottom: 12px;
+}
+.articles-search-row {
+  margin-top: 6px;
+  text-align: center;
+}
+.articles-search {
+  max-width: 520px;
+  margin: 0 auto;
+  padding: 2px 2px 2px 14px;
+  background: rgba(255, 255, 255, 0.65);
+  border: 1px solid rgba(125, 211, 252, 0.4);
+  border-radius: 999px;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow:
+    0 4px 20px rgba(14, 165, 233, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease;
+}
+.articles-search:hover {
+  border-color: rgba(125, 211, 252, 0.7);
+  transform: translateY(-1px);
+}
+.articles-search:focus-within {
+  border-color: #38bdf8;
+  box-shadow:
+    0 8px 28px rgba(14, 165, 233, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  transform: translateY(-1px);
+}
+.articles-search :deep(.el-input__wrapper) {
+  background: transparent;
+  box-shadow: none !important;
+  padding-left: 0;
+}
+.articles-search :deep(.el-input__inner) {
+  color: var(--c-ink);
+  font-size: 14px;
+}
+.articles-search :deep(.el-input__inner::placeholder) {
+  color: #94a3b8;
+}
+/* 前缀搜索图标：与站内 AppHeader/Search.vue 风格一致——无圆、无背景，仅浅蓝着色 */
+.articles-search :deep(.el-input__prefix-inner) {
+  color: #0ea5e9;
+  font-size: 16px;
+  line-height: 1;
+  margin-right: 2px;
+}
+.articles-search :deep(.el-input__prefix-inner .el-icon),
+.articles-search :deep(.el-input__prefix-inner svg) {
+  display: block;
+  width: 16px;
+  height: 16px;
+  font-size: 16px;
+  line-height: 16px;
+}
+.articles-search :deep(.el-input__wrapper.is-focus) ~ * .el-input__prefix-inner,
+.articles-search:focus-within :deep(.el-input__prefix-inner) {
+  color: #0369a1;
+}
+
+@media (max-width: 600px) {
+  .articles-search-row { margin-top: 6px; padding: 0 16px; }
+  .articles-search { max-width: none; padding: 4px 4px 4px 12px; }
+  .articles-search :deep(.el-input__inner) { font-size: 13px; }
+  .articles-search :deep(.el-input__inner::placeholder) { font-size: 13px; }
+}
+
+/* 搜索态提示条 */
+.search-tip,
+.search-status {
+  margin: 10px auto 0;
+  font-size: 13px;
+  color: var(--c-ink-soft, #64748b);
+}
+.search-tip { color: #ea580c; }
+.search-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+.search-status b { color: #0369a1; font-weight: 600; }
+.ss-exit {
+  padding: 2px 12px;
+  font-size: 12.5px;
+  color: #0369a1;
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+.ss-exit:hover { background: #e0f2fe; border-color: #38bdf8; }
+
+/* 搜索结果复用 .article-list 网格，卡片样式与正常列表完全一致 */
 
 .sky-divider {
   height: 3px;
-  margin: 36px auto 0;
+  margin: 14px auto 0;
   max-width: 320px;
   background: linear-gradient(90deg, transparent, #38bdf8, #fbbf24, #38bdf8, transparent);
   background-size: 200% 100%;

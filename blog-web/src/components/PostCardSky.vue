@@ -2,6 +2,7 @@
   <GradientBorderCard
     variant="sky"
     hoverable
+    v-tilt
     class="post-card-sky"
     @click="$router.push(`/articles/${article.slug}`)"
   >
@@ -190,5 +191,15 @@ const readMinutes = computed(() => {
 .stats {
   display: flex;
   gap: 10px;
+}
+
+/* mobile */
+@media (max-width: 480px) {
+  .cover-char { font-size: 48px; }
+  .body { padding: 14px 16px 12px; }
+  .title { font-size: 16px; }
+  .meta-top { gap: 6px; font-size: 11px; }
+  .excerpt { font-size: 13px; }
+  .stats { font-size: 11px; gap: 6px; }
 }
 </style>

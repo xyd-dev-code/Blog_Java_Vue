@@ -9,10 +9,10 @@ export const useSiteStore = defineStore('site', {
   actions: {
     /**
      * 拉取站点配置。
-     * 站点配置为「全局公共信息」,不存在用户级数据,缓存意义不大;
-     * 为了避免 admin 修改昵称后前台 store 还停在旧值,默认每次调用都重新请求。
+     * 默认只在未加载过时请求(force=false),避免一次页面渲染触发多次 /api/v1/site。
+     * 需要强制刷新(如 admin 修改站点信息后)请传 force=true 或调用 reload()。
      */
-    async load(force = true) {
+    async load(force = false) {
       try {
         const resp = await siteConfig()
         this.info = resp.data

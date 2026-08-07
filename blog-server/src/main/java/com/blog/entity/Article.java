@@ -27,6 +27,7 @@ public class Article {
     private LocalDateTime createTime;
     private LocalDateTime updateTime;
     private Long viewCount;
+    private Integer shareCount;
     @TableLogic private Integer deleted;
 
     @TableField(exist = false) private String categoryName;
@@ -67,6 +68,8 @@ public class Article {
     public void setUpdateTime(LocalDateTime updateTime) { this.updateTime = updateTime; }
     public Long getViewCount() { return viewCount; }
     public void setViewCount(Long viewCount) { this.viewCount = viewCount; }
+    public Integer getShareCount() { return shareCount; }
+    public void setShareCount(Integer shareCount) { this.shareCount = shareCount; }
     public Integer getDeleted() { return deleted; }
     public void setDeleted(Integer deleted) { this.deleted = deleted; }
     public String getCategoryName() { return categoryName; }

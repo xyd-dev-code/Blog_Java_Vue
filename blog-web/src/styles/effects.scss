@@ -1,0 +1,539 @@
+/* ============================================================
+   effects.scss — 纯 CSS 特效工具箱
+   在 main.js 里 import 即可全站可用
+   ============================================================ */
+
+/* ───── ① 悬浮浮动 ───── */
+/* 给任意元素（图标、装饰、badge）加 ef-float，缓慢上下浮动 */
+.ef-float {
+  animation: ef-float 3.5s ease-in-out infinite;
+  will-change: transform;
+}
+@keyframes ef-float {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-8px); }
+}
+.ef-float-slow { animation-duration: 5s; }
+.ef-float-fast { animation-duration: 2.2s; }
+
+/* ───── ② 渐变文字 ───── */
+/* 用于 hero 标题 / 强调文字。背景剪切成文字色，动画循环 */
+.ef-gradient-text {
+  background: linear-gradient(135deg, #38bdf8 0%, #0ea5e9 30%, #a78bfa 60%, #22d3ee 100%);
+  background-size: 300% 100%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: ef-gt-shift 6s ease-in-out infinite;
+}
+@keyframes ef-gt-shift {
+  0%, 100% { background-position: 0% 50%; }
+  50%      { background-position: 100% 50%; }
+}
+
+/* ───── ③ 卡片光扫 ───── */
+/* 给 .card 加 ef-card-sweep，hover 时一道光从左扫到右 */
+.ef-card-sweep {
+  position: relative;
+  overflow: hidden;
+}
+.ef-card-sweep::after {
+  content: '';
+  position: absolute;
+  top: -50%; left: -150%;
+  width: 60%; height: 200%;
+  background: linear-gradient(105deg,
+    transparent 30%, rgba(255,255,255,0.4) 40%, rgba(255,255,255,0.05) 60%, transparent 70%);
+  transform: skewX(-20deg);
+  transition: left 0.6s ease;
+  pointer-events: none;
+}
+.ef-card-sweep:hover::after {
+  left: 120%;
+}
+
+/* ───── ④ 霓虹光晕按钮 ───── */
+/* 给按钮 / CTA 加 ef-neon，hover 时放大 + 发光 */
+.ef-neon {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.ef-neon:hover {
+  transform: scale(1.06);
+  box-shadow: 0 0 18px rgba(56,189,248,0.55), 0 0 40px rgba(14,165,233,0.25);
+}
+
+/* ───── ⑤ 弹性缩放 ───── */
+/* 给头像/图标加 ef-bounce，hover 时弹一下 */
+.ef-bounce {
+  transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.ef-bounce:hover {
+  transform: scale(1.18);
+}
+
+/* ───── ⑥ 脉冲呼吸 ───── */
+/* 用于信号点 / 在线状态 / waiting badge */
+.ef-pulse {
+  animation: ef-pulse 2s ease-in-out infinite;
+}
+@keyframes ef-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: 0.55; transform: scale(0.92); }
+}
+
+/* ───── ⑦ 噪声纹理（全屏） ───── */
+/* 给 body 或某个 section 加 ef-noise，叠加一层极淡的噪点 */
+.ef-noise::before {
+  content: '';
+  position: absolute; inset: 0; z-index: 1;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events: none;
+}
+
+/* ============================================================
+   动态背景 — 挂到 <section> / <div> 上即可
+   ============================================================ */
+
+/* ───── ⑧ 流动渐变背景 ───── */
+/* 蓝→青→紫 渐变色大范围缓慢流动，适合 hero / 大区域 */
+.ef-bg-gradient {
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 25%, #dbeafe 50%, #ede9fe 75%, #f0f9ff 100%);
+  background-size: 400% 400%;
+  animation: ef-bg-flow 10s ease-in-out infinite;
+}
+@keyframes ef-bg-flow {
+  0%, 100% { background-position: 0% 50%; }
+  25%      { background-position: 100% 0%; }
+  50%      { background-position: 100% 100%; }
+  75%      { background-position: 0% 100%; }
+}
+
+/* ───── ⑨ 星光点阵背景 ───── */
+/* 深色底上亮白/浅蓝小点，缓慢旋转 + 漂移，像夜空，适合暗色区块 */
+.ef-bg-stars {
+  position: relative;
+  background-color: #0b1120;
+  overflow: hidden;
+}
+.ef-bg-stars::before {
+  content: '';
+  position: absolute; inset: -50%;
+  background-image:
+    radial-gradient(1px 1px at 15% 25%, rgba(255,255,255,0.8), transparent),
+    radial-gradient(1px 1px at 35% 55%, rgba(56,189,248,0.7), transparent),
+    radial-gradient(1.5px 1.5px at 55% 15%, rgba(255,255,255,0.9), transparent),
+    radial-gradient(1px 1px at 70% 40%, rgba(56,189,248,0.6), transparent),
+    radial-gradient(1.5px 1.5px at 85% 70%, rgba(255,255,255,0.8), transparent),
+    radial-gradient(1px 1px at 25% 85%, rgba(56,189,248,0.7), transparent),
+    radial-gradient(1px 1px at 45% 35%, rgba(255,255,255,0.6), transparent),
+    radial-gradient(1.5px 1.5px at 75% 60%, rgba(22,211,238,0.7), transparent),
+    radial-gradient(1px 1px at 95% 20%, rgba(255,255,255,0.7), transparent),
+    radial-gradient(1px 1px at 10% 60%, rgba(56,189,248,0.5), transparent),
+    radial-gradient(1.5px 1.5px at 60% 80%, rgba(255,255,255,0.6), transparent),
+    radial-gradient(1px 1px at 30% 10%, rgba(22,211,238,0.5), transparent);
+  animation: ef-stars-drift 30s linear infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+@keyframes ef-stars-drift {
+  0%   { transform: translate(0, 0) rotate(0deg); }
+  100% { transform: translate(-2%, -1%) rotate(1deg); }
+}
+
+/* ───── ⑩ 呼吸光斑背景 ───── */
+/* 浅色底上淡蓝渐变光斑，微呼吸，适合卡片区 / 评论区背景 */
+.ef-bg-dots {
+  background-color: #f8fbff;
+  background-image:
+    radial-gradient(circle at 12% 18%, rgba(56,189,248,0.08) 0%, transparent 20%),
+    radial-gradient(circle at 38% 62%, rgba(14,165,233,0.06) 0%, transparent 18%),
+    radial-gradient(circle at 65% 28%, rgba(34,211,238,0.07) 0%, transparent 22%),
+    radial-gradient(circle at 82% 75%, rgba(56,189,248,0.05) 0%, transparent 16%);
+  animation: ef-dots-breathe 8s ease-in-out infinite;
+}
+@keyframes ef-dots-breathe {
+  0%, 100% { background-size: 100% 100%; }
+  50%      { background-size: 105% 105%; }
+}
+
+/* ============================================================
+   卡片 / 标题 交互增强（晴天主题专用，低调不喧宾夺主）
+   ============================================================ */
+
+/* ───── ⑫ 卡片边框流光 ───── */
+/* hover 时浅蓝渐变沿圆角边框缓慢流动。用法：<div class="card ef-card-glow"> */
+/* 原理：伪元素铺满并外扩 1px 作为「边框层」，用 mask 挖空内部只留描边 */
+.ef-card-glow {
+  position: relative;
+  isolation: isolate;
+}
+.ef-card-glow::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1.5px;
+  background: conic-gradient(
+    from var(--glow-angle, 0deg),
+    transparent 0deg,
+    rgba(56, 189, 248, 0.15) 40deg,
+    rgba(56, 189, 248, 0.85) 90deg,
+    rgba(34, 211, 238, 0.9) 130deg,
+    rgba(56, 189, 248, 0.15) 180deg,
+    transparent 220deg,
+    transparent 360deg
+  );
+  /* 只保留 padding 宽度的描边，中间挖空 */
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 0.35s ease;
+  pointer-events: none;
+  z-index: 1;
+}
+.ef-card-glow:hover::before {
+  opacity: 1;
+  animation: ef-glow-spin 3s linear infinite;
+}
+
+/* @property 让 conic-gradient 的角度可被动画插值（Chrome/Edge/Safari 16.4+） */
+@property --glow-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+@keyframes ef-glow-spin {
+  to { --glow-angle: 360deg; }
+}
+
+/* 不支持 @property 的浏览器兜底：静态柔光描边，不闪不跳 */
+@supports not (background: conic-gradient(from 0deg, red, blue)) {
+  .ef-card-glow:hover::before {
+    animation: none;
+    background: linear-gradient(120deg, rgba(56, 189, 248, 0.7), rgba(34, 211, 238, 0.7));
+  }
+}
+
+/* ───── ⑬ 卡片入场：从下淡入上浮 ───── */
+/* 配合 useScrollReveal：默认隐藏，进入视口加 .visible */
+/* 用法：<div class="ef-rise"> … 需由 useScrollReveal('.ef-rise') 观察 */
+/* 用 animation 而非 transition：animation-delay 只影响入场，
+   不会像 transition-delay 那样连带拖慢卡片自身的 hover 响应；
+   fill-mode: backwards 让元素在延迟期间保持起始态，
+   动画结束后交还控制权给常规样式，hover 位移不被覆盖。 */
+.ef-rise {
+  opacity: 0;
+}
+.ef-rise.visible {
+  opacity: 1;
+  animation: ef-rise-in 0.6s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+@keyframes ef-rise-in {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+/* 网格中依次错峰入场：给前 12 个子项递增延迟 */
+@for $i from 1 through 12 {
+  .ef-stagger > *:nth-child(#{$i}).ef-rise.visible {
+    animation-delay: #{($i - 1) * 0.06}s;
+  }
+}
+/* 系统「减弱动效」：直接显形，不做位移 */
+@media (prefers-reduced-motion: reduce) {
+  .ef-rise { opacity: 1; }
+  .ef-rise.visible { animation: none; }
+}
+
+/* ───── ⑭ 标题柔光扫过 ───── */
+/* 一层淡蓝柔光从左向右缓慢扫过标题文字 */
+/* 用法：<h1 class="ef-title-shine">在线工具箱</h1> */
+.ef-title-shine {
+  position: relative;
+  background-image: linear-gradient(
+    100deg,
+    currentColor 0%,
+    currentColor 40%,
+    rgba(125, 211, 252, 0.95) 50%,
+    currentColor 60%,
+    currentColor 100%
+  );
+  background-size: 250% 100%;
+  background-position: 150% 0;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: ef-title-shine 5.5s ease-in-out 0.4s infinite;
+}
+@keyframes ef-title-shine {
+  0%        { background-position: 150% 0; }
+  45%, 100% { background-position: -50% 0; }
+}
+
+/* ───── ⑮ 标题逐字浮现 ───── */
+/* 用法：<h1 class="ef-title-chars"><span>在</span><span>线</span>…</h1>
+   或配合 <TextReveal> 组件自动拆字 */
+.ef-title-chars > span {
+  display: inline-block;
+  opacity: 0;
+  /* 初始态：下潜 + 轻微缩小，落位时淡入并归位（translate3d 触发 GPU 合成层，避免重排重绘卡顿） */
+  transform: translate3d(0, 0.5em, 0) scale(0.94);
+  transform-origin: 50% 100%;
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  animation: ef-char-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+/* 空格字符需保留宽度 */
+.ef-title-chars > span.is-space {
+  width: 0.35em;
+}
+@keyframes ef-char-in {
+  from { opacity: 0; transform: translate3d(0, 0.5em, 0) scale(0.94); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+}
+/* 尊重系统「减弱动效」：直接落到终态，不播放入场动画 */
+@media (prefers-reduced-motion: reduce) {
+  .ef-title-chars > span {
+    opacity: 1;
+    transform: none;
+    animation: none;
+    will-change: auto;
+  }
+}
+
+/* ───── ⑯ 斜纹科技网格 ───── */
+/* 极淡的 45° 细线网格，缓慢移动，科技感 */
+.ef-bg-grid {
+  background-color: #fafcff;
+  background-image:
+    linear-gradient(45deg, rgba(56,189,248,0.06) 25%, transparent 25%),
+    linear-gradient(-45deg, rgba(56,189,248,0.06) 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, rgba(56,189,248,0.06) 75%),
+    linear-gradient(-45deg, transparent 75%, rgba(56,189,248,0.06) 75%);
+  background-size: 40px 40px;
+  background-position: 0 0, 0 20px, 20px -20px, -20px 0;
+  animation: ef-grid-shift 12s linear infinite;
+}
+@keyframes ef-grid-shift {
+  0% { background-position: 0 0, 0 20px, 20px -20px, -20px 0; }
+  100% { background-position: 40px 40px, 40px 60px, 60px 20px, 20px 40px; }
+}
+
+/* ============================================================
+   炫酷增强（晴天主题 · 2026-08）
+   ============================================================ */
+
+/* ───── ⑰ 微光扫过 ───── */
+/* 元素 hover 时一道淡金/晴蓝微光从左到右扫过，比 card-sweep 更柔和 */
+/* 用法：<div class="ef-shimmer">…</div> */
+.ef-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+.ef-shimmer::after {
+  content: '';
+  position: absolute;
+  top: -20%; left: -120%;
+  width: 80%; height: 140%;
+  background: linear-gradient(
+    105deg,
+    transparent 0%,
+    rgba(251, 191, 36, 0.12) 35%,
+    rgba(255, 255, 255, 0.25) 50%,
+    rgba(56, 189, 248, 0.12) 65%,
+    transparent 100%
+  );
+  transform: skewX(-18deg);
+  transition: left 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+  pointer-events: none;
+  z-index: 2;
+}
+.ef-shimmer:hover::after {
+  left: 120%;
+}
+
+/* ───── ⑱ 玻璃抬升 ───── */
+/* 玻璃/毛玻璃卡片 hover 时微抬 + 边框发亮，适合导航药丸、天气卡片等 */
+/* 用法：<div class="ef-glass-lift">…</div> */
+.ef-glass-lift {
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+              box-shadow 0.35s ease,
+              border-color 0.35s ease;
+}
+.ef-glass-lift:hover {
+  transform: translateY(-6px);
+  box-shadow:
+    0 12px 32px rgba(14, 165, 233, 0.12),
+    0 4px 12px rgba(56, 189, 248, 0.08),
+    0 0 0 1px rgba(56, 189, 248, 0.25) inset;
+}
+
+/* ───── ⑲ 棱镜折射边缘 ───── */
+/* hover 时沿着元素边缘出现一道细微的彩虹折射光，如阳光穿过玻璃棱镜 */
+/* 用法：<div class="ef-prism-edge">…</div> */
+.ef-prism-edge {
+  position: relative;
+  isolation: isolate;
+}
+.ef-prism-edge::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 2px;
+  background: linear-gradient(
+    135deg,
+    rgba(251, 191, 36, 0.7),
+    rgba(56, 189, 248, 0.7),
+    rgba(167, 139, 250, 0.5),
+    rgba(34, 211, 238, 0.7),
+    rgba(251, 191, 36, 0.7)
+  );
+  background-size: 300% 300%;
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+  z-index: 1;
+  animation: ef-prism-shift 4s linear infinite paused;
+}
+.ef-prism-edge:hover::before {
+  opacity: 1;
+  animation-play-state: running;
+}
+@keyframes ef-prism-shift {
+  0%   { background-position: 0% 0%; }
+  100% { background-position: 300% 300%; }
+}
+
+/* ───── ⑳ 晴光放射 ───── */
+/* 一个从中心向外放射的晴空渐变光环，缓慢呼吸，适合空状态/CTA背景 */
+/* 用法：<div class="ef-sunburst">…</div> */
+.ef-sunburst {
+  position: relative;
+  overflow: hidden;
+}
+.ef-sunburst::before {
+  content: '';
+  position: absolute;
+  inset: -60%;
+  background:
+    conic-gradient(
+      from 0deg,
+      transparent 0deg,
+      rgba(56, 189, 248, 0.04) 15deg,
+      rgba(251, 191, 36, 0.06) 30deg,
+      transparent 45deg,
+      rgba(34, 211, 238, 0.04) 60deg,
+      transparent 75deg,
+      rgba(56, 189, 248, 0.03) 90deg,
+      transparent 105deg,
+      rgba(251, 191, 36, 0.05) 120deg,
+      transparent 135deg,
+      rgba(56, 189, 248, 0.04) 150deg,
+      transparent 165deg,
+      rgba(34, 211, 238, 0.03) 180deg,
+      transparent 195deg,
+      rgba(251, 191, 36, 0.04) 210deg,
+      transparent 225deg,
+      rgba(56, 189, 248, 0.05) 240deg,
+      transparent 255deg,
+      rgba(34, 211, 238, 0.03) 270deg,
+      transparent 285deg,
+      rgba(251, 191, 36, 0.04) 300deg,
+      transparent 315deg,
+      rgba(56, 189, 248, 0.03) 330deg,
+      transparent 345deg,
+      transparent 360deg
+    );
+  background-size: 100% 100%;
+  animation: ef-sunburst-spin 20s linear infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+.ef-sunburst > * {
+  position: relative;
+  z-index: 1;
+}
+@keyframes ef-sunburst-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ───── ㉑ hover 微光涟漪 ───── */
+/* hover 时从中心扩散一圈微光涟漪，适合图标按钮 */
+/* 用法：<button class="ef-ripple-hover">…</button> */
+.ef-ripple-hover {
+  position: relative;
+  overflow: hidden;
+}
+.ef-ripple-hover::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: 0 0 0 0 rgba(56, 189, 248, 0.35);
+  opacity: 0;
+  transition: box-shadow 0.55s ease, opacity 0.55s ease;
+  pointer-events: none;
+}
+.ef-ripple-hover:hover::after {
+  box-shadow: 0 0 0 10px rgba(56, 189, 248, 0);
+  opacity: 1;
+}
+
+/* ───── ㉒ 文字晴光呼吸 ───── */
+/* 文字颜色在晴蓝-暖金之间缓慢呼吸切换，适合强调短文本 */
+/* 用法：<span class="ef-text-breathe">精选</span> */
+.ef-text-breathe {
+  animation: ef-text-breathe 4s ease-in-out infinite;
+}
+@keyframes ef-text-breathe {
+  0%, 100% { color: #38bdf8; }
+  50%      { color: #f59e0b; }
+}
+
+/* ───── ㉓ 玻璃光斑流动 ───── */
+/* 透明/半透明容器背景有光斑缓慢漂移，如阳光透过树叶的光斑。
+   关键：不设 background-color，否则容器会变成"框框"与页面脱节。
+   光斑只浮在容器可见区域，不与容器背景冲突。*/
+/* 用法：<section class="ef-bg-caustics">…</section> */
+.ef-bg-caustics {
+  position: relative;
+  overflow: hidden;
+}
+.ef-bg-caustics::before {
+  content: '';
+  position: absolute;
+  inset: -30%;
+  background:
+    radial-gradient(ellipse 12% 8% at 20% 30%, rgba(251,191,36,0.18) 0%, transparent 70%),
+    radial-gradient(ellipse 9% 6% at 55% 20%, rgba(56,189,248,0.15) 0%, transparent 65%),
+    radial-gradient(ellipse 14% 9% at 75% 65%, rgba(251,191,36,0.14) 0%, transparent 70%),
+    radial-gradient(ellipse 10% 7% at 35% 75%, rgba(34,211,238,0.13) 0%, transparent 65%),
+    radial-gradient(ellipse 11% 8% at 80% 40%, rgba(56,189,248,0.16) 0%, transparent 70%),
+    radial-gradient(ellipse 8% 5% at 15% 55%, rgba(251,191,36,0.12) 0%, transparent 60%);
+  animation: ef-caustics-float 12s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+.ef-bg-caustics > * {
+  position: relative;
+  z-index: 1;
+}
+@keyframes ef-caustics-float {
+  0%, 100% { transform: translate(0, 0); }
+  33%      { transform: translate(8px, -12px); }
+  66%      { transform: translate(-6px, 8px); }
+}

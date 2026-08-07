@@ -1,5 +1,7 @@
 <template>
   <div class="sky-page-head">
+    <HeroLight />
+    <GodRays :origin-y="60" />
     <!-- 浮动云 -->
     <svg class="cloud cloud-1 cloud-float" viewBox="0 0 200 80" preserveAspectRatio="none">
       <path fill="rgba(255,255,255,.15)" d="M40,60 Q50,30 70,35 Q80,10 110,15 Q130,0 160,25 Q185,20 190,45 Q200,60 180,65 L30,65 Z"/>
@@ -11,16 +13,12 @@
       <h1>{{ title }}</h1>
       <p v-if="subtitle">{{ subtitle }}</p>
     </div>
-    <svg class="wave" viewBox="0 0 1440 120" preserveAspectRatio="none">
-      <path fill="currentColor" style="color:var(--c-bg); opacity:.95"
-        d="M0,40 C180,100 360,0 540,50 C720,100 900,20 1080,60 C1260,100 1380,30 1440,50 L1440,120 L0,120 Z" />
-      <path fill="currentColor" style="color:#fff; opacity:.3"
-        d="M0,60 C200,10 400,70 600,40 C800,10 1000,60 1200,35 C1320,20 1400,55 1440,45 L1440,120 L0,120 Z" />
-    </svg>
   </div>
 </template>
 
 <script setup>
+import GodRays from '@/components/effects/GodRays.vue'
+import HeroLight from '@/components/effects/HeroLight.vue'
 defineProps({
   title: { type: String, required: true },
   subtitle: { type: String, default: '' }

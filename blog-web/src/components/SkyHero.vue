@@ -1,6 +1,7 @@
 ﻿<template>
   <section class="sky-hero" ref="rootRef">
-    <!-- 装饰层 -->
+    <!-- 装饰层：视差光影 + 太阳 + 云朵 -->
+    <HeroLight />
     <div class="deco">
       <div class="sun" :style="sunStyle"></div>
       <svg class="cloud cloud-a" viewBox="0 0 64 24" fill="white" aria-hidden="true">
@@ -21,7 +22,7 @@
       <div class="hero-text reveal">
         <div class="hero-eyebrow">
           <span class="dot"></span>
-          <span>{{ greeting }} · {{ todayStr }}</span>
+          <span>{{ displayGreeting }} · {{ todayStr }}</span>
         </div>
         <h1 class="hero-title">
           <span class="title-main">{{ titleMain }}</span>
@@ -29,56 +30,89 @@
         </h1>
         <p class="hero-desc">{{ subtitle }}</p>
         <div class="hero-actions">
-          <el-button type="primary" size="large" class="btn-pulse" @click="$emit('cta')">
+          <el-button type="primary" size="large" class="btn-pulse ef-neon" @click="$emit('cta')">
             <el-icon><Reading /></el-icon>&nbsp;{{ ctaText }}
           </el-button>
           <el-button size="large" plain @click="$emit('secondary')">
             {{ secondaryText }}
           </el-button>
         </div>
-        <ul class="hero-stats">
-          <li v-for="s in stats" :key="s.label">
-            <div class="stat-num">{{ s.value }}</div>
-            <div class="stat-label">{{ s.label }}</div>
-          </li>
-        </ul>
       </div>
 
       <!-- 右：天气卡（玻璃态 + 渐变描边） -->
       <GradientBorderCard variant="mix" floating class="weather-card reveal">
         <div class="weather-head">
           <div>
-            <div class="weather-eyebrow">{{ status === 'ready' ? location : 'today' }}</div>
+            <div class="weather-eyebrow">
+              <span class="we-text">{{ (status === 'ready' || status === 'error') ? (location || '本地') : '今日天气' }}</span>
+              <button class="weather-loc-btn" type="button" :title="location ? '切换城市' : '选择城市'" @click="togglePicker">📍</button>
+            </div>
             <div class="weather-temp">
-              <template v-if="status === 'ready' || status === 'denied' || status === 'error'">
-                {{ desc }} · {{ temp ?? '--' }}°
-              </template>
-              <template v-else-if="status === 'locating' || status === 'fetching'">
-                正在获取你所在地的天气…
-              </template>
+                  <template v-if="status === 'ready'">
+                    {{ desc }} · {{ temp ?? '--' }}°
+                    <span v-if="feelsLike != null && feelsLike !== temp" class="weather-feels">（体感 {{ feelsLike }}°）</span>
+                  </template>
+                  <template v-else-if="status === 'error'">
+                    <span class="weather-fail">{{ desc }}</span>
+                    <button class="wd-btn" type="button" @click="reAuthorize">重试</button>
+                  </template>
+                  <template v-else-if="status === 'denied'">
+                    <span class="weather-fail">位置信息暂未授权</span>
+                    <button class="wd-btn" type="button" @click="reAuthorize">重新授权</button>
+                  </template>
               <template v-else>
-                晴 · 24°
+                正在获取天气…
               </template>
             </div>
-            <div class="weather-date">{{ todayStr }} · DemoAuthor</div>
+                <div v-if="status === 'ready' && (humidity != null || windSpeed != null || pressure != null)" class="weather-detail">
+                  <span v-if="humidity != null">湿度 {{ humidity }}%</span>
+                  <span v-if="humidity != null && (windSpeed != null || pressure != null)" class="wd-sep">·</span>
+                  <span v-if="windSpeed != null">{{ windDir }}{{ windSpeed }}km/h</span>
+                  <span v-if="windSpeed != null && pressure != null" class="wd-sep">·</span>
+                  <span v-if="pressure != null">气压 {{ pressure }}hPa</span>
+                </div>
+            <div class="weather-date">{{ todayStr }} · {{ siteNameLabel }}</div>
           </div>
           <div class="weather-icon">{{ icon }}</div>
+        </div>
+
+        <!-- 城市切换面板：访客搜索并切换到自己真实的城市 -->
+        <div v-if="showPicker" class="city-picker">
+          <div class="cp-input-wrap">
+            <input
+              v-model="cityKeyword"
+              class="cp-input"
+              type="text"
+              placeholder="搜索城市，如 深圳 / 北京 / 上海"
+              @input="onCityInput"
+              @keyup.enter="searchCities(cityKeyword)"
+            />
+            <button v-if="location" class="cp-reset" type="button" @click="resetCity" title="回到默认位置">默认</button>
+          </div>
+          <div v-if="searching" class="cp-tip">搜索中…</div>
+          <ul v-else-if="searchResults.length" class="cp-list">
+            <li
+              v-for="c in searchResults"
+              :key="c.name + c.lat + c.lon"
+              class="cp-item"
+              @click="pickCity(c)"
+            >
+              <span class="cp-name">{{ c.name }}</span>
+              <span class="cp-admin">{{ c.admin }}</span>
+            </li>
+          </ul>
+          <div v-else-if="cityKeyword.trim()" class="cp-tip">未找到匹配的城市</div>
         </div>
         <div class="weather-divider"></div>
         <div class="weather-grid">
           <div v-for="s in stats" :key="s.label">
-            <div class="wg-num">{{ s.value }}</div>
+            <div class="wg-num"><CountUp :value="s.value" /></div>
             <div class="wg-label">{{ s.label }}</div>
           </div>
         </div>
         <div class="weather-quote">{{ quote }}</div>
       </GradientBorderCard>
     </div>
-
-    <!-- 底部波浪分隔 -->
-    <svg class="wave" viewBox="0 0 1440 80" preserveAspectRatio="none" aria-hidden="true">
-      <path d="M0,40 C240,80 480,0 720,40 C960,80 1200,0 1440,40 L1440,80 L0,80 Z" fill="#ffffff" />
-    </svg>
   </section>
 </template>
 
@@ -86,15 +120,43 @@
 import { computed, ref, onMounted } from 'vue'
 import { Reading } from '@element-plus/icons-vue'
 import GradientBorderCard from './GradientBorderCard.vue'
+import HeroLight from '@/components/effects/HeroLight.vue'
+import CountUp from '@/components/CountUp.vue'
 import { useWeather } from '@/composables/useWeather'
+import { useSiteStore } from '@/stores/site'
 
-const { temp, desc, icon, location, status } = useWeather()
+// 天气卡展示访客所选城市的天气。默认按 IP 定位到城市，访客可手动搜索切换城市。
+const {
+  temp, desc, icon, location, status,
+  humidity, windSpeed, windDir, pressure, feelsLike,
+  showPicker, cityKeyword, searchResults, searching,
+  togglePicker, onCityInput, searchCities, pickCity, resetCity, reAuthorize
+} = useWeather()
 
-defineProps({
+const siteStore = useSiteStore()
+// 天气卡底部"日期·站点名"——不再硬编码博主笔名，跟随后台站点配置走，
+// 改名后也能即时同步。
+const siteNameLabel = computed(() =>
+  (siteStore.info?.siteName && siteStore.info.siteName.trim())
+    ? siteStore.info.siteName
+    : '拾光小筑'
+)
+
+// 按当前时段返回招呼语：深夜（含凌晨 0-5 点）归为「晚上好」，其余分段
+function timeGreeting() {
+  const h = new Date().getHours()
+  if (h >= 18 || h < 6) return '晚上好' // 18:00–次日 05:59 深夜 / 凌晨
+  if (h < 9) return '早上好' // 06:00–08:59
+  if (h < 12) return '上午好' // 09:00–11:59
+  if (h < 14) return '中午好' // 12:00–13:59
+  return '下午好' // 14:00–17:59
+}
+
+const props = defineProps({
   titleMain: { type: String, default: '草木蔓发' },
   titleAccent: { type: String, default: '春山可望' },
   subtitle: { type: String, default: '把博客做成一片晴天，慢一点，让灵魂跟上脚步。' },
-  greeting: { type: String, default: '下午好' },
+  greeting: { type: String, default: '' },
   ctaText: { type: String, default: '开始阅读' },
   secondaryText: { type: String, default: '关于我' },
   stats: { type: Array, default: () => [
@@ -107,6 +169,11 @@ defineProps({
 })
 
 defineEmits(['cta', 'secondary'])
+
+// 优先用外部传入的 greeting；未传入时按当前时段动态生成
+const displayGreeting = computed(() =>
+  (props.greeting && props.greeting.trim()) ? props.greeting : timeGreeting()
+)
 
 const rootRef = ref(null)
 const sunX = ref(50)
@@ -136,9 +203,10 @@ onMounted(() => {
 <style scoped lang="scss">
 .sky-hero {
   position: relative;
-  overflow: hidden;
-  padding: 80px 0 90px;
-  background: linear-gradient(180deg, #e0f7ff 0%, #f0f9ff 50%, #ffffff 100%);
+  /* 不在根元素裁切——太阳 box-shadow(0 0 120px) 的光晕会远超容器，
+     overflow:hidden 会在右侧/底部形成硬截断线 */
+  padding: 104px 0 120px;
+  /* 不设底色——全局天空渐变透上来，太阳光晕自然向外 bleed，与下方内容区共融 */
 }
 
 // 装饰：太阳 + 云
@@ -184,7 +252,7 @@ onMounted(() => {
   z-index: 1;
   display: grid;
   grid-template-columns: 1.3fr 1fr;
-  gap: 56px;
+  gap: 72px;
   align-items: center;
 }
 
@@ -197,7 +265,7 @@ onMounted(() => {
   color: #0369a1;
   border-radius: 999px;
   font-size: 13px;
-  margin-bottom: 20px;
+  margin-bottom: 34px;
   border: 1px solid rgba(125, 211, 252, 0.5);
   backdrop-filter: blur(6px);
 }
@@ -214,8 +282,8 @@ onMounted(() => {
 .hero-title {
   font-family: var(--font-serif);
   font-size: 52px;
-  line-height: 1.15;
-  margin: 0 0 20px;
+  line-height: 1.2;
+  margin: 0 0 36px;
   font-weight: 600;
   color: var(--c-ink, #1e293b);
 }
@@ -224,59 +292,41 @@ onMounted(() => {
   background: linear-gradient(135deg, #0369a1 0%, #38bdf8 60%, #22d3ee 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-          background-clip: text;
+  background-clip: text;
 }
 .title-accent {
   display: block;
-  margin-top: 6px;
+  margin-top: 12px;
   font-family: 'Caveat', 'Noto Serif SC', cursive;
   font-size: 60px;
   font-weight: 700;
   background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-          background-clip: text;
+  background-clip: text;
 }
 .hero-desc {
   font-size: 16px;
   color: var(--c-ink-soft, #64748b);
-  line-height: 1.85;
+  line-height: 1.9;
   max-width: 520px;
-  margin: 0 0 32px;
+  margin: 0 0 52px;
 }
 .hero-actions {
   display: flex;
-  gap: 14px;
-  margin-bottom: 36px;
+  gap: 22px;
+  margin-bottom: 44px;
   flex-wrap: wrap;
 }
-.hero-stats {
-  display: flex;
-  gap: 32px;
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-.stat-num {
-  font-family: var(--font-serif);
-  font-size: 28px;
-  font-weight: 600;
-  color: #0ea5e9;
-  line-height: 1;
-}
-.stat-label {
-  font-size: 12px;
-  color: var(--c-ink-soft, #64748b);
-  margin-top: 6px;
-  letter-spacing: 0.04em;
-}
-
 // 天气卡
 .weather-card { padding: 26px 26px 22px; }
 .weather-head {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
+  // 左右各让出 8px，让天气信息和图标都"往中间靠一点"，
+  // 不再贴着 weather-card 的内边缘
+  padding: 0 8px;
 }
 .weather-eyebrow {
   font-size: 11px;
@@ -292,10 +342,130 @@ onMounted(() => {
   color: var(--c-ink, #1e293b);
   margin-top: 4px;
 }
+.weather-feels {
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--c-ink-soft, #64748b);
+  margin-left: 4px;
+}
 .weather-date {
   font-size: 12px;
   color: var(--c-ink-soft, #64748b);
   margin-top: 4px;
+}
+
+// 城市切换按钮
+.weather-loc-btn {
+  border: none;
+  background: rgba(56, 189, 248, 0.12);
+  color: #06b6d4;
+  cursor: pointer;
+  font-size: 13px;
+  line-height: 1;
+  padding: 3px 6px;
+  border-radius: 8px;
+  transition: background 0.2s ease;
+}
+.weather-loc-btn:hover { background: rgba(56, 189, 248, 0.24); }
+.weather-fail { color: var(--c-ink-soft, #64748b); }
+
+// 天气详情（湿度 / 风力）
+.weather-detail {
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--c-ink-soft, #94a3b8);
+  letter-spacing: 0.02em;
+}
+.wd-sep { margin: 0 4px; opacity: 0.5; }
+
+// 城市搜索面板
+.city-picker {
+  margin-top: 14px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.62);
+  border: 1px solid rgba(125, 211, 252, 0.5);
+  border-radius: 12px;
+  backdrop-filter: blur(6px);
+}
+.cp-input-wrap {
+  display: flex;
+  gap: 8px;
+}
+.cp-input {
+  flex: 1;
+  min-width: 0;
+  border: 1px solid rgba(125, 211, 252, 0.6);
+  border-radius: 8px;
+  padding: 7px 10px;
+  font-size: 13px;
+  outline: none;
+  background: #fff;
+  color: var(--c-ink, #1e293b);
+  transition: border-color 0.2s ease;
+}
+.cp-input:focus { border-color: #38bdf8; }
+.cp-reset {
+  flex-shrink: 0;
+  border: 1px solid rgba(125, 211, 252, 0.6);
+  background: #fff;
+  color: #0284c7;
+  border-radius: 8px;
+  padding: 0 10px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+.cp-reset:hover { background: rgba(56, 189, 248, 0.12); }
+.cp-list {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+  max-height: 184px;
+  overflow-y: auto;
+}
+.cp-item {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.cp-item:hover { background: rgba(56, 189, 248, 0.12); }
+.cp-name {
+  font-weight: 600;
+  color: var(--c-ink, #1e293b);
+}
+.cp-admin {
+  font-size: 11px;
+  color: var(--c-ink-soft, #64748b);
+  flex-shrink: 0;
+}
+.cp-tip {
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--c-ink-soft, #64748b);
+}
+.wd-btn {
+  align-self: flex-start;
+  border: 1px solid var(--c-botany-500, #38bdf8);
+  background: rgba(56, 189, 248, 0.08);
+  color: var(--c-botany-600, #0284c7);
+  font-size: 13px;
+  padding: 5px 14px;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.wd-btn:hover {
+  background: var(--c-botany-500, #38bdf8);
+  color: #fff;
+}
+.wd-btn:active {
+  transform: scale(0.96);
 }
 .weather-icon {
   font-size: 56px;
@@ -328,6 +498,9 @@ onMounted(() => {
   color: var(--c-ink-soft, #64748b);
   margin-top: 2px;
 }
+// 第 4 项「阅读」固定放在第二列（即「分类」正下方）居中，
+// 避免 3 列 grid + 4 项时最后一项被推到第二行最左。
+.weather-grid > div:nth-child(4) { grid-column: 2; }
 .weather-quote {
   margin-top: 16px;
   font-size: 12px;
@@ -335,19 +508,10 @@ onMounted(() => {
   font-style: italic;
   line-height: 1.6;
   padding: 10px 14px;
-  background: linear-gradient(90deg, rgba(251,191,36,.08), transparent);
-  border-left: 2px solid #fbbf24;
-  border-radius: 0 8px 8px 0;
-}
-
-// 底部波浪
-.wave {
-  position: absolute;
-  bottom: -1px;
-  left: 0; right: 0;
-  width: 100%;
-  height: 60px;
-  z-index: 1;
+  // 左右对称渐变：两端透明、中间暖色，呼应居中显示
+  background: linear-gradient(90deg, transparent, rgba(251, 191, 36, 0.18), transparent);
+  border-radius: 8px;
+  text-align: center;
 }
 
 // reveal
@@ -363,10 +527,21 @@ onMounted(() => {
 
 @media (max-width: 900px) {
   .hero-grid { grid-template-columns: 1fr; }
-  .weather-card { display: none; }
+  /* 移动端不再隐藏天气卡——原 display:none 导致移动端完全看不到天气、
+     也无法切换城市/重试授权。改为单列下全宽堆叠在标题下方。 */
+  .weather-card {
+    display: block;
+    width: 100%;
+    margin-top: 8px;
+    padding: 22px 20px 18px;
+  }
+  .weather-temp { font-size: 28px; }
   .hero-title { font-size: 38px; }
   .title-accent { font-size: 44px; }
-  .hero-stats { gap: 20px; }
-  .stat-num { font-size: 22px; }
+}
+@media (max-width: 480px) {
+  .weather-grid { gap: 6px; }
+  .wg-num { font-size: 19px; }
+  .weather-temp { font-size: 26px; }
 }
 </style>

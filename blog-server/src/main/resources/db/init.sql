@@ -71,6 +71,7 @@ CREATE TABLE article (
     cover_image    VARCHAR(255),
     category_id    BIGINT,
     view_count     INT          NOT NULL DEFAULT 0,
+    share_count    INT          NOT NULL DEFAULT 0,
     comment_count  INT          NOT NULL DEFAULT 0,
     like_count     INT          NOT NULL DEFAULT 0,
     is_top         TINYINT      NOT NULL DEFAULT 0,
@@ -113,28 +114,47 @@ CREATE TABLE comment (
     avatar      VARCHAR(255),
     ip          VARCHAR(50),
     status      TINYINT      NOT NULL DEFAULT 0,
+    like_count  INT          NOT NULL DEFAULT 0,
+    report_count INT         NOT NULL DEFAULT 0,
+    ua          VARCHAR(255) NOT NULL DEFAULT '',
+    content_type TINYINT     NOT NULL DEFAULT 0,
+    featured   TINYINT      NOT NULL DEFAULT 0 COMMENT '人工置顶：1=精选留言',
     create_time DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted     TINYINT      NOT NULL DEFAULT 0,
     INDEX idx_article (article_id),
-    INDEX idx_status (status)
+    INDEX idx_status (status),
+    INDEX idx_featured (featured)
 ) ENGINE=InnoDB COMMENT='评论';
 
+-- 评论点赞记录（按 IP / 登录用户去重，同一人同一留言仅能点一次）
+DROP TABLE IF EXISTS comment_like;
+CREATE TABLE comment_like (
+    id           BIGINT PRIMARY KEY AUTO_INCREMENT,
+    comment_id   BIGINT       NOT NULL,
+    ip           VARCHAR(45)  NOT NULL DEFAULT '',
+    user_id      BIGINT       NULL,
+    create_time  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uq_like_ip   (comment_id, ip),
+    UNIQUE KEY uq_like_user (comment_id, user_id),
+    INDEX idx_comment (comment_id)
+) ENGINE=InnoDB COMMENT='评论点赞记录';
+
+-- 评论举报记录
+DROP TABLE IF EXISTS comment_report;
+CREATE TABLE comment_report (
+    id           BIGINT PRIMARY KEY AUTO_INCREMENT,
+    comment_id   BIGINT       NOT NULL,
+    reason       VARCHAR(50)  NOT NULL,
+    detail       VARCHAR(500) DEFAULT '',
+    email        VARCHAR(100) DEFAULT '',
+    ip           VARCHAR(45)  NOT NULL DEFAULT '',
+    status       TINYINT      NOT NULL DEFAULT 0,
+    create_time  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_comment (comment_id),
+    INDEX idx_status  (status)
+) ENGINE=InnoDB COMMENT='评论举报记录';
+
 -- ---------------------------------------------------------------
--- 独立页面 (关于、留言板模板等)
--- ---------------------------------------------------------------
-DROP TABLE IF EXISTS page;
-CREATE TABLE page (
-    id          BIGINT PRIMARY KEY AUTO_INCREMENT,
-    title       VARCHAR(200) NOT NULL,
-    slug        VARCHAR(80)  NOT NULL UNIQUE,
-    content     LONGTEXT,
-    cover       VARCHAR(255),
-    sort_order  INT          NOT NULL DEFAULT 0,
-    status      TINYINT      NOT NULL DEFAULT 1,
-    create_time DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    update_time DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    deleted     TINYINT      NOT NULL DEFAULT 0
-) ENGINE=InnoDB COMMENT='独立页面';
 
 -- ---------------------------------------------------------------
 -- 项目（作品集）
@@ -143,13 +163,34 @@ DROP TABLE IF EXISTS project;
 CREATE TABLE project (
     id          BIGINT PRIMARY KEY AUTO_INCREMENT,
     name        VARCHAR(100) NOT NULL,
-    kind        VARCHAR(20)  NOT NULL DEFAULT '工具',
     description VARCHAR(500),
     tech_stack  VARCHAR(500),
     icon        VARCHAR(50)  DEFAULT 'Folder',
     color       VARCHAR(50)  DEFAULT '#38bdf8',
     github_url  VARCHAR(255),
     demo_url    VARCHAR(255),
+    cover_url   VARCHAR(512) DEFAULT '',
+    category_id BIGINT       DEFAULT NULL,
+    sort_order  INT          NOT NULL DEFAULT 0,
+    status      TINYINT      NOT NULL DEFAULT 1,
+    create_time DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    update_time DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted     TINYINT      NOT NULL DEFAULT 0,
+    INDEX idx_status (status),
+    INDEX idx_sort (sort_order),
+    INDEX idx_category (category_id)
+) ENGINE=InnoDB COMMENT='项目';
+
+-- ---------------------------------------------------------------
+-- 项目分类（与前台筛选联动，后台可管理）
+-- ---------------------------------------------------------------
+DROP TABLE IF EXISTS project_category;
+CREATE TABLE project_category (
+    id          BIGINT PRIMARY KEY AUTO_INCREMENT,
+    name        VARCHAR(50)  NOT NULL,
+    slug        VARCHAR(80)  NOT NULL UNIQUE,
+    color       VARCHAR(50)  DEFAULT '#38bdf8',
+    description VARCHAR(255) DEFAULT '',
     sort_order  INT          NOT NULL DEFAULT 0,
     status      TINYINT      NOT NULL DEFAULT 1,
     create_time DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -157,7 +198,13 @@ CREATE TABLE project (
     deleted     TINYINT      NOT NULL DEFAULT 0,
     INDEX idx_status (status),
     INDEX idx_sort (sort_order)
-) ENGINE=InnoDB COMMENT='项目';
+) ENGINE=InnoDB COMMENT='项目分类';
+
+-- 项目分类种子(原 project.kind 的 开源/工具/实验 收口为单一可管理分类体系)
+INSERT INTO project_category (name, slug, color, description, sort_order, status) VALUES
+('开源',   'open-source', '#38bdf8', '对外开源、可协作的项目', 1, 1),
+('工具',   'tool',        '#fbbf24', '提升效率的实用工具',     2, 1),
+('实验',   'experiment',  '#0ea5e9', '探索性、练手型的小实验', 3, 1);
 
 -- ---------------------------------------------------------------
 -- 友情链接
@@ -172,12 +219,14 @@ CREATE TABLE friend_link (
     email       VARCHAR(100),
     link_group  VARCHAR(32)  NOT NULL DEFAULT '网友',
     sort_order  INT          NOT NULL DEFAULT 0,
+    recommended TINYINT(1)   NOT NULL DEFAULT 0 COMMENT '人工推荐：1=前台显示推荐徽章',
     status      TINYINT      NOT NULL DEFAULT 0,
     create_time DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     update_time DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     deleted     TINYINT      NOT NULL DEFAULT 0,
     INDEX idx_status (status),
-    INDEX idx_sort (sort_order)
+    INDEX idx_sort (sort_order),
+    INDEX idx_recommended (recommended)
 ) ENGINE=InnoDB COMMENT='友情链接';
 
 -- ---------------------------------------------------------------
@@ -192,17 +241,27 @@ CREATE TABLE site_config (
     update_time DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB COMMENT='站点配置';
 
+CREATE TABLE share_log (
+    id           BIGINT PRIMARY KEY AUTO_INCREMENT,
+    article_id   BIGINT       NOT NULL,
+    channel      VARCHAR(16)  NOT NULL COMMENT 'wechat/weibo/qq/douban/copy/link',
+    ip           VARCHAR(64),
+    user_agent   VARCHAR(255),
+    share_date   DATE         NOT NULL,
+    create_time  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_article_day (article_id, share_date),
+    INDEX idx_day_channel (share_date, channel)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='分享点击日志(每日同 IP+UA+渠道去重)';
+
 -- ===============================================================
 --                       Seed Data
 -- ===============================================================
 
--- 默认管理员账号 admin
--- ⚠️ 这里给的是**无效占位 BCrypt hash**,任何密码都登不上。首次登录前请重置:
---   1) 用 backend BCryptPasswordEncoder.encode("你的新密码") 生成 hash
---   2) UPDATE user SET password='<新 hash>' WHERE username='admin';
---   3) 或登录后台"个人中心"直接修改密码
+-- 默认管理员账号 admin / 初始密码 BOOTSTRAP_REQUIRED
+-- ⚠️ 仅用于开发 / 首次初始化。**生产部署前必须改成强密码**或在 init.sql 里替换 hash
+-- (用 backend 的 BCryptPasswordEncoder.encode 生成新 hash,或启动后用 SQL 改)。
 INSERT INTO user (username, password, nickname, email, role, status) VALUES
-('admin', '$2a$10$REPLACE_WITH_YOUR_OWN_BCRYPT_HASH_FOR_NEW_PASSWORD', '站长', 'your_email@example.com', 'ADMIN', 1);
+('admin', '!BOOTSTRAP_REQUIRED!', '站长', 'your_email@example.com', 'ADMIN', 1);
 
 -- 分类
 INSERT INTO category (name, slug, description, color, sort_order) VALUES
@@ -294,34 +353,11 @@ INSERT INTO comment (article_id, parent_id, nickname, email, content, status, cr
 (2, 0, 'Java 学习者', 'comment2@example.com', 'JWT 这块讲得很清楚，期待后续的 refresh 策略更新。', 1, NOW()),
 (3, 0, '前端新人', 'comment3@example.com', 'Composition API 真香，比 mixin 清晰多了。', 1, NOW());
 
--- 独立页面
-INSERT INTO page (title, slug, content, sort_order, status) VALUES
-('关于我', 'about',
- '# 你好，我是站长
-
-一个普通的工程师与写作者。
-白天写代码，晚上偶尔写点别的。
-
-## 在这里
-
-- 记录日常开发里值得记下来的事
-- 整理阅读时划线过的句子
-- 偶尔发一些摄影与生活片段
-
-## 怎么联系我
-
-- Email：见页脚
-- GitHub：见页脚
-
-如果只是想聊聊天，欢迎在 [留言板](/guestbook) 留下几句话。
-',
- 1, 1),
-('留言板模板', 'guestbook', '欢迎在此留言，我会一封一封看完。', 2, 1);
 
 -- 站点配置
 -- ⚠️ email / github 字段为占位值，部署后请在后台「站点配置」中替换为真实值
 INSERT INTO site_config (config_key, config_value, description) VALUES
-('site_name', 'DemoAuthor', '站点名称'),
+('siteName', 'DemoAuthor', '站点名称'),
 ('motto', '草木蔓发，春山可望', '站点副标题'),
 ('description', '一个工程师与写作者的小角落，记录代码、设计、生活与思考。', '站点描述'),
 ('keywords', '个人博客,DemoAuthor,Spring Boot,Vue,代码,设计,生活', 'SEO 关键词'),
@@ -329,14 +365,16 @@ INSERT INTO site_config (config_key, config_value, description) VALUES
 ('comment_audit', '1', '评论是否需要审核 (0=不需, 1=需要)'),
 ('github', 'https://github.com/', 'GitHub 链接（占位，部署后请在后台替换）'),
 ('email', 'your_email@example.com', '联系邮箱（占位，部署后请在后台替换）'),
-('authorName', '站长', '站长/博主展示名,默认随 admin 用户昵称同步');
+('authorName', '站长', '站长/博主展示名,默认随 admin 用户昵称同步'),
+('captcha_enabled', '1', '留言/评论提交是否开启算术验证码 (0=关, 1=开)'),
+('sensitive_words', '', '敏感词列表，逗号或空格分隔；命中后正文将被 ** 掩码');
 
 -- 项目（与前端静态示例保持一致）
-INSERT INTO project (name, kind, description, tech_stack, icon, color, github_url, demo_url, sort_order, status) VALUES
-('DemoAuthor 博客', '开源', '本站源码，Spring Boot + Vue 3 全栈实践，支持 Markdown、评论、SEO。', 'Spring Boot,Vue 3,MySQL,Element Plus', 'ChatDotRound', '#38bdf8', '#', '/', 1, 1),
-('Markdown Notebook', '工具', '本地优先的笔记应用，支持双向链接、图表、快捷键。', 'Tauri,Rust,TypeScript', 'Sunny', '#fbbf24', '#', NULL, 2, 1),
-('Weather Card', '实验', '嵌入卡片式天气小组件，支持多城市、动态背景与极简动画。', 'Vue 3,Canvas,OpenWeather API', 'Calendar', '#0ea5e9', '#', '#', 3, 1),
-('Todo CLI', '工具', '极简命令行 TODO 工具，支持优先级、标签、归档。', 'Go,Cobra', 'Promotion', '#22d3ee', '#', NULL, 4, 1);
+INSERT INTO project (name, description, tech_stack, icon, color, github_url, demo_url, cover_url, category_id, sort_order, status) VALUES
+('DemoAuthor 博客', '本站源码，Spring Boot + Vue 3 全栈实践，支持 Markdown、评论、SEO。', 'Spring Boot,Vue 3,MySQL,Element Plus', 'ChatDotRound', '#38bdf8', '#', '/', NULL, 1, 1, 1),
+('Markdown Notebook', '本地优先的笔记应用，支持双向链接、图表、快捷键。', 'Tauri,Rust,TypeScript', 'Sunny', '#fbbf24', '#', NULL, NULL, 2, 2, 1),
+('Weather Card', '嵌入卡片式天气小组件，支持多城市、动态背景与极简动画。', 'Vue 3,Canvas,OpenWeather API', 'Calendar', '#0ea5e9', '#', '#', NULL, 3, 3, 1),
+('Todo CLI', '极简命令行 TODO 工具，支持优先级、标签、归档。', 'Go,Cobra', 'Promotion', '#22d3ee', '#', NULL, NULL, 2, 4, 1);
 
 -- 友情链接（已通过）
 INSERT INTO friend_link (name, url, avatar, description, link_group, sort_order, status) VALUES
@@ -347,6 +385,112 @@ INSERT INTO friend_link (name, url, avatar, description, link_group, sort_order,
 ('Vite', 'https://vitejs.dev', 'https://vitejs.dev/logo.svg', '下一代前端构建工具', '网友', 5, 1),
 ('Pinia', 'https://pinia.vuejs.org', 'https://pinia.vuejs.org/logo.svg', 'Vue 官方推荐的状态管理', '网友', 6, 1);
 
+-- ---------------------------------------------------------------
+-- 访问日志(后台"今日访问统计"用)
+-- ---------------------------------------------------------------
+DROP TABLE IF EXISTS visit_log;
+CREATE TABLE visit_log (
+    id          BIGINT PRIMARY KEY AUTO_INCREMENT,
+    ip          VARCHAR(45)  NOT NULL DEFAULT '',
+    device_type VARCHAR(16)  NOT NULL DEFAULT '',
+    os          VARCHAR(64)  NOT NULL DEFAULT '',
+    browser     VARCHAR(64)  NOT NULL DEFAULT '',
+    path        VARCHAR(255) NOT NULL DEFAULT '',
+    user_agent  VARCHAR(512) NOT NULL DEFAULT '',
+    province    VARCHAR(64)  NOT NULL DEFAULT '',
+    visit_time  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_visit_time (visit_time),
+    INDEX idx_visit_ip_time (ip, visit_time),
+    INDEX idx_visit_province (province, visit_time)
+) ENGINE=InnoDB COMMENT='公开端点访问日志';
+
+-- ---------------------------------------------------------------
+-- 在线工具箱
+-- ---------------------------------------------------------------
+DROP TABLE IF EXISTS tool_daily_click;
+DROP TABLE IF EXISTS tool_category;
+DROP TABLE IF EXISTS tool;
+CREATE TABLE tool (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(50) NOT NULL COMMENT '工具名',
+    slug VARCHAR(50) NOT NULL COMMENT '路由 slug 或外链标识',
+    icon VARCHAR(255) NOT NULL DEFAULT 'Tools' COMMENT '图标图片 URL（可上传或填写链接），旧值可能为 Element Plus 图标名',
+    category VARCHAR(30) NOT NULL COMMENT '分类键,对应 tool_category.code',
+    description VARCHAR(200) NOT NULL DEFAULT '' COMMENT '简介(2 行)',
+    url VARCHAR(500) NOT NULL DEFAULT '' COMMENT '跳转地址:同页路径或外链 URL',
+    type TINYINT(1) NOT NULL DEFAULT 0 COMMENT '0=同页内嵌 1=外链',
+    status TINYINT(1) NOT NULL DEFAULT 1 COMMENT '0=下线 1=正常 2=维护中 3=预告',
+    sort_order INT NOT NULL DEFAULT 0 COMMENT '拖拽排序',
+    view_count BIGINT NOT NULL DEFAULT 0,
+    click_count BIGINT NOT NULL DEFAULT 0,
+    announcement VARCHAR(200) NOT NULL DEFAULT '' COMMENT '公告横幅',
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted INT NOT NULL DEFAULT 0 COMMENT '逻辑删除 0=未删除 1=已删除(@TableLogic,缺列会导致工具接口 500)',
+    UNIQUE KEY uk_slug (slug),
+    KEY idx_category (category),
+    KEY idx_status (status),
+    KEY idx_sort (sort_order)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='在线工具箱';
+
+CREATE TABLE tool_category (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    code VARCHAR(30) NOT NULL COMMENT '分类键,对应 tool.category',
+    name VARCHAR(50) NOT NULL COMMENT '显示名称',
+    sort_order INT NOT NULL DEFAULT 0 COMMENT '排序:越小越靠前',
+    status TINYINT NOT NULL DEFAULT 1 COMMENT '1=正常 0=下线(前台工具页隐藏该分类)',
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY uk_code (code),
+    KEY idx_sort (sort_order)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='工具分类';
+
+CREATE TABLE tool_daily_click (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    tool_id BIGINT NOT NULL,
+    click_date DATE NOT NULL,
+    click_count INT NOT NULL DEFAULT 0,
+    UNIQUE KEY uk_tool_date (tool_id, click_date),
+    KEY idx_date (click_date)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='工具每日点击统计';
+
+CREATE TABLE operation_log (
+    id         BIGINT       NOT NULL AUTO_INCREMENT,
+    module     VARCHAR(30)  NOT NULL COMMENT '业务模块,如 工具分类',
+    action     VARCHAR(20)  NOT NULL COMMENT '操作类型:create/update/delete/status',
+    target     VARCHAR(120) NOT NULL DEFAULT '' COMMENT '操作对象,如分类名(code)',
+    operator   VARCHAR(50)  NOT NULL DEFAULT '' COMMENT '操作人(账号)',
+    detail     VARCHAR(500) NOT NULL DEFAULT '' COMMENT '变更摘要',
+    ip         VARCHAR(45)  NOT NULL DEFAULT '' COMMENT '操作来源 IP',
+    created_at DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    KEY idx_module (module),
+    KEY idx_created (created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='后台操作日志';
+
+INSERT INTO tool_category (code, name, sort_order) VALUES
+('develop',   '开发', 1),
+('text',      '文本', 2),
+('image',     '图片', 3),
+('time',      '时间', 4),
+('crypto',    '加密', 5),
+('generator', '生成', 6),
+('daily',     '计算', 7);
+
+INSERT INTO tool (name, slug, icon, category, description, url, type, status, sort_order, announcement) VALUES
+('JSON 格式化',      'json-format',    'Document',      'develop',   '格式化与压缩 JSON，支持结构校验和错误定位',       '/tools/json-format',    0, 1, 100, ''),
+('时间戳加解密',     'time-cipher',    'Clock',         'crypto',    '秒级与毫秒级时间戳互转，支持自定义格式输出',     '/tools/time-cipher',    0, 1, 110, ''),
+('图片 Base64 转换', 'img-base64',     'Picture',       'image',     '图片与 Base64 互转，支持拖拽上传和一键复制',      '/tools/img-base64',     0, 1, 120, ''),
+('二维码生成器',     'qr-generator',   'ChatLineRound', 'generator', '将文本或链接生成二维码，可调尺寸与容错等级',     '/tools/qr-generator',   0, 1, 200, ''),
+('URL 编解码',       'url-codec',      'Link',          'develop',   'URL 与查询参数的编码、解码双向转换',             '/tools/url-codec',      0, 1, 210, ''),
+('单位换算',         'unit-convert',   'Cpu',           'daily',     '长度、时间、重量、体积等常用单位换算',           '/tools/unit-convert',   0, 1, 220, ''),
+('时间戳转换',       'timestamp',      'Timer',         'time',      '时间戳与可读日期时间双向转换',                   '/tools/timestamp',      0, 1, 300, ''),
+('正则表达式测试',   'regex-tester',   'MagicStick',    'develop',   '实时测试正则匹配，高亮显示全部匹配项',           '/tools/regex-tester',   0, 1, 310, ''),
+('Markdown 预览',    'md-preview',     'EditPen',       'text',      '左侧编写 Markdown，右侧实时预览渲染效果',        '/tools/md-preview',     0, 1, 400, ''),
+('Base64 编解码',    'base64-codec',   'Lock',          'crypto',    '字符串与 Base64 双向转换，支持 UTF-8 与二进制',   '/tools/base64-codec',   0, 1, 410, ''),
+('UUID 生成器',      'uuid-generator', 'Key',           'generator', '批量生成 UUID v4，支持自定义前缀与格式',         '/tools/uuid-generator', 0, 1, 500, ''),
+('图片压缩',         'img-compress',   'PictureFilled', 'image',     '在线压缩 PNG / JPG / WebP，保持画质并缩小体积',   '/tools/img-compress',   0, 2, 600, '该工具正在维护中，预计 3 天后恢复');
+
 -- 完
 SELECT 'Database initialized.' AS message;
 SELECT COUNT(*) AS users FROM user;
@@ -354,7 +498,9 @@ SELECT COUNT(*) AS categories FROM category;
 SELECT COUNT(*) AS tags FROM tag;
 SELECT COUNT(*) AS articles FROM article;
 SELECT COUNT(*) AS comments FROM comment;
-SELECT COUNT(*) AS pages FROM page;
 SELECT COUNT(*) AS configs FROM site_config;
 SELECT COUNT(*) AS projects FROM project;
 SELECT COUNT(*) AS friend_links FROM friend_link;
+SELECT COUNT(*) AS tools FROM tool;
+SELECT COUNT(*) AS tool_categories FROM tool_category;
+SELECT COUNT(*) AS operation_logs FROM operation_log;

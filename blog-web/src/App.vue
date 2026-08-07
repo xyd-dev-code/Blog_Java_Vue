@@ -2,13 +2,16 @@
   <div class="app-root" :class="{ 'cursor-click': cursorClicked }">
     <div v-if="showCursor" class="cursor-dot" :style="dotStyle"></div>
     <div v-if="showCursor" class="cursor-ring" :style="ringStyle"></div>
-    <router-view />
+    <el-config-provider :locale="zhCn">
+      <router-view />
+    </el-config-provider>
   </div>
 </template>
 
 <script setup>
 import { ref, watch, onMounted, onBeforeUnmount } from 'vue'
 import { useRoute } from 'vue-router'
+import zhCn from 'element-plus/es/locale/lang/zh-cn'
 
 const route = useRoute()
 const cursorClicked = ref(false)

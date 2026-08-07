@@ -3,9 +3,12 @@ package com.blog.controller;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.blog.common.R;
+import com.blog.dto.AdminReplyDTO;
 import com.blog.entity.Comment;
 import com.blog.mapper.ArticleMapper;
 import com.blog.service.CommentService;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
@@ -25,9 +28,9 @@ public class AdminCommentController {
 
     @GetMapping
     @io.swagger.v3.oas.annotations.Operation(summary = "分页评论")
-    public R<Page<Comment>> page(@RequestParam(defaultValue = "1") long page,
-                                 @RequestParam(defaultValue = "15") long size,
-                                 @RequestParam(required = false) Integer status) {
+    public R<Page<Comment>> page(@RequestParam(defaultValue = "1") @Min(1) long page,
+                                 @RequestParam(defaultValue = "15") @Min(1) @Max(200) long size,
+                                 @RequestParam(required = false) @Min(0) @Max(2) Integer status) {
         Page<Comment> p = Page.of(page, size);
         LambdaQueryWrapper<Comment> w = new LambdaQueryWrapper<Comment>()
                 .ne(Comment::getArticleId, CommentService.GUESTBOOK_ARTICLE_ID)
@@ -83,10 +86,23 @@ public class AdminCommentController {
         return R.ok();
     }
 
+    @PutMapping("/{id}/featured")
+    @io.swagger.v3.oas.annotations.Operation(summary = "切换精选留言")
+    public R<Void> featured(@PathVariable Long id, @RequestBody Map<String, Boolean> body) {
+        commentService.setFeatured(id, body != null && Boolean.TRUE.equals(body.get("featured")));
+        return R.ok();
+    }
+
     @DeleteMapping("/{id}")
     @io.swagger.v3.oas.annotations.Operation(summary = "删除")
     public R<Void> delete(@PathVariable Long id) {
         commentService.delete(id);
         return R.ok();
+    }
+
+    @PostMapping("/{id}/reply")
+    @io.swagger.v3.oas.annotations.Operation(summary = "管理员回复评论")
+    public R<Comment> reply(@PathVariable Long id, @RequestBody AdminReplyDTO dto) {
+        return R.ok(commentService.adminReply(id, dto.getContent()));
     }
 }
