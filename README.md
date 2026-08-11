@@ -16,9 +16,11 @@
 - **编辑器**：Tiptap 3 所见即所得 + Markdown 互转（GFM 表格支持），后台另配 MdEditor
 - **图床**：本地图床（Nginx 静态服务 + Let's Encrypt 签发 HTTPS），不依赖第三方对象存储（七牛云 SDK 已预留，可按需启用）
 - **部署**：Ubuntu + Nginx 反向代理 + systemd + Let's Encrypt；一键发布脚本 `deploy.sh` / `deploy.ps1`
-- **功能**：文章 / 分类 / 标签 / 评论 / 留言板 / 归档 / 搜索 / 项目集 / 工具集 / 友链 / 关于 / 站点配置 / 后台管理 / 首页天气卡 / 访问统计
+- **功能**：文章 / 分类 / 标签 / 评论 / 留言板 / 归档 / 搜索 / 项目集 / 工具集 / 友链 / 关于 / 站点配置 / 后台管理 / 首页天气卡 / 访问统计 / **邮箱订阅（新）**
 - **天气卡**：Open-Meteo 实时天气（温度 / 体感 / 湿度 / 风力风向 / 气压 / 天气状况），含 WMO code 校验与高温降级；城市默认定位 + 访客手动搜索切换；拒绝定位时显示"位置信息暂未授权" + 重新授权
 - **访问统计**：基于 ip2region 的 IP 地理解析，按设备 / 系统 / 浏览器 / 省份分布用 ECharts 饼图展示，访客明细按 IP + 日期分组折叠
+- **邮箱订阅（新）**：双确认邮件订阅流（pending → confirmed → unsubscribed），公开接口按 IP 限频；管理员端含 CRUD + CSV 导出（公式注入防护）
+- **内容自动通知（新）**：`@Scheduled` 定时检测新发布文章 / 项目 / 工具，邮件通知全部已确认订阅者；SMTP 未启用时自动停推且不标记 notified，启用后自动补推，避免通知丢失
 
 ## 🏗 目录结构
 
@@ -81,8 +83,8 @@ cp application-example.yml application.yml
 # 按需修改 application.yml 中的 DB / Redis / JWT / CORS / 图床 段落
 ```
 
-所有敏感字段都已改为环境变量占位符（`DB_PASSWORD` / `JWT_SECRET` / `FRONTEND_ORIGIN` / `IMG_BASE_URL` 等），
-生产部署时强烈建议通过环境变量注入。
+所有敏感字段都已改为环境变量占位符（`DB_PASSWORD` / `BLOG_JWT_SECRET` / `FRONTEND_ORIGIN` / `IMG_BASE_URL` 等），
+生产部署时强烈建议通过环境变量注入。**`BLOG_JWT_SECRET` 必填**（无值时 Spring 启动失败，避免意外用默认 key 签 token）。
 
 ### 3. 初始化数据库
 
@@ -136,7 +138,8 @@ npm run dev
 API 前缀：`/api/v1`
 
 - 前台：`/api/v1/home`, `/api/v1/articles`, `/api/v1/categories`, `/api/v1/tags`, `/api/v1/projects`, `/api/v1/tools`, `/api/v1/friend-links`, `/api/v1/about`, `/api/v1/comments/guestbook`, `/api/v1/site`
-- 后台：`/api/v1/admin/**`（需登录），含 `/api/v1/admin/stats` 访问统计
+- 订阅：`/api/v1/subscribe`（POST 订阅 / GET 确认 / GET 退订，公开）
+- 后台：`/api/v1/admin/**`（需登录），含 `/api/v1/admin/stats` 访问统计 + `/api/v1/admin/subscriptions` 订阅管理
 - 认证：`/api/v1/auth/login`
 
 > 完整端点以 Swagger UI 为准；以上为常用分组示例。
@@ -258,8 +261,9 @@ API 前缀：`/api/v1`
 3. **不要打开外网端口**：3306 / 6379 / 8080 仅监听 `127.0.0.1`，通过 Nginx 443 反代访问
 4. **MySQL 用户**：应用使用低权限用户，不要用 `root` 连接 Spring Boot
 5. **图床目录权限**：建议 `drwxr-x---`，Nginx 以独立用户读取
-6. **JWT secret**：生产环境通过 `JWT_SECRET` 环境变量注入，至少 64 字节随机
+6. **JWT secret**：生产环境通过 `BLOG_JWT_SECRET` 环境变量注入，至少 64 字节随机
 7. **访客隐私**：访问统计仅记录 IP 与派生地理位置用于展示分布，不展示完整 IP 明细给非授权用户
+8. **评论者隐私**：公开评论 API 通过 `CommentPublicVO` 返回，自动剥离邮箱 / IP / UA 等字段，匿名访客无法读取评论者隐私信息
 
 ## 📝 License
 
