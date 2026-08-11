@@ -4,13 +4,13 @@ import com.blog.common.R;
 import com.blog.common.BizException;
 import com.blog.dto.CommentDTO;
 import com.blog.dto.CommentReportDTO;
-import com.blog.entity.Comment;
 import com.blog.security.ClientIpResolver;
 import com.blog.security.LoginUser;
 import com.blog.security.RateLimiter;
 import com.blog.security.SecurityUtil;
 import com.blog.service.CaptchaService;
 import com.blog.service.CommentService;
+import com.blog.vo.CommentPublicVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
@@ -39,13 +39,13 @@ public class CommentController {
 
     @GetMapping("/article/{articleId}")
     @Operation(summary = "某文章的评论树 (仅已通过)")
-    public R<List<Comment>> tree(@PathVariable Long articleId) {
+    public R<List<CommentPublicVO>> tree(@PathVariable Long articleId) {
         return R.ok(commentService.treeByArticle(articleId, false));
     }
 
     @GetMapping("/guestbook")
     @Operation(summary = "留言板公共评论树 (仅已通过)")
-    public R<List<Comment>> guestbook() {
+    public R<List<CommentPublicVO>> guestbook() {
         return R.ok(commentService.guestbook());
     }
 
@@ -57,7 +57,7 @@ public class CommentController {
 
     @PostMapping
     @Operation(summary = "发表/提交评论")
-    public R<Comment> create(@Valid @RequestBody CommentDTO dto, HttpServletRequest req) {
+    public R<CommentPublicVO> create(@Valid @RequestBody CommentDTO dto, HttpServletRequest req) {
         String ip = ipResolver.resolve(req);
         // 验证码校验（开关走站点配置 captcha_enabled）
         if (!captchaService.verify(dto.getCaptchaToken(), dto.getCaptchaAnswer())) {
@@ -71,7 +71,7 @@ public class CommentController {
             throw e;
         }
         String ua = req.getHeader("User-Agent");
-        return R.ok(commentService.create(dto, ip, ua));
+        return R.ok(commentService.toPublic(commentService.create(dto, ip, ua)));
     }
 
     @PostMapping("/{id}/like")

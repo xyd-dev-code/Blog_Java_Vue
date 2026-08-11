@@ -16,6 +16,8 @@ import com.blog.mapper.CategoryMapper;
 import com.blog.mapper.TagMapper;
 import com.blog.mapper.TagRelationMapper;
 import com.blog.mapper.UserMapper;
+import com.blog.mapper.CommentMapper;
+import com.blog.entity.Comment;
 import org.springframework.beans.BeanUtils;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
@@ -29,13 +31,14 @@ import java.util.stream.Collectors;
 
 @Service
 public class ArticleService {
-    public ArticleService(ArticleMapper articleMapper, ArticleTagMapper articleTagMapper, CategoryMapper categoryMapper, TagMapper tagMapper, TagRelationMapper tagRelationMapper, UserMapper userMapper) {
+    public ArticleService(ArticleMapper articleMapper, ArticleTagMapper articleTagMapper, CategoryMapper categoryMapper, TagMapper tagMapper, TagRelationMapper tagRelationMapper, UserMapper userMapper, CommentMapper commentMapper) {
         this.articleMapper = articleMapper;
         this.articleTagMapper = articleTagMapper;
         this.categoryMapper = categoryMapper;
         this.tagMapper = tagMapper;
         this.tagRelationMapper = tagRelationMapper;
         this.userMapper = userMapper;
+        this.commentMapper = commentMapper;
     }
 
 
@@ -45,6 +48,7 @@ public class ArticleService {
     private final TagMapper tagMapper;
     private final TagRelationMapper tagRelationMapper;
     private final UserMapper userMapper;
+    private final CommentMapper commentMapper;
 
     public Page<Article> homePage(long page, long size) {
         Page<Article> p = Page.of(page, size);
@@ -55,6 +59,7 @@ public class ArticleService {
         // 注入作者信息
         User admin = userMapper.selectById(1L);
         for (Article a : p.getRecords()) setAuthor(a, admin);
+        injectCommentCount(p.getRecords());
         return p;
     }
 
@@ -88,6 +93,7 @@ public class ArticleService {
                 .last("LIMIT " + safeLimit));
         User admin = userMapper.selectById(1L);
         for (Article a : list) setAuthor(a, admin);
+        injectCommentCount(list);
         return list;
     }
 
@@ -98,6 +104,7 @@ public class ArticleService {
                 .orderByDesc(Article::getPublishTime));
         User admin = userMapper.selectById(1L);
         for (Article a : list) setAuthor(a, admin);
+        injectCommentCount(list);
         return list;
     }
 
@@ -158,6 +165,7 @@ public class ArticleService {
                 .last("LIMIT " + safeLimit));
         User admin = userMapper.selectById(1L);
         for (Article a : list) setAuthor(a, admin);
+        injectCommentCount(list);
         return list;
     }
 
@@ -172,6 +180,7 @@ public class ArticleService {
                 .orderByDesc(Article::getPublishTime));
         User admin = userMapper.selectById(1L);
         for (Article a : list) setAuthor(a, admin);
+        injectCommentCount(list);
         return list;
     }
 
@@ -305,6 +314,7 @@ public class ArticleService {
                 .last("LIMIT " + Math.max(1, limit)));
         User admin = userMapper.selectById(1L);
         for (Article a : list) setAuthor(a, admin);
+        injectCommentCount(list);
         return list;
     }
 
@@ -366,6 +376,23 @@ public class ArticleService {
             if (admin.getAvatar() != null && !admin.getAvatar().isEmpty()) {
                 a.setAuthorAvatar(admin.getAvatar());
             }
+        }
+    }
+
+    /** 批量注入每篇文章的已审核评论数（status=1），避免 N+1 查询 */
+    private void injectCommentCount(List<Article> articles) {
+        if (articles == null || articles.isEmpty()) return;
+        List<Long> ids = articles.stream().map(Article::getId).collect(Collectors.toList());
+        // 一次查出所有文章的评论数：按 articleId 分组，只统计 status=1(已审核)
+        List<Comment> approved = commentMapper.selectList(
+                new LambdaQueryWrapper<Comment>()
+                        .in(Comment::getArticleId, ids)
+                        .eq(Comment::getStatus, 1)
+                        .select(Comment::getArticleId));
+        Map<Long, Long> countMap = approved.stream()
+                .collect(Collectors.groupingBy(Comment::getArticleId, Collectors.counting()));
+        for (Article a : articles) {
+            a.setCommentCount(countMap.getOrDefault(a.getId(), 0L));
         }
     }
 }

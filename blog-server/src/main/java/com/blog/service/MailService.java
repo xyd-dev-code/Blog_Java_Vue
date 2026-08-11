@@ -44,26 +44,34 @@ public class MailService {
     }
 
     /**
-     * 异步发邮件。返回 void,所有异常在内部吞掉,只 WARN log。
-     *
-     * @param to        收件人邮箱
-     * @param subject   主题
-     * @param textBody  纯文本正文(fallback)
-     * @param htmlBody  HTML 正文(可选,null 则用 textBody)
+     * 异步发邮件(评论/留言等广播通知)。不阻塞业务线程,失败仅 WARN log。
      */
     @Async("mailTaskExecutor")
     public void send(String to, String subject, String textBody, String htmlBody) {
+        // 复用同步实现,异步包装一层即可,避免两份 MIME 构建逻辑
+        sendSync(to, subject, textBody, htmlBody);
+    }
+
+    /**
+     * 同步发信,返回是否成功。供关键链路(订阅确认)使用,
+     * 以便后端如实反馈"确认邮件是否真的发出",避免前端盲目提示"请查收邮箱"。
+     *
+     * @return true=已成功提交至 SMTP;false=未启用 / 参数缺失 / 发送异常
+     */
+    public boolean sendSync(String to, String subject, String textBody, String htmlBody) {
         if (!enabled) {
             log.debug("[MailService] 跳过(未启用) → to={}, subject={}", to, subject);
-            return;
+            return false;
         }
         if (to == null || to.isBlank() || subject == null || textBody == null) {
             log.warn("[MailService] 参数缺失,跳过发送 to={}", to);
-            return;
+            return false;
         }
         try {
             MimeMessage msg = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(msg, false, "UTF-8");
+            // multipart=true 才能同时设置纯文本 + HTML 两个 alternative part,
+            // 否则 helper.setText(text, html) 抛 "Not in multipart mode"
+            MimeMessageHelper helper = new MimeMessageHelper(msg, true, "UTF-8");
             helper.setFrom(fromEmail, fromName);
             helper.setTo(to);
             helper.setSubject(subject);
@@ -74,12 +82,14 @@ public class MailService {
             }
             mailSender.send(msg);
             log.info("[MailService] 发送成功 to={} subject={}", to, subject);
+            return true;
         } catch (MessagingException e) {
             log.warn("[MailService] MIME 构建失败 to={} subject={} err={}", to, subject, e.getMessage());
         } catch (Exception e) {
             // SMTP 不可达 / 鉴权失败 / 超时 — 兜底,不影响业务
             log.warn("[MailService] 发送失败 to={} subject={} err={}", to, subject, e.toString());
         }
+        return false;
     }
 
     public boolean isEnabled() { return enabled; }

@@ -9,6 +9,7 @@ import com.blog.entity.Comment;
 import com.blog.entity.CommentLike;
 import com.blog.entity.CommentReport;
 import com.blog.entity.User;
+import com.blog.vo.CommentPublicVO;
 import com.blog.mapper.ArticleMapper;
 import com.blog.mapper.CommentLikeMapper;
 import com.blog.mapper.CommentMapper;
@@ -170,22 +171,25 @@ public class CommentService {
         commentMapper.updateById(c);
     }
 
-    public List<Comment> treeByArticle(Long articleId, boolean includePending) {
+    public List<CommentPublicVO> treeByArticle(Long articleId, boolean includePending) {
         LambdaQueryWrapper<Comment> w = new LambdaQueryWrapper<Comment>()
                 .eq(Comment::getArticleId, articleId)
                 .orderByAsc(Comment::getCreateTime);
         if (!includePending) w.eq(Comment::getStatus, 1);
         List<Comment> all = commentMapper.selectList(w);
-        return buildTree(all);
+        return toPublicTree(all);
     }
 
-    public List<Comment> guestbook() {
+    public List<CommentPublicVO> guestbook() {
         List<Comment> all = commentMapper.selectList(new LambdaQueryWrapper<Comment>()
                 .eq(Comment::getArticleId, GUESTBOOK_ARTICLE_ID)
                 .eq(Comment::getStatus, 1)
                 .orderByDesc(Comment::getCreateTime));
-        return buildTree(all);
+        return toPublicTree(all);
     }
+
+    /** 前台提交评论成功后回显也走公开 VO，避免把作者自己的邮箱/IP/UA 回吐给客户端 */
+    public CommentPublicVO toPublic(Comment c) { return toPublicVo(c); }
 
     public List<Comment> treeAll() {
         List<Comment> all = commentMapper.selectList(new LambdaQueryWrapper<Comment>()
@@ -328,19 +332,54 @@ public class CommentService {
     private List<Comment> buildTree(List<Comment> all) {
         Map<Long, Comment> map = all.stream().collect(Collectors.toMap(Comment::getId, c -> c));
         List<Comment> roots = new ArrayList<>();
+        Set<Long> visited = new HashSet<>();
         for (Comment c : all) {
+            if (visited.contains(c.getId())) continue; // 防御数据层环形 parentId 导致无限递归
+            visited.add(c.getId());
             if (c.getParentId() == null || c.getParentId() == 0L) {
                 roots.add(c);
             } else {
                 Comment parent = map.get(c.getParentId());
-                if (parent != null) {
+                if (parent != null && !visited.contains(parent.getId())) {
                     if (parent.getReplies() == null) parent.setReplies(new ArrayList<>());
                     c.setParentName(parent.getNickname());
                     parent.getReplies().add(c);
+                } else if (parent != null) {
+                    // parent 已在本轮处理(环形),把孤儿节点提升为根,避免丢失
+                    roots.add(c);
                 }
             }
         }
         return roots;
+    }
+
+    /** 公开视图：剔除 email/ip/ua 等隐私字段，并递归转换子回复 */
+    private List<CommentPublicVO> toPublicTree(List<Comment> all) {
+        List<Comment> roots = buildTree(all);
+        return roots.stream().map(this::toPublicVo).collect(Collectors.toList());
+    }
+
+    private CommentPublicVO toPublicVo(Comment c) {
+        CommentPublicVO v = new CommentPublicVO();
+        v.setId(c.getId());
+        v.setArticleId(c.getArticleId());
+        v.setParentId(c.getParentId());
+        v.setNickname(c.getNickname());
+        v.setWebsite(c.getWebsite());
+        v.setContent(c.getContent());
+        v.setAvatar(c.getAvatar());
+        v.setStatus(c.getStatus());
+        v.setLikeCount(c.getLikeCount());
+        v.setReportCount(c.getReportCount());
+        v.setContentType(c.getContentType());
+        v.setFeatured(c.getFeatured());
+        v.setCreateTime(c.getCreateTime());
+        v.setArticleTitle(c.getArticleTitle());
+        v.setParentName(c.getParentName());
+        if (c.getReplies() != null) {
+            v.setReplies(c.getReplies().stream().map(this::toPublicVo).collect(Collectors.toList()));
+        }
+        return v;
     }
 
     private String clean(String html) {
