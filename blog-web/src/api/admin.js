@@ -99,6 +99,16 @@ export const adminDeleteFriendLink = (id) => http.delete(`/admin/friend-links/${
 export const adminReviewFriendLink = (id, status) => http.put(`/admin/friend-links/${id}/status`, null, { params: { status } })
 export const adminSetFriendLinkRecommended = (id, recommended) => http.put(`/admin/friend-links/${id}/recommended`, null, { params: { recommended } })
 
+// ====== 邮箱订阅订阅者管理 ======
+export const adminSubscriptions = (params) => http.get('/admin/subscriptions', { params })
+export const adminSubscriptionStats = () => http.get('/admin/subscriptions/stats')
+export const adminCreateSubscription = (data) => http.post('/admin/subscriptions', data)
+export const adminConfirmSubscription = (id) => http.put(`/admin/subscriptions/${id}/confirm`)
+export const adminUnsubscribeSubscription = (id) => http.put(`/admin/subscriptions/${id}/unsubscribe`)
+export const adminDeleteSubscription = (id) => http.delete(`/admin/subscriptions/${id}`)
+export const adminExportSubscriptions = () =>
+  http.get('/admin/subscriptions/export', { responseType: 'blob' })
+
 // dashboard
 export const adminDashboard = (params) => http.get('/admin/dashboard', { params })
 
