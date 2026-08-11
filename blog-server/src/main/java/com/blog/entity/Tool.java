@@ -22,6 +22,7 @@ public class Tool {
     private Integer type;
     /** 0=下线 1=正常 2=维护中 3=预告 */
     private Integer status;
+    private Integer notified;
     @TableField("sort_order")
     private Integer sortOrder;
     @TableField("view_count")
@@ -54,6 +55,8 @@ public class Tool {
     public void setType(Integer type) { this.type = type; }
     public Integer getStatus() { return status; }
     public void setStatus(Integer status) { this.status = status; }
+    public Integer getNotified() { return notified; }
+    public void setNotified(Integer notified) { this.notified = notified; }
     public Integer getSortOrder() { return sortOrder; }
     public void setSortOrder(Integer sortOrder) { this.sortOrder = sortOrder; }
     public Long getViewCount() { return viewCount; }

@@ -34,4 +34,8 @@ export const publicToolCategories = () => http.get('/tool-categories', { silent:
 
 export const login = (data) => http.post('/auth/login', data)
 
+// 邮箱订阅（替代原 RSS 订阅）— 双重确认：提交后发确认邮件，点击链接完成订阅
+export const subscribeEmail = (data) => http.post('/subscribe', data)
+export const confirmSubscribe = (token) => http.get('/subscribe/confirm', { params: { token }, silent: true })
+
 

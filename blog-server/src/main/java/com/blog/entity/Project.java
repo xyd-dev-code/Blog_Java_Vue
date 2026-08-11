@@ -28,6 +28,7 @@ public class Project {
     private Long categoryId;
     private Integer sortOrder;
     private Integer status;
+    private Integer notified;
     private LocalDateTime createTime;
     private LocalDateTime updateTime;
     @TableLogic
@@ -60,6 +61,8 @@ public class Project {
     public void setSortOrder(Integer sortOrder) { this.sortOrder = sortOrder; }
     public Integer getStatus() { return status; }
     public void setStatus(Integer status) { this.status = status; }
+    public Integer getNotified() { return notified; }
+    public void setNotified(Integer notified) { this.notified = notified; }
     public LocalDateTime getCreateTime() { return createTime; }
     public void setCreateTime(LocalDateTime createTime) { this.createTime = createTime; }
     public LocalDateTime getUpdateTime() { return updateTime; }

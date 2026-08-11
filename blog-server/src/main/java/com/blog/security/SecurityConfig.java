@@ -97,13 +97,15 @@ public class SecurityConfig {
                         "/api/v1/project-categories/**",
                         "/api/v1/friend-links/**",
                         "/api/v1/tools/**",
-                        "/api/v1/tool-categories/**"
+                        "/api/v1/tool-categories/**",
+                        "/api/v1/subscribe/**"
                     ).permitAll()
                     .requestMatchers(HttpMethod.POST,
                         "/api/v1/comments",
                         "/api/v1/friend-links/apply",
                         "/api/v1/upload/avatar",
-                        "/api/v1/share/**"
+                        "/api/v1/share/**",
+                        "/api/v1/subscribe"
                     ).permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/v1/comments/**").permitAll();
                 if (devProfile) {

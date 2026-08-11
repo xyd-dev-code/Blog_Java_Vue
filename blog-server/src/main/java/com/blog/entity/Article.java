@@ -19,6 +19,7 @@ public class Article {
     private String coverImage;
     private Long categoryId;
     private Integer status;
+    private Integer notified;
     private Integer isTop;
     private Integer isFeatured;
     private Integer allowComment;
@@ -35,6 +36,7 @@ public class Article {
     @TableField(exist = false) private List<Tag> tags;
     @TableField(exist = false) private String author;
     @TableField(exist = false) private String authorAvatar;
+    @TableField(exist = false) private Long commentCount;
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -52,6 +54,8 @@ public class Article {
     public void setCategoryId(Long categoryId) { this.categoryId = categoryId; }
     public Integer getStatus() { return status; }
     public void setStatus(Integer status) { this.status = status; }
+    public Integer getNotified() { return notified; }
+    public void setNotified(Integer notified) { this.notified = notified; }
     public Integer getIsTop() { return isTop; }
     public void setIsTop(Integer isTop) { this.isTop = isTop; }
     public Integer getIsFeatured() { return isFeatured; }
@@ -82,4 +86,6 @@ public class Article {
     public void setAuthor(String author) { this.author = author; }
     public String getAuthorAvatar() { return authorAvatar; }
     public void setAuthorAvatar(String authorAvatar) { this.authorAvatar = authorAvatar; }
+    public Long getCommentCount() { return commentCount; }
+    public void setCommentCount(Long commentCount) { this.commentCount = commentCount; }
 }

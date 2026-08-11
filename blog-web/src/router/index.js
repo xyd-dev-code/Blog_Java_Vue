@@ -30,6 +30,7 @@ const TITLE_MAP = {
   'admin-projects': '项目管理',
   'admin-tools': '工具管理',
   'admin-friend-links': '友链管理',
+  'admin-subscriptions': '订阅管理',
   'admin-stats': '访问统计',
   'admin-profile': '个人资料'
 }
@@ -75,6 +76,7 @@ const routes = [
       { path: 'projects', name: 'admin-projects', component: () => import('@/views/admin/ProjectManagement.vue') },
       { path: 'tools', name: 'admin-tools', component: () => import('@/views/admin/ToolManagement.vue') },
       { path: 'friend-links', name: 'admin-friend-links', component: () => import('@/views/admin/FriendLinkList.vue') },
+      { path: 'subscriptions', name: 'admin-subscriptions', component: () => import('@/views/admin/SubscriptionList.vue') },
       { path: 'stats', name: 'admin-stats', component: () => import('@/views/admin/Stats.vue') },
       { path: 'profile', name: 'admin-profile', component: () => import('@/views/admin/Profile.vue') }
     ]

@@ -36,6 +36,9 @@
         <router-link to="/admin/friend-links" class="nav-item">
           <el-icon><Link /></el-icon><span v-if="!collapsed">友链管理</span>
         </router-link>
+        <router-link to="/admin/subscriptions" class="nav-item">
+          <el-icon><Bell /></el-icon><span v-if="!collapsed">订阅管理</span>
+        </router-link>
         <router-link to="/admin/stats" class="nav-item">
           <el-icon><DataAnalysis /></el-icon><span v-if="!collapsed">访问统计</span>
         </router-link>
@@ -90,7 +93,7 @@ import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
   Expand, Fold, DataLine, DataAnalysis, Document,
-  ChatDotRound, ChatLineSquare, Files, View, ArrowDown, Box, Link, User, Clock, Tools,
+  ChatDotRound, ChatLineSquare, Files, View, ArrowDown, Box, Link, User, Clock, Tools, Bell,
 } from '@element-plus/icons-vue'
 import { useUserStore } from '@/stores/user'
 import { useSiteStore } from '@/stores/site'
@@ -133,6 +136,7 @@ const titles = {
   'admin-projects': '项目管理',
   'admin-tools': '工具管理',
   'admin-friend-links': '友链管理',
+  'admin-subscriptions': '订阅管理',
   'admin-stats': '访问统计',
   'admin-profile': '个人中心'
 }
@@ -147,12 +151,22 @@ const onCmd = (cmd) => {
   }
 }
 
+// resize 防抖：连续 resize 事件合并到 150ms 后只执行一次，避免频繁重渲染
+let resizeTimer = null
+const onResize = () => {
+  if (resizeTimer) clearTimeout(resizeTimer)
+  resizeTimer = setTimeout(checkMobile, 150)
+}
+
 onMounted(() => {
   checkMobile()
-  window.addEventListener('resize', checkMobile, { passive: true })
+  window.addEventListener('resize', onResize, { passive: true })
   siteStore.load()
 })
-onUnmounted(() => window.removeEventListener('resize', checkMobile))
+onUnmounted(() => {
+  window.removeEventListener('resize', onResize)
+  if (resizeTimer) clearTimeout(resizeTimer)
+})
 </script>
 
 <style scoped lang="scss">
