@@ -79,6 +79,7 @@ CREATE TABLE article (
     allow_comment  TINYINT      NOT NULL DEFAULT 1,
     password       VARCHAR(100) DEFAULT NULL,
     status         TINYINT      NOT NULL DEFAULT 1,
+    notified       TINYINT      NOT NULL DEFAULT 0 COMMENT '是否已推送订阅邮件(0=未 1=已)',
     publish_time   DATETIME,
     create_time    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     update_time    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -173,6 +174,7 @@ CREATE TABLE project (
     category_id BIGINT       DEFAULT NULL,
     sort_order  INT          NOT NULL DEFAULT 0,
     status      TINYINT      NOT NULL DEFAULT 1,
+    notified    TINYINT      NOT NULL DEFAULT 0 COMMENT '是否已推送订阅邮件(0=未 1=已)',
     create_time DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     update_time DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     deleted     TINYINT      NOT NULL DEFAULT 0,
@@ -253,6 +255,24 @@ CREATE TABLE share_log (
     INDEX idx_day_channel (share_date, channel)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='分享点击日志(每日同 IP+UA+渠道去重)';
 
+-- ---------------------------------------------------------------
+-- 邮箱订阅（原 RSS 订阅的替代方案，双重确认）
+-- ---------------------------------------------------------------
+DROP TABLE IF EXISTS email_subscription;
+CREATE TABLE email_subscription (
+    id           BIGINT       PRIMARY KEY AUTO_INCREMENT,
+    email        VARCHAR(120) NOT NULL COMMENT '订阅邮箱(统一小写存储)',
+    status       TINYINT      NOT NULL DEFAULT 0 COMMENT '0=待确认 1=已确认',
+    token        VARCHAR(64)  DEFAULT NULL COMMENT '确认令牌(UUID 去横杠)',
+    source       VARCHAR(20)  DEFAULT 'web' COMMENT '订阅来源',
+    create_time  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    confirm_time DATETIME     DEFAULT NULL COMMENT '确认时间',
+    deleted      TINYINT      NOT NULL DEFAULT 0 COMMENT '逻辑删除(@TableLogic)',
+    UNIQUE KEY uk_email (email),
+    KEY idx_status (status),
+    KEY idx_token (token)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='邮箱订阅';
+
 -- ===============================================================
 --                       Seed Data
 -- ===============================================================
@@ -284,9 +304,9 @@ INSERT INTO tag (name, slug, description, color) VALUES
 
 -- 文章示例
 INSERT INTO article (title, slug, summary, content, category_id, is_top, is_featured, status, publish_time, view_count) VALUES
-('DemoAuthor · 个人博客系统上线了', 'hello-blog',
+('MyBlog · 个人博客系统上线了', 'hello-blog',
  '你好，欢迎路过。这是一封写给第一波访客的短信：关于这个博客会写什么，以及为什么开。',
- '# DemoAuthor · 上线
+ '# MyBlog · 上线
 
 你好，欢迎路过。
 
@@ -357,10 +377,10 @@ INSERT INTO comment (article_id, parent_id, nickname, email, content, status, cr
 -- 站点配置
 -- ⚠️ email / github 字段为占位值，部署后请在后台「站点配置」中替换为真实值
 INSERT INTO site_config (config_key, config_value, description) VALUES
-('siteName', 'DemoAuthor', '站点名称'),
+('siteName', 'MyBlog', '站点名称'),
 ('motto', '草木蔓发，春山可望', '站点副标题'),
 ('description', '一个工程师与写作者的小角落，记录代码、设计、生活与思考。', '站点描述'),
-('keywords', '个人博客,DemoAuthor,Spring Boot,Vue,代码,设计,生活', 'SEO 关键词'),
+('keywords', '个人博客,MyBlog,Spring Boot,Vue,代码,设计,生活', 'SEO 关键词'),
 ('beian', '', 'ICP 备案号'),
 ('comment_audit', '1', '评论是否需要审核 (0=不需, 1=需要)'),
 ('github', 'https://github.com/', 'GitHub 链接（占位，部署后请在后台替换）'),
@@ -371,7 +391,7 @@ INSERT INTO site_config (config_key, config_value, description) VALUES
 
 -- 项目（与前端静态示例保持一致）
 INSERT INTO project (name, description, tech_stack, icon, color, github_url, demo_url, cover_url, category_id, sort_order, status) VALUES
-('DemoAuthor 博客', '本站源码，Spring Boot + Vue 3 全栈实践，支持 Markdown、评论、SEO。', 'Spring Boot,Vue 3,MySQL,Element Plus', 'ChatDotRound', '#38bdf8', '#', '/', NULL, 1, 1, 1),
+('MyBlog 博客', '本站源码，Spring Boot + Vue 3 全栈实践，支持 Markdown、评论、SEO。', 'Spring Boot,Vue 3,MySQL,Element Plus', 'ChatDotRound', '#38bdf8', '#', '/', NULL, 1, 1, 1),
 ('Markdown Notebook', '本地优先的笔记应用，支持双向链接、图表、快捷键。', 'Tauri,Rust,TypeScript', 'Sunny', '#fbbf24', '#', NULL, NULL, 2, 2, 1),
 ('Weather Card', '嵌入卡片式天气小组件，支持多城市、动态背景与极简动画。', 'Vue 3,Canvas,OpenWeather API', 'Calendar', '#0ea5e9', '#', '#', NULL, 3, 3, 1),
 ('Todo CLI', '极简命令行 TODO 工具，支持优先级、标签、归档。', 'Go,Cobra', 'Promotion', '#22d3ee', '#', NULL, NULL, 2, 4, 1);
@@ -420,6 +440,7 @@ CREATE TABLE tool (
     url VARCHAR(500) NOT NULL DEFAULT '' COMMENT '跳转地址:同页路径或外链 URL',
     type TINYINT(1) NOT NULL DEFAULT 0 COMMENT '0=同页内嵌 1=外链',
     status TINYINT(1) NOT NULL DEFAULT 1 COMMENT '0=下线 1=正常 2=维护中 3=预告',
+    notified TINYINT NOT NULL DEFAULT 0 COMMENT '是否已推送订阅邮件(0=未 1=已)',
     sort_order INT NOT NULL DEFAULT 0 COMMENT '拖拽排序',
     view_count BIGINT NOT NULL DEFAULT 0,
     click_count BIGINT NOT NULL DEFAULT 0,

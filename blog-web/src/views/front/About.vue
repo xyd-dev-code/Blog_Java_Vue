@@ -99,11 +99,11 @@
             <p>{{ githubDisplay }}</p>
             <a :href="siteGithub" target="_blank" class="ci-link">访问主页 &rarr;</a>
           </div>
-          <div class="contact-item card">
-            <div class="ci-icon ci-rss">RSS</div>
-            <h4>订阅</h4>
-            <p>追踪最新文章</p>
-            <a href="#" class="ci-link">订阅 RSS &rarr;</a>
+          <div class="contact-item card sub-trigger" @click="openSubDialog" role="button" tabindex="0" @keyup.enter="openSubDialog" @keyup.space="openSubDialog">
+            <div class="ci-icon ci-mail">✉</div>
+            <h4>邮箱订阅</h4>
+            <p>输入邮箱，第一时间收到新文章</p>
+            <a href="javascript:;" class="ci-link" @click.stop="openSubDialog">立即订阅 &rarr;</a>
           </div>
         </div>
       </section>
@@ -112,12 +112,42 @@
     <div v-else class="loading-page container-narrow">
       <el-skeleton :rows="8" animated />
     </div>
+
+    <!-- 邮箱订阅弹窗（与上方加载态平级，不进入 v-if 分支） -->
+    <el-dialog
+      v-model="subDialogVisible"
+      title="邮箱订阅"
+      width="420px"
+      class="sub-dialog"
+      :close-on-click-modal="false"
+    >
+      <p class="sub-dialog-desc">输入你的邮箱，新文章发布当天即可收到通知。无需注册，点确认链接即生效。</p>
+      <el-form ref="subFormRef" :model="subForm" :rules="subRules" @submit.prevent="onSubscribe">
+        <el-form-item prop="email">
+          <el-input
+            v-model="subForm.email"
+            type="email"
+            inputmode="email"
+            placeholder="你的邮箱地址，例如 you@example.com"
+            clearable
+            maxlength="80"
+            :disabled="subLoading"
+          />
+        </el-form-item>
+      </el-form>
+      <p v-if="subMsg" class="sub-dialog-msg" :class="{ ok: subOk }">{{ subMsg }}</p>
+      <template #footer>
+        <el-button @click="subDialogVisible = false" :disabled="subLoading">取消</el-button>
+        <el-button type="primary" :loading="subLoading" @click="onSubscribe">{{ subLoading ? '提交中…' : '订阅' }}</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, computed, watch } from 'vue'
-import { home } from '@/api/front'
+import { ref, reactive, nextTick, onMounted, computed, watch } from 'vue'
+import { home, subscribeEmail } from '@/api/front'
+import { ElMessage } from 'element-plus'
 import { MdPreview } from 'md-editor-v3'
 import 'md-editor-v3/lib/preview.css'
 import HeroAbout from '@/components/HeroAbout.vue'
@@ -149,7 +179,7 @@ const homeData = ref({})
 
 // 站点配置
 const siteEmail = computed(() => siteStore.info?.email || 'site_email@example.com')
-const siteGithub = computed(() => siteStore.info?.github || 'https://github.com/DemoAuthor')
+const siteGithub = computed(() => siteStore.info?.github || 'https://github.com/')
 const siteAvatar = computed(() => siteStore.info?.siteLogo || 'https://api.dicebear.com/7.x/notionists/svg?seed=author&backgroundColor=e0f2fe')
 // About 页展示用的昵称 / 简介:跟随后端 admin 用户的资料,后端未填则用站点名做兜底
 const authorName = computed(() => {
@@ -163,6 +193,76 @@ const githubDisplay = computed(() => {
   const u = siteGithub.value || ''
   return u.replace(/^https?:\/\//, '').replace(/\/$/, '') || 'github.com'
 })
+
+// 邮箱订阅（替代原 RSS 订阅）— 弹窗收集 + 后续展示
+const subDialogVisible = ref(false)
+const subLoading = ref(false)
+const subMsg = ref('')
+const subOk = ref(false)
+const subFormRef = ref(null)
+const subForm = reactive({ email: '' })
+
+const subRules = {
+  email: [
+    {
+      validator: (_rule, value, cb) => {
+        if (!value) return cb(new Error('请输入邮箱'))
+        if (!/^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(value)) return cb(new Error('邮箱格式不正确'))
+        cb()
+      },
+      trigger: 'blur',
+    },
+  ],
+}
+
+function openSubDialog() {
+  if (subDialogVisible.value) return
+  subMsg.value = ''
+  subOk.value = false
+  subForm.email = ''
+  subDialogVisible.value = true
+}
+
+async function onSubscribe() {
+  // 触发表单校验后再提交
+  let valid = false
+  try {
+    valid = await (subFormRef.value?.validate?.() ?? Promise.resolve(true))
+  } catch (_) {
+    valid = false
+  }
+  if (!valid) return
+
+  const email = subForm.email
+  subLoading.value = true
+  subMsg.value = ''
+  try {
+    const res = await subscribeEmail({ email })
+    const data = res?.data ?? {}
+    // 后端如实反馈确认邮件是否真的发出：emailSent===false 时不应伪装成成功
+    const sent = data.emailSent !== false
+    subOk.value = sent
+    subMsg.value = data.message || '订阅成功，请在邮箱内完成确认'
+    if (sent) {
+      ElMessage.success(data.message || '订阅成功，请查收邮箱中的确认链接')
+    } else {
+      ElMessage.warning(data.message || '确认邮件发送失败，请稍后重试')
+    }
+    // 1.4s 后关闭弹窗，保留 subMsg 静态展示不做重置（避免提前清空提示）
+    await nextTick()
+    setTimeout(() => {
+      subDialogVisible.value = false
+      subMsg.value = ''
+      subOk.value = false
+      subForm.email = ''
+    }, 1400)
+  } catch (e) {
+    subOk.value = false
+    subMsg.value = e?.response?.data?.message || e?.message || '订阅失败，请稍后重试'
+  } finally {
+    subLoading.value = false
+  }
+}
 
 // 统计数据
 const statsList = computed(() => {
@@ -455,11 +555,31 @@ function initReveal() {
 .contact-item:hover .ci-icon { transform: scale(1.08); }
 .ci-email { background: linear-gradient(135deg, #e0f7ff, #bae6fd); color: #0369a1; }
 .ci-github { background: linear-gradient(135deg, #f1f5f9, #e2e8f0); color: var(--c-ink-700); svg { fill: var(--c-ink-700); } }
-.ci-rss { background: linear-gradient(135deg, #e0f7ff, #fbbf24); color: #0369a1; }
+.ci-mail { background: linear-gradient(135deg, #e0f7ff, #bae6fd); color: #0369a1; }
 .contact-item h4 { font-family: var(--font-serif); font-size: 17px; font-weight: 600; margin: 0 0 4px; color: var(--c-ink); }
 .contact-item p { font-size: 13px; color: var(--c-ink-soft); margin: 0 0 14px; }
 .ci-link { font-size: 13px; color: var(--c-botany-700); font-weight: 500; }
 .ci-link:hover { color: var(--c-botany-500); }
+
+/* 邮箱订阅卡片：点击交互（与同级 ci-link 同色，与 card hover 兼容） */
+.sub-trigger { cursor: pointer; outline: none; }
+.sub-trigger:focus-visible {
+  box-shadow: var(--shadow-pop), 0 0 0 3px rgba(56, 189, 248, 0.25);
+}
+
+/* 邮箱订阅弹窗（提示文案 + 行内状态） */
+.sub-dialog-desc {
+  font-size: 13px; line-height: 1.7; color: var(--c-ink-soft);
+  margin: 0 0 14px;
+}
+.sub-dialog-msg {
+  margin: 10px 0 0; font-size: 13px; color: #dc2626; line-height: 1.5;
+}
+.sub-dialog-msg.ok { color: #16a34a; }
+
+/* dialog 顶部留出 fixed nav 安全距离，避免被遮 */
+.sub-dialog :deep(.el-dialog) { margin-top: 84px; }
+.sub-dialog :deep(.el-dialog__body) { padding-top: 4px; }
 
 /* 滚动揭示 */
 .reveal { opacity: 0; transform: translateY(30px); transition: opacity .7s ease, transform .7s cubic-bezier(.25,.8,.25,1); }

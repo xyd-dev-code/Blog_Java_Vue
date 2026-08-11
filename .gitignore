@@ -79,3 +79,21 @@ docs/superpowers/specs/
 
 # 本地启动脚本里的真实密钥(密钥不进仓库;留 start-backend.bat / .example 进仓作为模板)
 start-backend.local.bat
+
+# Spring Boot 反序列化 jar / Maven 展开产物(本地 `mvn` / IDE 调试产生,不入仓库)
+blog-server/META-INF/
+blog-server/org/
+
+# 安全扫描工具状态(可能含源码快照,公开仓库不应暴露)
+.mimosa/
+.zcode/
+
+# 凭证/密钥/环境文件(防御性;即使误放也不应被追踪)
+*.key
+*.pem
+*.crt
+*.p12
+*.pfx
+.env
+.env.*
+*.env
