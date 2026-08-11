@@ -115,7 +115,7 @@ const latest = ref([])
 const tags = ref([])
 
 const heroTitle = computed(() => {
-  const name = siteStore.info?.siteName || 'DemoAuthor'
+  const name = siteStore.info?.siteName || 'MyBlog'
   const motto = siteStore.info?.motto || '春山可望'
   return { main: name, accent: motto }
 })
@@ -171,7 +171,7 @@ onMounted(async () => {
 }
 .section-eyebrow {
   display: block;
-  font-size: 11px;
+  font-size: 12px;
   letter-spacing: 0.22em;
   text-transform: uppercase;
   color: #06b6d4;
@@ -201,6 +201,13 @@ onMounted(async () => {
 @keyframes shimmer-bar {
   0%, 100% { background-position: 0% 50%; }
   50%      { background-position: 100% 50%; }
+}
+/* 移动端暂停标题下划线流光 */
+@media (max-width: 768px) {
+  .section-title::after { animation: none; will-change: auto; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .section-title::after { animation: none; }
 }
 .section-sub {
   color: var(--c-ink-soft, #64748b);
@@ -269,7 +276,7 @@ onMounted(async () => {
 }
 .tc-chip.is-big:hover { background: #0369a1; border-color: #0369a1; }
 .tc-count {
-  font-size: 11px;
+  font-size: 12px;
   padding: 1px 6px;
   background: rgba(255, 255, 255, 0.3);
   border-radius: 999px;

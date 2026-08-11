@@ -1,8 +1,14 @@
 ﻿<template>
   <div class="profile-page">
+    <!-- 加载失败时顶部 banner + 重试,避免 onMounted 静默吞错导致页面看上去"无数据" -->
+    <div v-if="loadError" class="load-error">
+      <el-icon><WarningFilled /></el-icon>
+      <span>{{ loadError }}</span>
+      <el-button type="primary" size="small" :loading="profileLoading || siteLoading" @click="loadAll">重新加载</el-button>
+    </div>
     <div class="profile-grid">
       <!-- 左侧：个人资料 -->
-      <el-card class="profile-card">
+      <el-card class="profile-card" v-loading="profileLoading">
         <template #header>
           <div class="card-header">
             <el-icon><User /></el-icon>
@@ -28,7 +34,7 @@
             <el-input v-model="profileForm.nickname" placeholder="你的昵称" />
           </el-form-item>
           <el-form-item label="邮箱">
-            <el-input v-model="profileForm.email" placeholder="联系邮箱" />
+            <el-input v-model="profileForm.email" type="email" inputmode="email" placeholder="联系邮箱" />
           </el-form-item>
           <el-form-item label="用户名">
             <span class="form-static">{{ profileForm.username || '-' }}</span>
@@ -44,14 +50,14 @@
 
       <!-- 右侧：站点信息 -->
       <div class="profile-right">
-        <el-card class="profile-card">
+        <el-card class="profile-card" v-loading="siteLoading">
           <template #header>
             <div class="card-header"><el-icon><Setting /></el-icon><span>站点信息</span></div>
           </template>
           <el-form :model="siteForm" label-width="90px">
             <el-row :gutter="16">
               <el-col :md="12">
-                <el-form-item label="站点名称"><el-input v-model="siteForm.siteName" placeholder="DemoAuthor" /></el-form-item>
+                <el-form-item label="站点名称"><el-input v-model="siteForm.siteName" placeholder="MyBlog" /></el-form-item>
               </el-col>
               <el-col :md="12">
                 <el-form-item label="副标题"><el-input v-model="siteForm.motto" placeholder="草木蔓发，春山可望" /></el-form-item>
@@ -65,7 +71,7 @@
             </el-form-item>
             <el-row :gutter="16">
               <el-col :md="12">
-                <el-form-item label="联系邮箱"><el-input v-model="siteForm.email" /></el-form-item>
+                <el-form-item label="联系邮箱"><el-input v-model="siteForm.email" type="email" inputmode="email" /></el-form-item>
               </el-col>
               <el-col :md="12">
                 <el-form-item label="ICP 备案号"><el-input v-model="siteForm.beian" /></el-form-item>
@@ -138,7 +144,7 @@
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
-import { User, Lock, Setting, Camera } from '@element-plus/icons-vue'
+import { User, Lock, Setting, Camera, WarningFilled } from '@element-plus/icons-vue'
 import { Cropper } from 'vue-advanced-cropper'
 import 'vue-advanced-cropper/dist/style.css'
 import { useSiteStore } from '@/stores/site'
@@ -156,6 +162,9 @@ const pwdSaving = ref(false)
 const pwdVisible = ref(false)
 const siteSaving = ref(false)
 const uploading = ref(false)
+const profileLoading = ref(false)
+const siteLoading = ref(false)
+const loadError = ref('')  // 任一加载失败时显示顶部 banner，并提供手动重试
 
 const uploadInput = ref(null)
 const cropperRef = ref(null)
@@ -350,7 +359,11 @@ const saveSite = async () => {
   siteSaving.value = false
 }
 
-onMounted(async () => {
+// 把加载逻辑抽成可重试函数,顶部 banner 上挂重试按钮(替代原 try {} catch (_) {} 完全静默吞错)
+const loadAll = async () => {
+  loadError.value = ''
+  // 串行,避免瞬时打两个 admin 接口给后端压力(后端若慢,两个并发更易 504)
+  profileLoading.value = true
   try {
     const resp = await adminProfile()
     const u = resp.data || {}
@@ -361,29 +374,51 @@ onMounted(async () => {
       username: u.username
     })
     oldAvatar.value = u.avatar || ''
-    // 同步到全局用户状态
     if (userStore.userInfo && u.avatar) {
       userStore.userInfo = { ...userStore.userInfo, avatar: u.avatar }
     }
-  } catch (_) {}
+  } catch (e) {
+    loadError.value = `个人资料加载失败:${e?.response?.data?.message || e?.message || '未知错误'}`
+    ElMessage.error(loadError.value)
+  } finally {
+    profileLoading.value = false
+  }
 
+  siteLoading.value = true
   try {
     const resp = await adminSiteConfig()
     const cfg = resp.data || {}
     Object.assign(siteForm, cfg)
-    // 兼容旧 seed key:老数据用 site_name,新代码/前台读 siteName
     if (!siteForm.siteName && cfg.site_name) siteForm.siteName = cfg.site_name
-    // 移除残留的 site_name 等额外 key,避免提交时连同发出去被后端拒绝
     if (cfg.site_name) delete siteForm.site_name
-    // 同步站点 logo 到全局站点状态
     if (cfg.siteLogo && siteStore.info) {
       siteStore.info = { ...siteStore.info, siteLogo: cfg.siteLogo }
     }
-  } catch (_) {}
-})
+  } catch (e) {
+    loadError.value = loadError.value
+      ? `${loadError.value}; 站点信息加载失败:${e?.response?.data?.message || e?.message || '未知错误'}`
+      : `站点信息加载失败:${e?.response?.data?.message || e?.message || '未知错误'}`
+    ElMessage.error(loadError.value)
+  } finally {
+    siteLoading.value = false
+  }
+}
+
+onMounted(loadAll)
 </script>
 
 <style scoped lang="scss">
+.load-error {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 16px;
+  margin-bottom: 16px;
+  background: #fef3c7; color: #92400e;
+  border: 1px solid #fcd34d; border-radius: 8px;
+  font-size: 13px; line-height: 1.5;
+}
+.load-error .el-icon { font-size: 16px; flex-shrink: 0; }
+.load-error > span { flex: 1; word-break: break-all; }
+
 .profile-grid {
   display: grid;
   grid-template-columns: 360px 1fr;
