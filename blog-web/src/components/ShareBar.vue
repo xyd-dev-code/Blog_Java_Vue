@@ -165,7 +165,7 @@ async function copyFromInput() {
   margin-bottom: 12px;
 }
 .share-eyebrow {
-  font-size: 10px; letter-spacing: 0.22em; font-weight: 600;
+  font-size: 12px; letter-spacing: 0.22em; font-weight: 600;
   color: #06b6d4; text-transform: uppercase;
 }
 .share-count {

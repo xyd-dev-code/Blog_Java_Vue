@@ -196,8 +196,13 @@ onBeforeUnmount(() => {
   100% { transform: translate(var(--sp-drift-x, 0), var(--sp-drift-y, 0)); }
 }
 
-/* 移动端：减少光点数量带来的视觉压力，保留一半 */
+/* 尊重系统"减少动态"：停止所有光点的持续闪烁/飘移 */
+@media (prefers-reduced-motion: reduce) {
+  .sp { animation: none; opacity: 0.3 !important; }
+}
+
+/* 移动端：暂停持续动画，仅留静止微光，省电省重绘 */
 @media (max-width: 768px) {
-  .sp { opacity: 0.35 !important; }
+  .sp { opacity: 0.3 !important; animation: none; }
 }
 </style>

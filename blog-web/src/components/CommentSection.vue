@@ -76,7 +76,7 @@
         </div>
       </div>
       <el-input v-model="form.nickname" placeholder="昵称 *" maxlength="20" />
-      <el-input v-model="form.email" placeholder="邮箱 (选填, 不会公开)" />
+      <el-input v-model="form.email" type="email" inputmode="email" placeholder="邮箱 (选填, 不会公开)" />
       <el-input v-model="form.website" placeholder="网站 (选填)" />
       <el-input
         ref="contentInput"
@@ -93,7 +93,7 @@
         <label class="form-label">验证码 <span class="required">*</span> <span class="label-hint">（防刷评论）</span></label>
         <div class="captcha-row">
           <span class="captcha-q">{{ captcha.question }}</span>
-          <el-input v-model="form.captchaAnswer" placeholder="答案" class="captcha-input cs-input" @keyup.enter="submit" />
+          <el-input v-model="form.captchaAnswer" inputmode="numeric" placeholder="答案" class="captcha-input cs-input" @keyup.enter="submit" />
           <el-button size="small" link @click="refreshCaptcha">换一题</el-button>
         </div>
       </div>

@@ -102,7 +102,7 @@
           @current-change="(p) => { query.page = p; reload(false) }" />
       </div>
 
-      <el-dialog v-model="replyVisible" title="回复评论" width="520px" append-to-body>
+      <el-dialog v-model="replyVisible" title="回复评论" width="min(520px, 92vw)" append-to-body>
         <div v-if="replyTarget" class="reply-quote">
           ↳ 回复 <b>@{{ replyTarget.nickname }}</b>：{{ clipText(replyTarget.content) }}
         </div>
@@ -151,20 +151,23 @@ const submitReply = async () => {
   }
 }
 
-const query = reactive({ page: 1, size: 15, status: '' })
+const query = reactive({ page: 1, size: 15 })
 
 const reload = async (resetPage = true) => {
   loading.value = true
-  query.status = filter.value === 'all' ? '' :
-                 filter.value === 'pending' ? 0 :
-                 filter.value === 'approved' ? 1 : 2
+  const statusVal = filter.value === 'all' ? null :
+                    filter.value === 'pending' ? 0 :
+                    filter.value === 'approved' ? 1 : 2
+  if (statusVal != null) query.status = statusVal; else delete query.status
   // 分页器回调里传 false,避免「点第 2 页 → 立刻被重置回第 1 页」的递归 bug
   if (resetPage) query.page = 1
   try {
     const resp = await adminComments(query)
     list.value = resp.data?.records || []
     total.value = resp.data?.total || 0
-  } catch (_) {}
+  } catch (e) {
+    console.error('[AdminComments] 加载失败', e)
+  }
   loading.value = false
   try {
     counts.value = (await adminCommentStats()).data || {}

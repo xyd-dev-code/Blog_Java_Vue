@@ -83,6 +83,7 @@
               v-model="cityKeyword"
               class="cp-input"
               type="text"
+              inputmode="search"
               placeholder="搜索城市，如 深圳 / 北京 / 上海"
               @input="onCityInput"
               @keyup.enter="searchCities(cityKeyword)"
@@ -329,7 +330,7 @@ onMounted(() => {
   padding: 0 8px;
 }
 .weather-eyebrow {
-  font-size: 11px;
+  font-size: 12px;
   letter-spacing: 0.18em;
   text-transform: uppercase;
   color: #06b6d4;
@@ -440,7 +441,7 @@ onMounted(() => {
   color: var(--c-ink, #1e293b);
 }
 .cp-admin {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--c-ink-soft, #64748b);
   flex-shrink: 0;
 }
@@ -494,7 +495,7 @@ onMounted(() => {
   color: #0369a1;
 }
 .wg-label {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--c-ink-soft, #64748b);
   margin-top: 2px;
 }

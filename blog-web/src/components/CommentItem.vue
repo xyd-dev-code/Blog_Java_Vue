@@ -25,6 +25,7 @@
           </span>
           <img v-if="hasAvatar && !imgError"
             :src="comment.avatar" alt="avatar"
+            loading="lazy" decoding="async"
             class="ci-av-img" :class="{ 'is-loaded': imgLoaded }"
             @load="imgLoaded = true" @error="onImgError" />
         </div>
@@ -213,7 +214,7 @@ const firstLetter = (name) => {
   background: linear-gradient(135deg, #fbbf24, #f59e0b);
   color: #fff;
   border-radius: 999px;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
   letter-spacing: 0.05em;
   box-shadow: 0 2px 6px rgba(245, 158, 11, 0.3);
@@ -294,15 +295,15 @@ const firstLetter = (name) => {
   .ci-av-img.is-loaded { opacity: 1; }
 }
 .comment-item.is-reply .ci-avatar { width: 28px; height: 28px; }
-.comment-item.is-reply .ci-avatar img, .comment-item.is-reply .ci-avatar .ci-av-fallback { width: 28px; height: 28px; font-size: 11px; }
+.comment-item.is-reply .ci-avatar img, .comment-item.is-reply .ci-avatar .ci-av-fallback { width: 28px; height: 28px; font-size: 12px; }
 .ci-meta { flex: 1; min-width: 0; }
 .ci-name { font-size: 13px; font-weight: 600; color: var(--c-ink); display: flex; align-items: center; gap: 6px; }
 .comment-item.is-reply .ci-name { font-size: 12px; }
-.ci-admin { font-size: 10px; padding: 1px 6px; background: linear-gradient(135deg, var(--c-botany-500), var(--c-botany-700)); color: #fff; border-radius: 999px; font-weight: 500; }
-.ci-time { font-size: 11px; color: var(--c-ink-300); margin-top: 2px; }
+.ci-admin { font-size: 12px; padding: 1px 6px; background: linear-gradient(135deg, var(--c-botany-500), var(--c-botany-700)); color: #fff; border-radius: 999px; font-weight: 500; }
+.ci-time { font-size: 12px; color: var(--c-ink-300); margin-top: 2px; }
 
 /* ============================== 回复对象 ============================== */
-.ci-reply-to { font-size: 11px; color: var(--c-ink-300); margin-bottom: 4px; b { color: var(--c-botany-600); } }
+.ci-reply-to { font-size: 12px; color: var(--c-ink-300); margin-bottom: 4px; b { color: var(--c-botany-600); } }
 
 /* ============================== 正文 ============================== */
 .ci-body { font-size: 13px; color: var(--c-ink-500); line-height: 1.7; white-space: pre-wrap; word-break: break-word; flex: 1; }
@@ -330,10 +331,10 @@ const firstLetter = (name) => {
 
 /* ============================== 便签/文章模式回复按钮 ============================== */
 .ci-reply-btn {
-  font-size: 11px; color: var(--c-ink-300); cursor: pointer; display: inline-flex; align-items: center; gap: 3px;
+  font-size: 12px; color: var(--c-ink-300); cursor: pointer; display: inline-flex; align-items: center; gap: 3px;
   user-select: none; transition: color 0.2s; margin-top: 10px; padding-top: 8px; border-top: 1px dashed rgba(0,0,0,0.08);
   &:hover { color: var(--c-botany-500); }
-  .el-icon { font-size: 11px; }
+  .el-icon { font-size: 12px; }
 }
 
 /* ============================== 子回复区 ============================== */

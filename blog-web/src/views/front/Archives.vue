@@ -103,7 +103,7 @@ const grouped = computed(() => {
   margin-top: 4px;
 }
 .tl-count {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--c-ink-soft);
   margin-top: 6px;
   padding: 2px 8px;

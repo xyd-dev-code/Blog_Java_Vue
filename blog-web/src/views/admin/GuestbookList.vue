@@ -90,7 +90,7 @@
           @current-change="(p) => { query.page = p; reload(false) }" />
       </div>
 
-      <el-dialog v-model="replyVisible" title="回复留言" width="520px" append-to-body>
+      <el-dialog v-model="replyVisible" title="回复留言" width="min(520px, 92vw)" append-to-body>
         <div v-if="replyTarget" class="reply-quote">
           ↳ 回复 <b>@{{ replyTarget.nickname }}</b>：{{ clipText(replyTarget.content) }}
         </div>

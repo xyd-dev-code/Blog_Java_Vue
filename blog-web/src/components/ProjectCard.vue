@@ -205,7 +205,7 @@ const onGlowMove = (e) => {
 .tech-tag {
   font-family: var(--font-sans);
   display: inline-block;
-  font-size: 10px;
+  font-size: 12px;
   padding: 2px 8px;
   border-radius: 999px;
   background: #f8fafc;
@@ -268,5 +268,20 @@ const onGlowMove = (e) => {
   color: #0c4a6e;
   border-color: #94a3b8;
   transform: translateY(-1px);
+}
+
+/* 移动端：放大卡片操作按钮到 ≥44px 触控目标，避免误触（P0 触控尺寸修复） */
+@media (max-width: 768px) {
+  .card-actions {
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .btn {
+    min-height: 44px;
+    font-size: 13px;
+  }
+  .btn-gh,
+  .btn-demo { padding: 10px 16px; }
+  .btn-more { padding: 10px 15px; }
 }
 </style>

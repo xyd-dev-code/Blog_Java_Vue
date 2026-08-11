@@ -14,7 +14,7 @@
               <el-option label="预告" :value="3" />
               <el-option label="下线" :value="0" />
             </el-select>
-            <el-input v-model="filters.keyword" placeholder="搜索名称 / slug" clearable style="width: 200px"
+            <el-input v-model="filters.keyword" placeholder="搜索名称 / slug" clearable inputmode="search" style="width: 200px"
               @keyup.enter="reload" @clear="reload" />
             <el-button @click="reload">查询</el-button>
             <el-button type="primary" @click="openForm()"><el-icon><Plus /></el-icon> 新建工具</el-button>
@@ -88,7 +88,7 @@
     </el-card>
 
     <!-- 新建/编辑弹窗 -->
-    <el-dialog v-model="dlg" :title="form.id ? '编辑工具' : '新建工具'" width="640px" destroy-on-close
+    <el-dialog v-model="dlg" :title="form.id ? '编辑工具' : '新建工具'" width="min(640px, 92vw)" destroy-on-close
       @close="resetForm">
       <el-form :model="form" :rules="rules" ref="formRef" label-width="80px">
         <el-form-item label="名称" prop="name">
@@ -379,11 +379,11 @@ onMounted(() => { loadCategories(); load() })
 .sort-num { font-family: 'Consolas', monospace; color: #475569; font-size: 12px; }
 .slug { font-family: 'Consolas', 'Monaco', monospace; font-size: 12px; color: #0369a1; background: rgba(56,189,248,0.08); padding: 1px 6px; border-radius: 4px; }
 .type-ext {
-  font-size: 11px; padding: 2px 8px; border-radius: 999px;
+  font-size: 12px; padding: 2px 8px; border-radius: 999px;
   background: rgba(251, 191, 36, 0.15); color: #854f0b;
 }
 .type-int {
-  font-size: 11px; padding: 2px 8px; border-radius: 999px;
+  font-size: 12px; padding: 2px 8px; border-radius: 999px;
   background: rgba(56, 189, 248, 0.15); color: #0c4a6e;
 }
 .muted { color: #94a3b8; font-size: 12px; }

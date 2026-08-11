@@ -49,6 +49,8 @@ html {
   scroll-behavior: smooth;
   /* 固定导航遮挡补偿：锚点定位时预留导航高度 */
   scroll-padding-top: 92px;
+  /* 移动端：消除灰色点击高亮 */
+  -webkit-tap-highlight-color: transparent;
 }
 
 /* 尊重系统「减弱动效」偏好：关闭平滑滚动与装饰动画 */
@@ -196,6 +198,13 @@ h1, h2, h3, h4 { font-family: var(--font-serif); color: var(--c-ink); letter-spa
   0%, 100% { background-position: 0% 50%; }
   50% { background-position: 100% 50%; }
 }
+/* 移动端暂停标题下划线流光，减少逐帧重绘 */
+@media (max-width: 768px) {
+  .section-title::after { animation: none; will-change: auto; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .section-title::after { animation: none; }
+}
 .section-sub { color: var(--c-ink-soft); font-size: 15px; margin-bottom: 40px; }
 
 .card {
@@ -250,8 +259,13 @@ h1, h2, h3, h4 { font-family: var(--font-serif); color: var(--c-ink); letter-spa
 .el-message-box,
 .el-notification {
   z-index: 9999 !important;
-  /* 强制 fixed 重新进入视口坐标系，避免被祖先 backdrop-filter 创建的
-     stacking context 限制导致视觉位置错乱 */
+}
+/* .el-message / .el-notification 默认 fixed，但会被祖先 backdrop-filter 创建的
+   stacking context 限制视觉层级；强制 fixed 让 z-index 真正生效。
+   ⚠️ 不要把 .el-message-box 也加 position:fixed：EP 内部它嵌在 .el-overlay-dialog
+   里靠 flex 居中，强 fixed 会脱离居中布局贴到 top:0 left:0(顶部弹窗 bug 2026-08-09)。 */
+.el-message,
+.el-notification {
   position: fixed !important;
 }
 .el-button--primary {
@@ -675,4 +689,170 @@ h1, h2, h3, h4 { font-family: var(--font-serif); color: var(--c-ink); letter-spa
     color: var(--c-ink);
     font-weight: 600;
   }
+}
+
+/* ============================================================
+   移动端触控优化（2026-08-09）
+   ------------------------------------------------------------
+   1) touch-action: manipulation 消除 300ms 延迟
+   2) @media (hover: none) 禁用触控设备的 hover 专属效果
+      （手指 hover 误触发 + 点击后高亮残留）
+   3) :active 触觉反馈替代 hover
+   ============================================================ */
+
+/* 交互元素：消除双击缩放延迟 */
+a, button, [role="button"], input, select, textarea,
+.el-button, .el-link, .el-tag, .el-switch, .el-radio, .el-checkbox,
+.card, .tag-pill, .btn-link, .glow-card, .border-glow,
+.ef-neon, .ef-bounce, .ef-glass-lift, .ef-ripple-hover,
+.ef-shimmer, .ef-prism-edge, .ef-card-sweep, .ef-card-glow {
+  touch-action: manipulation;
+}
+
+/* ── 触控设备：禁用 hover 专属效果 + 添加 :active 反馈 ── */
+@media (hover: none) and (pointer: coarse) {
+  /* 卡片不因 hover 上浮（手指悬停误触发） */
+  .card:hover { transform: none; box-shadow: var(--shadow-soft); border-color: var(--c-line-soft); }
+  .ef-glass-lift:hover { transform: none; }
+  .ef-neon:hover { transform: none; box-shadow: none; }
+  .ef-bounce:hover { transform: none; }
+
+  /* 光效不激活（避免点击后高亮残留在元素上） */
+  .glow-card:hover::before, .glow-card:hover::after { opacity: 0; }
+  .border-glow:hover::after { opacity: 0; animation-play-state: paused; }
+  .ef-card-glow:hover::before { opacity: 0; animation: none; }
+  .ef-prism-edge:hover::before { opacity: 0; }
+  .ef-card-sweep:hover::after { left: -150%; }
+  .ef-shimmer:hover::after { left: -120%; }
+  .ef-ripple-hover:hover::after { opacity: 0; box-shadow: 0 0 0 0 transparent; }
+
+  /* 组件级卡片 hover 位移不残留（sticky hover 修复） */
+  .friend-card:hover, .post-card:hover, .post-card-sky:hover,
+  .pc-compact:hover, .proj-card:hover, .tool-card:hover,
+  .rs-card:hover, .cta-card:hover, .stat-item:hover,
+  .contact-item:hover, .friend-placeholder:hover,
+  .nav-card:hover, .tl-item:hover .tl-card,
+  .comment-item.is-card:hover > .ci-card,
+  .kpi-card:hover, .group-header:hover, .detail-row:hover {
+    transform: none !important;
+    box-shadow: var(--shadow-soft) !important;
+  }
+  /* 封面图不因 hover 放大 */
+  .post-card:hover .cover img, .post-card-sky:hover .cover img,
+  .proj-card:hover .illus-img, .friend-card:hover .avatar {
+    transform: none !important;
+  }
+
+  /* 标签/链接 hover 态不残留 */
+  .tag-pill:hover { background: var(--c-botany-50); color: var(--c-botany-900); border-color: var(--c-botany-100); }
+  .btn-link:hover { gap: 6px; }
+  a:hover { color: inherit; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--c-line); }
+  .mat-input .el-input__wrapper:hover { border-bottom-color: var(--c-line) !important; }
+  .markdown-body tbody tr:hover td { background: #ffffff; }
+  .markdown-body tbody tr:nth-child(even) td:hover { background: #f0f9ff; }
+
+  /* :active 触觉反馈（替代 hover） */
+  .card:active { transform: scale(0.985); transition: transform 0.1s ease; }
+  .btn-link:active { opacity: 0.7; }
+  .tag-pill:active { background: var(--c-botany-500); color: #fff; }
+  a:active { opacity: 0.6; }
+  .el-button:active { opacity: 0.85; transform: scale(0.97); }
+  .el-button--primary:active { opacity: 0.9; }
+  .ef-bounce:active { transform: scale(0.92); }
+  .ef-neon:active { transform: scale(0.96); }
+  .ef-glass-lift:active { transform: scale(0.98); }
+
+  /* 卡片类：按下缩放 */
+  .friend-card:active, .post-card:active, .post-card-sky:active,
+  .pc-compact:active, .proj-card:active, .tool-card:active,
+  .rs-card:active, .cta-card:active, .stat-item:active,
+  .contact-item:active, .nav-card:active, .friend-placeholder:active,
+  .tl-card:active {
+    transform: scale(0.97) !important;
+    transition: transform 0.1s ease !important;
+  }
+
+  /* 按钮类：按下不透明度降低 */
+  .hero-chip:active, .tc-chip:active, .share-btn:active,
+  .btn-gh:active, .btn-demo:active, .btn-more:active,
+  .btn-loadmore:active, .fh-apply-btn:active, .hg-publish:active,
+  .comment-trigger:active, .gb-sentinel:active, .ss-exit:active,
+  .more-link:active, .weather-loc-btn:active, .cp-reset:active,
+  .cp-item:active, .wd-btn:active {
+    opacity: 0.7;
+    transform: scale(0.97);
+    transition: all 0.1s ease;
+  }
+
+  /* 评论/留言操作图标 */
+  .ci-act:active, .ci-report:active, .ci-expand:active {
+    opacity: 0.5;
+  }
+
+  /* el-link / el-tag 触感 */
+  .el-link:active { opacity: 0.7; }
+  .el-tag:active { transform: scale(0.95); }
+}
+
+/* ── 全局 :active 反馈（触控+鼠标通用，低强度不干扰桌面端）── */
+@media (hover: hover) and (pointer: fine) {
+  .card:active { transform: scale(0.99); transition: transform 0.08s ease; }
+  .el-button:active { transform: scale(0.98); }
+}
+
+/* ============================================================
+   移动端弹窗 → 底部抽屉（Bottom Sheet）
+   ------------------------------------------------------------
+   所有 el-dialog 在 ≤640px 窗口自动转为底部抽屉：
+   全宽、圆角顶部、顶部拖拽手柄、最大高 88vh 可滚动。
+   个别弹窗如需自定义可在组件内 @media 覆盖。
+   ============================================================ */
+@media (max-width: 640px) {
+  .el-overlay-dialog {
+    align-items: flex-end !important;
+  }
+  .el-dialog {
+    width: 100% !important;
+    margin: 0 !important;
+    margin-bottom: 0 !important;
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    border-radius: 18px 18px 0 0 !important;
+    max-height: 88vh;
+    overflow-y: auto;
+    animation: el-dialog-slide-up 0.3s cubic-bezier(0.22, 1, 0.36, 1) !important;
+  }
+  .el-dialog__header {
+    border-radius: 18px 18px 0 0;
+    padding-top: 14px;
+    position: relative;
+  }
+  .el-dialog__header::before {
+    content: '';
+    display: block;
+    width: 36px;
+    height: 4px;
+    background: var(--c-line);
+    border-radius: 2px;
+    margin: 0 auto 10px;
+  }
+  /* el-message-box 保持居中（确认弹窗仍居中显示） */
+  .el-overlay-dialog:has(.el-message-box) {
+    align-items: center !important;
+  }
+  .el-overlay-dialog:has(.el-message-box) .el-message-box {
+    position: relative !important;
+    bottom: auto !important;
+    border-radius: var(--radius) !important;
+    animation: none !important;
+    max-height: none;
+  }
+}
+
+@keyframes el-dialog-slide-up {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
 }

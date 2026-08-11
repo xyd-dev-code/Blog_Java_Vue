@@ -24,7 +24,7 @@
       <p class="excerpt">{{ excerpt(article.summary || article.content, 100) }}</p>
       <div class="meta-bottom">
         <div class="author">
-          <img v-if="authorAvatar" :src="authorAvatar" class="avatar avatar-img" alt="" />
+          <img v-if="authorAvatar" :src="authorAvatar" class="avatar avatar-img" alt="" loading="lazy" decoding="async" />
           <div v-else class="avatar"></div>
           <span>{{ authorName }}</span>
         </div>
@@ -105,7 +105,7 @@ const readMinutes = computed(() => {
   background: rgba(15, 23, 42, 0.55);
   color: #fff;
   border-radius: 999px;
-  font-size: 11px;
+  font-size: 12px;
   backdrop-filter: blur(6px);
 }
 
@@ -131,7 +131,7 @@ const readMinutes = computed(() => {
   color: #0369a1;
   border-radius: 999px;
   border: 1px solid #e0f2fe;
-  font-size: 11px;
+  font-size: 12px;
 }
 .chip:nth-child(2) {
   background: #ecfeff;
@@ -198,8 +198,8 @@ const readMinutes = computed(() => {
   .cover-char { font-size: 48px; }
   .body { padding: 14px 16px 12px; }
   .title { font-size: 16px; }
-  .meta-top { gap: 6px; font-size: 11px; }
+  .meta-top { gap: 6px; font-size: 12px; }
   .excerpt { font-size: 13px; }
-  .stats { font-size: 11px; gap: 6px; }
+  .stats { font-size: 12px; gap: 6px; }
 }
 </style>

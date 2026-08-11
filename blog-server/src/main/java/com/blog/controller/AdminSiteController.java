@@ -41,7 +41,7 @@ public class AdminSiteController {
             "site.logo", "site.favicon", "site.copyright", "site.icp", "site.police",
             "seo.title", "seo.description", "seo.keywords", "seo.canonical",
             "social.github", "social.twitter", "social.weibo", "social.qq",
-            "social.email", "social.rss",
+            "social.email",
             "footer.text", "footer.beian", "footer.icp",
             "comment.audit", "comment.placeholder",
             "github.url", "github.token",
@@ -50,7 +50,7 @@ public class AdminSiteController {
             "siteLogo", "siteFavicon", "siteCopyright", "siteIcp", "sitePolice",
             "seoTitle", "seoDescription", "seoKeywords", "seoCanonical",
             "socialGithub", "socialTwitter", "socialWeibo", "socialQq",
-            "socialEmail", "socialRss",
+            "socialEmail",
             "footerText", "footerBeian", "footerIcp",
             "commentAudit", "commentPlaceholder",
             // 评论/留言通知开关(0/1)

@@ -8,7 +8,7 @@
             <span class="sub">按月份聚合的所有文章，共 <b>{{ articles.length }}</b> 篇</span>
           </div>
           <div class="actions">
-            <el-input v-model="kw" placeholder="搜索标题…" clearable style="width: 240px;" @keyup.enter="reload" />
+            <el-input v-model="kw" placeholder="搜索标题…" clearable inputmode="search" style="width: 240px;" @keyup.enter="reload" />
             <el-button @click="reload"><el-icon><Refresh /></el-icon>&nbsp;刷新</el-button>
           </div>
         </div>
@@ -197,7 +197,7 @@ onMounted(reload)
   top: 80px;  /* 顶部 admin-topbar 高度 */
 }
 .aside-eyebrow {
-  font-size: 11px;
+  font-size: 12px;
   letter-spacing: 0.18em;
   text-transform: uppercase;
   color: #06b6d4;
@@ -244,7 +244,7 @@ onMounted(reload)
   margin-top: 2px;
 }
 .m-count {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--c-ink-soft);
   margin-top: 6px;
 }
@@ -271,7 +271,7 @@ onMounted(reload)
   border-bottom: 1px dashed #e0f2fe;
 }
 .pane-eyebrow {
-  font-size: 11px;
+  font-size: 12px;
   letter-spacing: 0.15em;
   text-transform: uppercase;
   color: #06b6d4;

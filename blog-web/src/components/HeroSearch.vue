@@ -119,7 +119,7 @@ defineProps({
 /* 文字层（置于装饰之上） */
 .hs-inner { position: relative; z-index: 3; }
 .hs-eyebrow {
-  font-size: 11px;
+  font-size: 12px;
   letter-spacing: 0.28em;
   text-transform: uppercase;
   color: var(--c-botany-500);

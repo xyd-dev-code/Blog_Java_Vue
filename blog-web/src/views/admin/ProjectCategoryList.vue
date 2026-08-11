@@ -9,7 +9,7 @@
       </template>
 
       <div class="toolbar">
-        <el-input v-model="filters.keyword" placeholder="搜索名称 / slug" clearable style="width: 220px" @keyup.enter="reload" @clear="reload" />
+        <el-input v-model="filters.keyword" placeholder="搜索名称 / slug" clearable inputmode="search" style="width: 220px" @keyup.enter="reload" @clear="reload" />
         <el-button @click="reload">查询</el-button>
       </div>
 

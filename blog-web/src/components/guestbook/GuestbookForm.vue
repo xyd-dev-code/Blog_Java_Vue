@@ -18,7 +18,7 @@
       </div>
       <div class="form-col">
         <label class="form-label">邮箱 <span class="required">*</span> <span class="label-hint">（不会公开）</span></label>
-        <el-input v-model="form.email" placeholder="your@example.com" class="gb-input" />
+        <el-input v-model="form.email" type="email" inputmode="email" placeholder="your@example.com" class="gb-input" />
       </div>
     </div>
 
@@ -101,7 +101,7 @@
       <label class="form-label">验证码 <span class="required">*</span> <span class="label-hint">（防刷留言）</span></label>
       <div class="captcha-row">
         <span class="captcha-q">{{ captcha.question }}</span>
-        <el-input v-model="form.captchaAnswer" placeholder="答案" class="captcha-input gb-input" @keyup.enter="submit" />
+        <el-input v-model="form.captchaAnswer" inputmode="numeric" placeholder="答案" class="captcha-input gb-input" @keyup.enter="submit" />
         <el-button size="small" link @click="refreshCaptcha">换一题</el-button>
       </div>
     </div>

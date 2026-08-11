@@ -328,7 +328,7 @@ async function downloadMdTemplate() {
   b { color: var(--c-ink); margin: 0 2px; }
 }
 .imp-pill {
-  font-size: 11px; padding: 2px 8px; border-radius: 999px;
+  font-size: 12px; padding: 2px 8px; border-radius: 999px;
   background: #f3f4f6; color: #475569;
 }
 .imp-pill-new { background: #ecfdf5; color: #047857; }

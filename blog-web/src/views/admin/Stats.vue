@@ -331,6 +331,12 @@ const resizeCharts = () => {
   browserChart?.resize()
   provinceChart?.resize()
 }
+// resize 防抖：ECharts resize 涉及重新布局，连续 resize 合并到 150ms 后只执行一次
+let resizeTimer = null
+const onResize = () => {
+  if (resizeTimer) clearTimeout(resizeTimer)
+  resizeTimer = setTimeout(resizeCharts, 150)
+}
 
 // 监听整个 stats（深度），任一字段变化都重绘饼图；比监听字段数组更稳
 watch(stats, () => {
@@ -543,14 +549,15 @@ onMounted(async () => {
   osChart = initChart(osChartRef.value, buildPieData(stats.byOs))
   browserChart = initChart(browserChartRef.value, buildPieData(stats.byBrowser))
   provinceChart = initChart(provinceChartRef.value, buildPieData(stats.byProvince, formatProvince))
-  window.addEventListener('resize', resizeCharts)
+  window.addEventListener('resize', onResize)
   loadAll()
   onAutoRefreshChange(autoRefresh.value)
 })
 
 onUnmounted(() => {
   if (refreshTimer) clearInterval(refreshTimer)
-  window.removeEventListener('resize', resizeCharts)
+  window.removeEventListener('resize', onResize)
+  if (resizeTimer) clearTimeout(resizeTimer)
   chartObservers.forEach((ro) => ro.disconnect())
   chartObservers.length = 0
   deviceChart?.dispose()
@@ -645,13 +652,13 @@ onUnmounted(() => {
   min-height: 2px;
 }
 .hour-num {
-  font-size: 10px;
+  font-size: 12px;
   color: #fff;
   font-variant-numeric: tabular-nums;
   transform: scale(0.85);
 }
 .hour-label {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--c-ink-soft);
   margin-top: 4px;
   font-variant-numeric: tabular-nums;
@@ -823,7 +830,7 @@ onUnmounted(() => {
   word-break: break-all;
 }
 .path-page {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--c-ink-soft);
   padding: 0 4px;
   letter-spacing: 0.02em;

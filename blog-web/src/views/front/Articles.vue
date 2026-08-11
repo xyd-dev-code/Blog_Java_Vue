@@ -23,6 +23,7 @@
           placeholder="搜索文章标题、内容或标签…（回车搜索）"
           clearable
           size="default"
+          inputmode="search"
           @keyup.enter="doSearch"
           @clear="exitSearch"
         >

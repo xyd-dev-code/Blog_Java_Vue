@@ -77,6 +77,7 @@
               :src="p.coverUrl"
               :alt="p.name"
               loading="lazy"
+              decoding="async"
               class="illus-img"
             />
             <SunnyDecor v-else :variant="illusVariant(p)" :size="280" class="illus-decor" />
@@ -164,7 +165,7 @@
     >
       <div v-if="detailProject" class="proj-detail">
         <div class="pd-cover">
-          <img v-if="detailProject.coverUrl" :src="detailProject.coverUrl" :alt="detailProject.name" />
+          <img v-if="detailProject.coverUrl" :src="detailProject.coverUrl" :alt="detailProject.name" loading="lazy" decoding="async" />
           <SunnyDecor v-else :variant="illusVariant(detailProject)" :size="320" />
         </div>
         <div class="pd-body">
@@ -589,7 +590,7 @@ onMounted(async () => {
 @media (max-width: 560px) {
   .proj-grid { grid-template-columns: 1fr; gap: 18px; }
   .card-actions { flex-wrap: wrap; gap: 4px; padding: 6px 12px 10px; }
-  .btn { font-size: 11px; padding: 5px 10px; }
+  .btn { font-size: 12px; padding: 5px 10px; }
 }
 @media (max-width: 480px) {
   .btn-more { margin-left: 0; }
@@ -712,7 +713,7 @@ onMounted(async () => {
 .tech-tag {
   font-family: var(--font-sans);
   display: inline-block;
-  font-size: 10px;
+  font-size: 12px;
   padding: 2px 8px;
   border-radius: 999px;
   background: #f8fafc;

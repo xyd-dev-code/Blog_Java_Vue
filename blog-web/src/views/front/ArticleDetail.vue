@@ -34,7 +34,7 @@
         <GradientBorderCard variant="mix" class="art-author-bar">
           <div class="author-row">
             <div class="author-left">
-              <img v-if="authorAvatar" :src="authorAvatar" class="avatar avatar-img" alt="" />
+              <img v-if="authorAvatar" :src="authorAvatar" class="avatar avatar-img" alt="" loading="lazy" decoding="async" />
               <div v-else class="avatar avatar-fallback">{{ initial }}</div>
               <div class="author-text">
                 <div class="author-name">{{ authorName }}</div>
@@ -62,6 +62,21 @@
     </header>
 
     <div class="container-narrow art-body">
+      <!-- 左侧目录侧边栏：独立滚动容器 + sticky 固定 -->
+      <aside class="art-toc" v-if="tocItems.length" aria-label="文章目录">
+        <div class="toc-title">目录</div>
+        <ul class="toc-list">
+          <li
+            v-for="item in tocItems"
+            :key="item.id"
+            :class="['toc-item', 'lv-' + item.level, { active: activeId === item.id }]"
+          >
+            <a :href="'#' + item.id" @click.prevent="goAnchor(item.id)">{{ item.text }}</a>
+          </li>
+        </ul>
+      </aside>
+
+      <div class="art-main">
       <!-- 面包屑：首页 / 文章 / 标题 -->
       <nav class="art-breadcrumb" aria-label="面包屑导航">
         <router-link to="/" class="bc-item">首页</router-link>
@@ -72,7 +87,7 @@
       </nav>
 
       <!-- 正文（与后台 MdEditor 渲染一致） -->
-      <article class="art-content md-preview-wrap">
+      <article ref="contentRef" class="art-content md-preview-wrap">
         <MdPreview
           :model-value="article.content"
           v-bind="previewProps"
@@ -109,6 +124,7 @@
       <RelatedArticles :list="related" />
 
       <CommentSection :article-id="article.id" />
+      </div>
     </div>
   </div>
   <div v-else class="loading-page">
@@ -117,7 +133,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import { Calendar, View, ChatDotRound, Folder } from '@element-plus/icons-vue'
 import { articleBySlug } from '@/api/front'
@@ -144,6 +160,55 @@ const prev = ref(null)
 const next = ref(null)
 const related = ref([])
 
+/* ===== 文章目录（左侧独立侧边栏） ===== */
+const tocItems = ref([])        // [{ id, text, level }]
+const tocEls = []               // 缓存标题 DOM，用于滚动高亮
+const activeId = ref('')
+const contentRef = ref(null)
+
+// 收集正文 h2/h3 构建目录；若库未生成 id 则兜底补一个
+const buildToc = () => {
+  const root = contentRef.value
+  if (!root) return
+  const nodes = Array.from(root.querySelectorAll('h2, h3'))
+  const items = []
+  const els = []
+  nodes.forEach((n) => {
+    if (!n.id) {
+      n.id = 'h-' + (n.textContent || '').trim()
+        .toLowerCase()
+        .replace(/[^\w一-龥]+/g, '-')
+        .replace(/^-+|-+$/g, '')
+        .slice(0, 48) || 'h-auto'
+    }
+    items.push({ id: n.id, text: (n.textContent || '').trim(), level: Number(n.tagName[1]) })
+    els.push(n)
+  })
+  tocItems.value = items
+  tocEls.length = 0
+  tocEls.push(...els)
+  if (items.length) activeId.value = items[0].id
+}
+
+// 点击目录项：平滑滚动到对应标题（全局 scroll-padding-top 已为固定 header 留位）
+const goAnchor = (id) => {
+  const el = document.getElementById(id)
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+}
+
+// 滚动时高亮当前可见章节
+const setActive = () => {
+  if (!tocEls.length) return
+  const offset = 110
+  let cur = tocEls[0].id
+  for (const el of tocEls) {
+    if (el.getBoundingClientRect().top - offset <= 0) cur = el.id
+    else break
+  }
+  // 仅在章节切换时才写响应式，避免每帧无谓重渲染
+  if (cur !== activeId.value) activeId.value = cur
+}
+
 const { authorName, authorAvatar, initial } = useAuthor(article)
 const { temp, desc, location } = useWeather()
 
@@ -155,14 +220,23 @@ const readMinutes = computed(() => {
 
 // 阅读进度
 const progressPercent = ref(0)
+// rAF 合并滚动帧：避免每次 scroll 事件都触发 Vue 重渲染 + 同步读取布局（getBoundingClientRect）
+let scrollTicking = false
 const onScroll = () => {
-  const h = document.documentElement
-  const total = h.scrollHeight - h.clientHeight
-  progressPercent.value = total > 0 ? Math.min(100, (h.scrollTop / total) * 100) : 0
+  if (scrollTicking) return
+  scrollTicking = true
+  requestAnimationFrame(() => {
+    const h = document.documentElement
+    const total = h.scrollHeight - h.clientHeight
+    progressPercent.value = total > 0 ? Math.min(100, (h.scrollTop / total) * 100) : 0
+    setActive()
+    scrollTicking = false
+  })
 }
 
 const load = async () => {
   article.value = null
+  tocItems.value = []
   try {
     const resp = await articleBySlug(route.params.slug)
     article.value = resp.data?.article
@@ -170,10 +244,20 @@ const load = async () => {
     next.value = resp.data?.next
     related.value = resp.data?.related || []
   } catch (_) {}
+  // 等 MdPreview 渲染出标题 DOM 再收集目录
+  await nextTick()
+  buildToc()
+  // MdPreview 可能异步渲染，补一次兜底，确保标题都被收集
+  setTimeout(buildToc, 80)
+  setActive()
 }
 
 watch(() => route.params.slug, load)
-onMounted(() => { load(); window.addEventListener('scroll', onScroll, { passive: true }) })
+onMounted(async () => {
+  await load()
+  window.addEventListener('scroll', onScroll, { passive: true })
+  onScroll()
+})
 onUnmounted(() => { window.removeEventListener('scroll', onScroll) })
 </script>
 
@@ -413,7 +497,7 @@ onUnmounted(() => { window.removeEventListener('scroll', onScroll) })
 }
 .section-eyebrow {
   display: block;
-  font-size: 10px;
+  font-size: 12px;
   letter-spacing: 0.2em;
   text-transform: uppercase;
   color: #06b6d4;
@@ -467,7 +551,75 @@ onUnmounted(() => { window.removeEventListener('scroll', onScroll) })
 /* 桌面端(>1024px):正文区扩到 1100px 居中,让阅读体验更接近图一的"宽屏但留呼吸"效果。
    平板/手机仍走 .container-narrow 的 880px 或全屏,不影响移动端适配。 */
 @media (min-width: 1025px) {
-  .art-body { max-width: 1100px; }
+  .art-body {
+    max-width: 1360px;
+    display: flex;
+    align-items: flex-start;
+    gap: 36px;
+  }
+  .art-main { flex: 1; min-width: 0; }
+}
+
+/* ===== 左侧目录侧边栏 ===== */
+.art-toc {
+  position: sticky;
+  top: 92px;                 /* 钉在固定 header 下方，不随文章滚动 */
+  align-self: flex-start;    /* 不拉伸，sticky 才有生效空间 */
+  flex-shrink: 0;
+  width: 240px;
+  /* 自身独立滚动容器：目录项过多时只滚这里，不影响右侧文章 */
+  max-height: calc(100vh - 112px);
+  overflow-y: auto;
+  padding: 18px 14px 18px 16px;
+  background: rgba(255, 255, 255, 0.62);
+  border: 1px solid rgba(186, 230, 253, 0.6);
+  border-radius: 14px;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  scrollbar-width: thin;
+}
+.toc-title {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--c-ink);
+  margin-bottom: 10px;
+  padding-left: 10px;
+}
+.toc-list { list-style: none; margin: 0; padding: 0; }
+.toc-item a {
+  display: block;
+  padding: 6px 10px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--c-ink-soft);
+  text-decoration: none;
+  border-left: 2px solid transparent;
+  border-radius: 0 8px 8px 0;
+  transition: color 0.18s ease, background 0.18s ease, border-color 0.18s ease;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.toc-item.lv-3 a { padding-left: 24px; font-size: 12.5px; }
+.toc-item a:hover {
+  color: var(--c-botany-500);
+  background: var(--c-botany-50);
+}
+.toc-item.active a {
+  color: #0369a1;
+  background: rgba(56, 189, 248, 0.12);
+  border-left-color: #38bdf8;
+  font-weight: 600;
+}
+/* 锚点跳转时为固定 header 预留偏移，避免标题被遮挡 */
+.art-content :deep(h2),
+.art-content :deep(h3) {
+  scroll-margin-top: 96px;
+}
+/* 平板 / 手机：隐藏目录，回归单栏阅读 */
+@media (max-width: 1024px) {
+  .art-toc { display: none; }
 }
 
 /* ===== 面包屑 ===== */
@@ -582,7 +734,7 @@ onUnmounted(() => { window.removeEventListener('scroll', onScroll) })
   min-height: 80px;
 }
 .nav-next { text-align: right; align-items: flex-end; }
-.lbl { font-size: 11px; letter-spacing: 0.1em; color: #06b6d4; font-weight: 600; }
+.lbl { font-size: 12px; letter-spacing: 0.1em; color: #06b6d4; font-weight: 600; }
 .t {
   font-family: var(--font-serif);
   font-size: 15px;

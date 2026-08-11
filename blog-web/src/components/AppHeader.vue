@@ -21,7 +21,7 @@
       </nav>
 
       <div class="nav-tools">
-        <el-input v-model="kw" placeholder="搜点什么…" size="default" clearable
+        <el-input v-model="kw" placeholder="搜点什么…" size="default" clearable inputmode="search"
           class="search-box" :class="{ 'is-focused': searchFocused }"
           @focus="searchFocused = true" @blur="searchFocused = false"
           @keyup.enter="goSearch">
@@ -36,7 +36,7 @@
 
     <!-- 手机抽屉 -->
     <!-- Teleport to body 让抽屉脱离 AppHeader 的 stacking context,
-         避免被页面里 transform/filter 元素(如 SkyHero / ParticleBg)盖住 -->
+         避免被页面里 transform/filter 元素(如 SkyHero)盖住 -->
     <Teleport to="body">
       <transition name="drawer">
         <div v-if="drawerOpen" class="mobile-drawer" @click.self="toggleDrawer">
@@ -50,7 +50,7 @@
             </button>
           </div>
           <div class="drawer-search">
-            <el-input v-model="kw" placeholder="搜点什么…" clearable @keyup.enter="goSearchAndClose">
+            <el-input v-model="kw" placeholder="搜点什么…" clearable inputmode="search" @keyup.enter="goSearchAndClose">
               <template #prefix><el-icon><Search /></el-icon></template>
             </el-input>
           </div>
@@ -194,7 +194,7 @@ watch(drawerOpen, (v) => {
 .brand-text { display: flex; flex-direction: column; line-height: 1.1; }
 .brand-name { font-family: var(--font-serif); font-size: 20px; font-weight: 600; color: var(--c-ink); }
 .brand-motto {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--c-ink-soft);
   letter-spacing: 0.05em;
   margin-top: 3px;
@@ -288,7 +288,7 @@ watch(drawerOpen, (v) => {
 // 汉堡按钮 — 移动端显示
 .hamburger {
   display: none;
-  width: 40px; height: 40px;
+  width: 44px; height: 44px;
   border: none; background: transparent;
   flex-direction: column; justify-content: center; align-items: center;
   gap: 5px; cursor: pointer;
