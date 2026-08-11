@@ -78,6 +78,10 @@
 }
 
 @media (max-width: 768px) {
-  .au-band { opacity: 0.22; }
+  .au-band {
+    opacity: 0.18;
+    animation: none;
+    will-change: auto;
+  }
 }
 </style>

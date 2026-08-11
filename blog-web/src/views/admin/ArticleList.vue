@@ -5,7 +5,7 @@
         <div class="header-bar">
           <span>文章列表</span>
           <div class="actions">
-            <el-input v-model="query.keyword" placeholder="搜索标题" clearable
+            <el-input v-model="query.keyword" placeholder="搜索标题" clearable inputmode="search"
               class="search-input" @keyup.enter="reload" />
             <el-select v-model="query.status" placeholder="状态" clearable
               class="status-select" @change="reload">

@@ -72,7 +72,7 @@
 
     <!-- 写留言弹窗（桌面 + 移动端共用） -->
     <el-dialog v-model="formVisible" :title="replyTo ? '回复 @' + replyTo.nickname : '写下你的留言'"
-      :width="replyTo ? '480px' : '560px'" :top="'84px'" class="gb-form-dialog" :close-on-click-modal="false"
+      :width="replyTo ? 'min(480px, 92vw)' : 'min(560px, 92vw)'" :top="'84px'" class="gb-form-dialog" :close-on-click-modal="false"
       @close="replyTo = null">
       <GuestbookForm
         :reply-to="replyTo"
@@ -84,7 +84,7 @@
     </el-dialog>
 
     <!-- 举报弹窗 -->
-    <el-dialog v-model="reportVisible" title="举报留言" width="500px" :top="'84px'" class="gb-form-dialog">
+    <el-dialog v-model="reportVisible" title="举报留言" width="min(500px, 92vw)" :top="'84px'" class="gb-form-dialog">
       <div class="report-body" v-if="reportTarget">
         <p class="report-target">
           举报 <b>@{{ reportTarget.nickname }}</b> 的留言：
@@ -103,7 +103,7 @@
           :placeholder="detailRequired ? '请补充具体内容（必填）' : '补充说明（选填）'"
           class="report-detail" />
         <label class="form-label">联系邮箱 <span class="required">*</span> <span class="label-hint">（便于回复处理进展）</span></label>
-        <el-input v-model="reportForm.email" placeholder="your@example.com" class="report-email" />
+        <el-input v-model="reportForm.email" type="email" inputmode="email" placeholder="your@example.com" class="report-email" />
       </div>
       <template #footer>
         <el-button @click="reportVisible = false">取消</el-button>
@@ -411,9 +411,37 @@ onBeforeUnmount(() => {
 .report-detail, .report-email { margin-top: 2px; }
 .report-body .form-label { margin-top: 4px; }
 
-/* 弹窗在窄屏恢复 92% */
+/* 弹窗在窄屏转为底部抽屉（Bottom Sheet）*/
 @media (max-width: 640px) {
-  :deep(.gb-form-dialog) { width: 92% !important; }
+  :deep(.gb-form-dialog) {
+    width: 100% !important;
+    margin: 0 !important;
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    border-radius: 18px 18px 0 0 !important;
+    max-height: 88vh;
+    overflow-y: auto;
+  }
+  /* 遮罩层距离顶部留白 */
+  :deep(.el-overlay-dialog) {
+    align-items: flex-end !important;
+  }
+  :deep(.gb-form-dialog .el-dialog__header) {
+    border-radius: 18px 18px 0 0;
+    padding-top: 14px;
+  }
+  /* 拖拽手柄视觉提示 */
+  :deep(.gb-form-dialog .el-dialog__header)::before {
+    content: '';
+    display: block;
+    width: 36px;
+    height: 4px;
+    background: var(--c-line);
+    border-radius: 2px;
+    margin: 0 auto 10px;
+  }
 }
 
 @media (max-width: 1199px) {
@@ -423,6 +451,6 @@ onBeforeUnmount(() => {
   .gb-grid, .sk-grid { column-count: 1; gap: 12px; }
   .gb-featured { margin-bottom: 20px; }
   .gb-featured :deep(.ci-card) { padding: 18px 18px 14px; }
-  .gb-footer { padding: 18px 12px 0; font-size: 11px; }
+  .gb-footer { padding: 18px 12px 0; font-size: 12px; }
 }
 </style>

@@ -92,4 +92,9 @@ const orbs = computed(() =>
 @media (prefers-reduced-motion: reduce) {
   .bokeh-field { display: none; }
 }
+
+/* 移动端：暂停浮光持续重绘（静止即不可见，无视觉损失） */
+@media (max-width: 768px) {
+  .bokeh { animation: none; }
+}
 </style>

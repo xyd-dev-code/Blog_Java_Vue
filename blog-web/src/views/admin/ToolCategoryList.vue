@@ -16,6 +16,7 @@
           v-model="filters.keyword"
           placeholder="搜索分类键 / 名称"
           clearable
+          inputmode="search"
           style="width: 220px"
           @keyup.enter="reload"
           @clear="reload"

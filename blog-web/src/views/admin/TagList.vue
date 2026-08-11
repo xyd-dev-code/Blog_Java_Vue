@@ -8,7 +8,7 @@
         </div>
       </template>
       <div class="toolbar">
-        <el-input v-model="filters.keyword" placeholder="搜索" clearable style="width: 200px" @keyup.enter="reload" @clear="reload" />
+        <el-input v-model="filters.keyword" placeholder="搜索" clearable inputmode="search" style="width: 200px" @keyup.enter="reload" @clear="reload" />
         <el-button @click="reload">查询</el-button>
       </div>
       <div class="table-scroll">

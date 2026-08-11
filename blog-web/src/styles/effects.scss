@@ -45,11 +45,13 @@
   background: linear-gradient(105deg,
     transparent 30%, rgba(255,255,255,0.4) 40%, rgba(255,255,255,0.05) 60%, transparent 70%);
   transform: skewX(-20deg);
-  transition: left 0.6s ease;
+  transition: transform 0.6s ease;
   pointer-events: none;
 }
+/* 用 translateX 代替 left，避免 hover 时触发重排（reflow）；
+   left 仍固定在 -150% 作为起点，translateX(450%) 相对元素自身宽度(60%)≈ 270% 容器宽，等价原 left:120% */
 .ef-card-sweep:hover::after {
-  left: 120%;
+  transform: translateX(450%) skewX(-20deg);
 }
 
 /* ───── ④ 霓虹光晕按钮 ───── */
@@ -349,12 +351,13 @@
     transparent 100%
   );
   transform: skewX(-18deg);
-  transition: left 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
   pointer-events: none;
   z-index: 2;
 }
+/* 用 translateX 代替 left，避免 hover 时重排；translateX(300%) 相对元素自身宽度(80%)≈ 240% 容器宽，等价原 left:120% */
 .ef-shimmer:hover::after {
-  left: 120%;
+  transform: translateX(300%) skewX(-18deg);
 }
 
 /* ───── ⑱ 玻璃抬升 ───── */
@@ -536,4 +539,49 @@
   0%, 100% { transform: translate(0, 0); }
   33%      { transform: translate(8px, -12px); }
   66%      { transform: translate(-6px, 8px); }
+}
+
+/* ============================================================
+   移动端 / 减弱动效偏好：暂停大范围装饰背景动画
+   这些背景层面积大、需逐帧重绘（background-position / transform 旋转），
+   在中低端手机上会持续占用 GPU，滑动时尤其明显。
+   交互类光扫（ef-card-sweep / ef-shimmer / ef-glass-lift 等）hover 才触发、
+   且已改用 transform，不在暂停范围。
+   ============================================================ */
+@media (max-width: 768px) {
+  .ef-bg-gradient,
+  .ef-bg-stars::before,
+  .ef-bg-dots,
+  .ef-bg-grid,
+  .ef-sunburst::before,
+  .ef-bg-caustics::before {
+    animation: none !important;
+    will-change: auto;
+  }
+  /* 移动端无 hover，边框流光/棱镜折射本就 paused；显式兜底释放合成层 */
+  .border-glow::after,
+  .ef-prism-edge::before {
+    animation: none !important;
+    will-change: auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ef-float,
+  .ef-gradient-text,
+  .ef-bg-gradient,
+  .ef-bg-stars::before,
+  .ef-bg-dots,
+  .ef-bg-grid,
+  .ef-sunburst::before,
+  .ef-bg-caustics::before,
+  .ef-text-breathe,
+  .ef-card-sweep::after,
+  .ef-shimmer::after,
+  .border-glow::after,
+  .ef-prism-edge::before {
+    animation: none !important;
+    transition: none !important;
+    will-change: auto;
+  }
 }

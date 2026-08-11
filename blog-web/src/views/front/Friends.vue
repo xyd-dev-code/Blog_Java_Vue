@@ -204,7 +204,7 @@
           />
         </el-form-item>
         <el-form-item label="联系邮箱" prop="email">
-          <el-input v-model="applyForm.email" placeholder="可选，审核结果将发送到此邮箱" maxlength="100" />
+          <el-input v-model="applyForm.email" type="email" inputmode="email" placeholder="可选，审核结果将发送到此邮箱" maxlength="100" />
         </el-form-item>
       </el-form>
       <template #footer>
@@ -461,7 +461,7 @@ const submitApply = async () => {
 .fh-left { flex: 1; min-width: 220px; position: relative; z-index: 1; }
 .section-eyebrow {
   display: inline-block;
-  font-size: 11px;
+  font-size: 12px;
   letter-spacing: 0.22em;
   text-transform: uppercase;
   color: #06b6d4;
@@ -792,7 +792,7 @@ const submitApply = async () => {
   align-items: center;
   padding: 1px 6px;
   font-family: var(--font-sans);
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 500;
   color: #b45309;
   background: linear-gradient(135deg, rgba(251,191,36,0.18), rgba(245,158,11,0.10));
@@ -840,7 +840,7 @@ const submitApply = async () => {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  font-size: 11px;
+  font-size: 12px;
   color: var(--c-ink-soft);
   letter-spacing: 0.04em;
 }
@@ -916,7 +916,7 @@ const submitApply = async () => {
   margin: 6px 0 0;
 }
 .ph-sub {
-  font-size: 11px;
+  font-size: 12px;
   color: #94a3b8;
   margin: 0;
   text-align: center;

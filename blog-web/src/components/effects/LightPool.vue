@@ -108,6 +108,10 @@
 }
 
 @media (max-width: 768px) {
-  .lp-blob { opacity: 0.06; }
+  .lp-blob {
+    opacity: 0.05;
+    animation: none;
+    will-change: auto;
+  }
 }
 </style>

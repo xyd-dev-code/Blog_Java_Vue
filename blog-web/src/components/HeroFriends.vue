@@ -174,7 +174,7 @@ const warmDots = Array.from({ length: 4 }, (_, i) => ({
   z-index: 2;
 }
 .hf-eyebrow {
-  font-size: 11px;
+  font-size: 12px;
   letter-spacing: 0.25em;
   text-transform: uppercase;
   color: var(--c-autumn-500);

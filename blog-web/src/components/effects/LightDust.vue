@@ -86,6 +86,7 @@ const specks = Array.from({ length: 16 }, (_, i) => {
 }
 
 @media (max-width: 768px) {
-  .dust-speck { opacity: 0.3; }
+  /* 粒子起点在视口外且 opacity:0，暂停动画即不可见，零持续重绘成本 */
+  .dust-speck { animation: none; }
 }
 </style>

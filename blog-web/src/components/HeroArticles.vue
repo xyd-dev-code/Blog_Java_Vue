@@ -128,7 +128,7 @@ defineProps({
   z-index: 2;
 }
 .ha-eyebrow {
-  font-size: 11px;
+  font-size: 12px;
   letter-spacing: 0.25em;
   text-transform: uppercase;
   color: var(--c-botany-500);

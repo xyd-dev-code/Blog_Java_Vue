@@ -44,12 +44,12 @@ export const escapeHtml = (s) => {
 export const renderComment = (text) => {
   if (!text) return ''
   let s = escapeHtml(text)
-  // URL 识别
-  s = s.replace(/(https?:\/\/[^\s<]+)/g,
-    '<a class="cmt-link" href="$1" target="_blank" rel="noopener noreferrer">$1</a>')
-  // @提及
+  // @提及先于 URL：避免 URL 中的 @（如 https://x.com/@user）被误包一层 <a> 导致链接 HTML 破碎
   s = s.replace(/@([^\s@<]{1,20})/g,
     '<a class="cmt-mention" data-name="$1">@$1</a>')
+  // URL 识别（[^\s<]+ 遇到已注入的 < 标签会自然停止，不会侵入 @mention 标签内部）
+  s = s.replace(/(https?:\/\/[^\s<]+)/g,
+    '<a class="cmt-link" href="$1" target="_blank" rel="noopener noreferrer">$1</a>')
   // 换行
   s = s.replace(/\n/g, '<br>')
   return s

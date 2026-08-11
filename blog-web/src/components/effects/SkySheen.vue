@@ -88,8 +88,13 @@
   .sheen { animation: none; }
 }
 
-/* 移动端弱化：光晕范围收窄，省电省重绘 */
+/* 移动端降级：暂停超大模糊光晕的逐帧重绘（blur(64px)×54vw 是移动端 GPU 杀手），
+   改为静止弱光晕保留晴空氛围，并释放 will-change 占用的合成层显存 */
 @media (max-width: 768px) {
-  .sheen-1, .sheen-2, .sheen-3 { opacity: 0.3; }
+  .sheen-1, .sheen-2, .sheen-3 {
+    opacity: 0.28;
+    animation: none;
+    will-change: auto;
+  }
 }
 </style>

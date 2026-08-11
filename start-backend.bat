@@ -7,18 +7,29 @@ cd /d "%~dp0blog-server"
 set JAVA_HOME=D:\AppData\Java\JDK\JDK17
 set PATH=%JAVA_HOME%\bin;%PATH%
 
-rem 本地真实密钥(包含 JWT secret / 数据库密码)统一放在 start-backend.local.bat,
-rem 该文件被 .gitignore 屏蔽,不会进 GitHub 仓库。
-rem 如果不存在,直接调用 mvn,Spring 会因 BLOG_JWT_SECRET 为空启动失败 — 这是预期行为,
-rem 提醒你复制 start-backend.local.bat.example 为 start-backend.local.bat 并填入本地值。
+rem Local secrets (DB_PASSWORD / BLOG_JWT_SECRET) live in start-backend.local.bat,
+rem which is git-ignored and never committed. If it is missing, the build falls
+rem back to defaults; Spring will then fail to start because BLOG_JWT_SECRET is
+rem empty. This is expected and reminds you to create the local file.
+
 if exist "%~dp0start-backend.local.bat" (
     call "%~dp0start-backend.local.bat"
 ) else (
     echo.
     echo [WARN] start-backend.local.bat not found, falling back to defaults.
-    echo        Please copy start-backend.local.bat.example to start-backend.local.bat
-    echo        and fill in local DB_PASSWORD / BLOG_JWT_SECRET.
+    echo        Create start-backend.local.bat (git-ignored) and set:
+    echo            set DB_PASSWORD=your_mysql_password
+    echo            set BLOG_JWT_SECRET=any_long_random_string_min_32_chars
+    echo        Spring will refuse to start without BLOG_JWT_SECRET.
     echo.
+)
+
+rem Safety check: make sure we are inside the Maven project, otherwise the
+rem spring-boot plugin prefix cannot be resolved and mvn fails with a cryptic error.
+if not exist "pom.xml" (
+    echo [ERROR] pom.xml not found in %CD%. The cd into blog-server may have failed.
+    pause
+    exit /b 1
 )
 
 echo Using JAVA_HOME=%JAVA_HOME%

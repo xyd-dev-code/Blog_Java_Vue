@@ -117,7 +117,7 @@
           <p class="card-desc">{{ t.description }}</p>
 
           <!-- 右上图标：图片 URL 优先渲染，否则蓝线稿文档图标兜底 -->
-          <img v-if="isIconUrl(t.icon)" :src="t.icon" class="card-icon card-icon-img" alt="" aria-hidden="true" />
+          <img v-if="isIconUrl(t.icon)" :src="t.icon" class="card-icon card-icon-img" alt="" aria-hidden="true" loading="lazy" decoding="async" />
           <svg v-else class="card-icon" width="60" height="60" viewBox="0 0 60 60"
             fill="none" stroke="#38bdf8" stroke-width="2" stroke-linejoin="round"
             aria-hidden="true">
@@ -606,7 +606,7 @@ onMounted(async () => { loadCategories(); await load() })
   grid-area: tag;
   display: inline-block;
   padding: 3px 10px;
-  font-size: 11px;
+  font-size: 12px;
   background: #f1f5f9;
   color: #64748b;
   border-radius: 6px;

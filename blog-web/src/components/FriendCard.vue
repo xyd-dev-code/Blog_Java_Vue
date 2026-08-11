@@ -179,7 +179,7 @@ function friendlyUrl(u = '') {
   align-items: center;
   padding: 1px 6px;
   font-family: var(--font-sans);
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 500;
   color: #b45309;
   background: linear-gradient(135deg, rgba(251,191,36,0.18), rgba(245,158,11,0.10));
@@ -227,7 +227,7 @@ function friendlyUrl(u = '') {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  font-size: 11px;
+  font-size: 12px;
   color: var(--c-ink-soft);
   letter-spacing: 0.04em;
 }
