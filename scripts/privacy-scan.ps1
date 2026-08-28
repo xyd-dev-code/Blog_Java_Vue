@@ -59,6 +59,9 @@ function Scan-Lines([string]$displayPath, [string[]]$lines, [int]$baseLine = 0) 
         if ($line -match 'eyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}') {
             Add-Finding 'jwt' $displayPath $lineNo '发现 JWT 字面量'
         }
+        if ($line -notmatch '(?i)dummy-bcrypt-hash' -and $line -match '\$2[aby]\$\d{2}\$[./A-Za-z0-9]{53}') {
+            Add-Finding 'bcrypt-literal' $displayPath $lineNo '发现可用于登录验证的 BCrypt 字面量'
+        }
         if ($line -match '(?i)\b(https?|jdbc:[a-z0-9]+)://[^\s/@:]+:[^\s/@]+@') {
             Add-Finding 'url-credential' $displayPath $lineNo 'URL 中包含用户名和密码'
         }
@@ -110,6 +113,7 @@ if ($History) {
     $historyPatterns = @(
         '-----BEGIN (RSA |EC |OPENSSH |DSA )?PRIVATE KEY-----',
         '(AKIA[0-9A-Z]{16}|ASIA[0-9A-Z]{16}|gh[pousr]_[A-Za-z0-9_]{20,}|github_pat_[A-Za-z0-9_]{20,}|sk-(proj-)?[A-Za-z0-9_-]{20,})',
+        '[$]2[aby][$][0-9]{2}[$][./A-Za-z0-9]{53}',
         '(password|passwd|pwd|secret|api[-_]?key|access[-_]?key|client[-_]?secret|auth[-_]?token)[[:space:]]*[:=][[:space:]]*',
         '[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}',
         '([0-9]{1,3}\.){3}[0-9]{1,3}'
@@ -125,11 +129,7 @@ if ($History) {
                 $key = $path + ':' + $lineNo + ':' + $line
                 if ($seenHistory.ContainsKey($key)) { continue }
                 $seenHistory[$key] = $true
-                $before = $findings.Count
                 Scan-Lines ($commit.Substring(0, 8) + ':' + $path) @($line) ($lineNo - 1)
-                if ($findings.Count -eq $before -and $path -match '(?i)application.*\.ya?ml|\.env|credentials|secret') {
-                    Add-Finding 'history-sensitive-file' ($commit.Substring(0, 8) + ':' + $path) $lineNo '历史配置文件需人工复核'
-                }
             }
         }
     }

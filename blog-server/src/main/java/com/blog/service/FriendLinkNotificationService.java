@@ -76,7 +76,7 @@ public class FriendLinkNotificationService {
                             "申请编号: #%s\n" +
                             "提交时间: %s\n\n" +
                             "去后台审核: %s\n\n" +
-                            "— DevCoding Blog",
+                            "%s",
                     safe(f.getName()),
                     safe(f.getUrl()),
                     f.getAvatar() == null || f.getAvatar().isBlank() ? "（未提供）" : f.getAvatar(),
@@ -84,10 +84,12 @@ public class FriendLinkNotificationService {
                     f.getEmail() == null || f.getEmail().isBlank() ? "（未提供）" : f.getEmail(),
                     f.getId(),
                     f.getCreateTime() == null ? "（未知）" : f.getCreateTime().toString(),
-                    adminUrl);
+                    adminUrl,
+                    "— " + safe(siteConfigService.get("siteName", "Blog")));
             mailService.send(adminEmail, subject, text, null);
         } catch (Exception e) {
-            log.warn("[FriendLinkNotify] onApplied 失败 id={} err={}", f.getId(), e.toString());
+            log.warn("[FriendLinkNotify] onApplied 失败 id={} errType={}",
+                    f.getId(), e.getClass().getSimpleName());
         }
     }
 

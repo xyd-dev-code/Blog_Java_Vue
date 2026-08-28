@@ -60,11 +60,11 @@ public class MailService {
      */
     public boolean sendSync(String to, String subject, String textBody, String htmlBody) {
         if (!enabled) {
-            log.debug("[MailService] 跳过(未启用) → to={}, subject={}", to, subject);
+            log.debug("[MailService] 跳过发送：邮件服务未启用");
             return false;
         }
         if (to == null || to.isBlank() || subject == null || textBody == null) {
-            log.warn("[MailService] 参数缺失,跳过发送 to={}", to);
+            log.warn("[MailService] 参数缺失，跳过发送");
             return false;
         }
         try {
@@ -81,13 +81,13 @@ public class MailService {
                 helper.setText(textBody, false);
             }
             mailSender.send(msg);
-            log.info("[MailService] 发送成功 to={} subject={}", to, subject);
+            log.info("[MailService] 邮件发送成功");
             return true;
         } catch (MessagingException e) {
-            log.warn("[MailService] MIME 构建失败 to={} subject={} err={}", to, subject, e.getMessage());
+            log.warn("[MailService] MIME 构建失败: {}", e.getClass().getSimpleName());
         } catch (Exception e) {
             // SMTP 不可达 / 鉴权失败 / 超时 — 兜底,不影响业务
-            log.warn("[MailService] 发送失败 to={} subject={} err={}", to, subject, e.toString());
+            log.warn("[MailService] 邮件发送失败: {}", e.getClass().getSimpleName());
         }
         return false;
     }

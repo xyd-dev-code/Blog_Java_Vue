@@ -44,7 +44,7 @@ public class LocalStorageService {
         if (!base.startsWith("http://") && !base.startsWith("https://")) base = "https://" + base;
         if (base.endsWith("/")) base = base.substring(0, base.length() - 1);
         this.publicUrlPrefix = base;
-        log.info("LocalStorageService 初始化: dir={}, baseUrl={}", baseDir, publicUrlPrefix);
+        log.info("LocalStorageService 初始化完成");
     }
 
     /** 写入字节，自动按 MD5 去重。返回可访问 URL。 */
@@ -75,7 +75,7 @@ public class LocalStorageService {
         try {
             return Files.deleteIfExists(target);
         } catch (IOException e) {
-            log.warn("删除本地图片失败: {} ({})", target, e.getMessage());
+            log.warn("删除本地图片失败: {}", e.getClass().getSimpleName());
             return false;
         }
     }

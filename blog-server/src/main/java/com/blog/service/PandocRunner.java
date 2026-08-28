@@ -58,7 +58,7 @@ public class PandocRunner {
                         log.info("classpath 无 templates/blog-docx-reference.docx,DOCX 导出将回退到 pandoc 内置默认");
                     } else {
                         Files.copy(in, target, StandardCopyOption.REPLACE_EXISTING);
-                        log.info("解包 blog-docx-reference.docx → {}", target);
+                        log.info("已解包 blog-docx-reference.docx");
                     }
                 }
             }
@@ -74,7 +74,7 @@ public class PandocRunner {
                     try (InputStream in = getClass().getClassLoader().getResourceAsStream("fonts/" + name)) {
                         if (in != null) {
                             Files.copy(in, target2, StandardCopyOption.REPLACE_EXISTING);
-                            log.info("解包 {} → {}", name, target2);
+                            log.info("已解包字体资源 {}", name);
                         } else {
                             log.warn("classpath 无 fonts/{}", name);
                         }
@@ -97,9 +97,9 @@ public class PandocRunner {
                         + "  BoldItalicFont = *\n"
                         + "]\n";
                 Files.writeString(preamble, content, StandardCharsets.UTF_8);
-                log.info("生成 fontspec preamble → {}", preamble);
+                log.info("已生成 fontspec preamble");
             } catch (IOException e) {
-                log.warn("生成 fontspec preamble 失败: {}", e.getMessage());
+                log.warn("生成 fontspec preamble 失败: {}", e.getClass().getSimpleName());
             }
 
             // 探测 PDF engine 优先级:env override > xelatex > weasyprint > 兜底
@@ -110,9 +110,9 @@ public class PandocRunner {
                 if (which("weasyprint") != null) pdfEngine = "weasyprint";
                 else pdfEngine = "";   // 让 pandoc 用默认
             }
-            log.info("Pandoc 初始化完成,PDF engine = {}", pdfEngine.isEmpty() ? "<default>" : pdfEngine);
+            log.info("Pandoc 初始化完成，PDF engine 模式: {}", pdfEngine.isEmpty() ? "default" : "custom");
         } catch (IOException e) {
-            log.warn("PandocRunner 初始化失败(非致命): {}", e.getMessage());
+            log.warn("PandocRunner 初始化失败（非致命）: {}", e.getClass().getSimpleName());
         }
     }
 

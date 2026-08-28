@@ -57,7 +57,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(auth);
             } catch (JwtException | IllegalArgumentException ex) {
-                log.debug("Invalid JWT: {}", ex.getMessage());
+                log.debug("Invalid JWT: {}", ex.getClass().getSimpleName());
             }
         }
         chain.doFilter(request, response);
