@@ -76,6 +76,8 @@ deploy.bat
 deploy.ps1
 # 内部设计/规划文档(不进公开仓库)
 docs/superpowers/specs/
+# 本地发布/排障记录可能复述已轮换的密钥、服务器地址或个人邮箱
+docs/LOCAL-CHANGELOG*.md
 
 # 本地启动脚本里的真实密钥(密钥不进仓库;留 start-backend.bat / .example 进仓作为模板)
 start-backend.local.bat
@@ -97,3 +99,16 @@ blog-server/org/
 .env
 .env.*
 *.env
+
+# 常见凭据文件、数据库导出与临时备份（防误提交）
+.npmrc
+.pypirc
+settings.xml
+credentials.json
+secrets.json
+*.kdbx
+*.ovpn
+*.dump
+*.sql.gz
+*.bak
+*.backup

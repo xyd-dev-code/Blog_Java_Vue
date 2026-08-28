@@ -1,75 +1,79 @@
+server:
+  port: ${SERVER_PORT:8080}
+  error:
+    include-stacktrace: never
+    include-message: never
+
 spring:
   profiles:
-    active: dev
+    active: ${SPRING_PROFILES_ACTIVE:dev}
   datasource:
-    url: jdbc:mysql://localhost:3306/blog_java_vue?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
-    # 改用环境变量,不要把真实密码写进仓库
-    # example 文件里用占位符;真正部署时复制为 application.yml 然后设置环境变量
-    username: ${DB_USERNAME:root}
-    password: ${DB_PASSWORD}
+    url: ${DB_URL:jdbc:mysql://localhost:3306/blog_java_vue?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true}
+    username: ${DB_USERNAME:blog}
+    # 不提供默认密码；真实值只允许来自运行环境或外部密钥管理器。
+    password: ${DB_PASSWORD:}
     driver-class-name: com.mysql.cj.jdbc.Driver
   data:
     redis:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
       timeout: 3000ms
-      database: 0
+      database: ${REDIS_DATABASE:0}
+  mail:
+    # 邮件功能默认关闭；启用时 host/username/password 均由环境变量注入。
+    host: ${BLOG_MAIL_HOST:localhost}
+    port: ${BLOG_MAIL_PORT:1025}
+    username: ${BLOG_MAIL_USERNAME:}
+    password: ${BLOG_MAIL_PASSWORD:}
+    default-encoding: UTF-8
+    properties:
+      mail:
+        smtp:
+          auth: ${BLOG_MAIL_SMTP_AUTH:false}
+          ssl:
+            enable: ${BLOG_MAIL_SSL:false}
+          starttls:
+            enable: ${BLOG_MAIL_STARTTLS:false}
 
 blog:
+  # 外发确认/退订链接的可信根地址；生产环境必须显式设置。
+  site-base-url: ${BLOG_SITE_BASE_URL:}
   jwt:
-    # 用 `openssl rand -base64 64` 生成一个强随机密钥
-    secret: ${JWT_SECRET}
-    expiration: 604800000  # 7 days
+    # 必填；用 `openssl rand -base64 64` 生成，空值会让 JwtUtil 拒绝启动。
+    secret: ${BLOG_JWT_SECRET:}
+    expiration: ${BLOG_JWT_EXPIRATION:7200000}
     header: Authorization
     prefix: "Bearer "
   cors:
     allowed-origins:
       - http://localhost:5173
-      - http://localhost:5174
       - http://127.0.0.1:5173
-      - ${FRONTEND_ORIGIN:https://yourdomain.com}
-      - ${FRONTEND_ORIGIN_WWW:https://www.yourdomain.com}
+      - ${FRONTEND_ORIGIN:}
+      - ${FRONTEND_ORIGIN_WWW:}
   local-storage:
-    # 本地开发示例;生产请用绝对路径并保证 nginx/www-data 有读权限
     dir: ${UPLOAD_DIR:./uploads/img}
-    base-url: ${IMG_BASE_URL:https://img.yourdomain.com}
+    base-url: ${IMG_BASE_URL:}
   visit-log:
-    # 生产默认 false:本地/回环 IP 不计入统计。
-    # dev 环境设为 true,解决 Vite 代理导致后端看到 127.0.0.1 而统计恒空的问题。
     include-local-ip: false
-    # 会话级去重窗口(秒)。同一 IP+UA 在此窗口内无论刷新/访问多少接口,只记一次。
-    # 默认 30 秒;若内容更新快可调小,若被刷可调大(如 300)。
-    session-interval-seconds: 30
+    session-interval-seconds: ${VISIT_SESSION_INTERVAL_SECONDS:30}
   ip2-region:
-    # ip2region 离线数据文件路径。注意:仓库里文件名是 ip2region_v4.xdb(约 11MB),
-    # 不是 ip2region.xdb(该文件不存在,下载会拿到错误页)。
-    # 下载地址: https://raw.githubusercontent.com/lionsoul2014/ip2region/master/data/ip2region_v4.xdb
-    # 放入 src/main/resources 下即可用默认 classpath:ip2region.xdb;也可配绝对路径(如 /opt/blog/data/ip2region.xdb)。
-    # 注:gitee/某些 CDN 的 raw 直链对大文件会返回 47 字节错误页,且仓库 xdb 走 Git LFS,
-    # git clone 默认拉不到真实数据,请直接下载上述 raw 文件。
-    db-path: classpath:ip2region.xdb
-  # 站点对外可访问的根 URL(评论/友链通知邮件里的审核/详情链接会拼接这个地址)
-  # 部署时改成 https://yourdomain.com;dev 通常是 http://localhost:5173
+    db-path: ${IP2_REGION_DB_PATH:classpath:ip2region.xdb}
   site:
-    url: ${SITE_URL:https://yourdomain.com}
+    url: ${SITE_URL:http://localhost:5173}
   mail:
-    # 发件人邮箱;留空/未配置 SMTP 时 MailService 不会真正发送
-    from-email: ${MAIL_FROM:}
-    from-name: ${MAIL_FROM_NAME:Blog}
-    enabled: ${MAIL_ENABLED:false}
-    # 评论/留言/友链通知收件人(站长邮箱)
-    admin-email: ${MAIL_ADMIN_EMAIL:}
+    enabled: ${BLOG_MAIL_ENABLED:false}
+    from-email: ${BLOG_MAIL_FROM_EMAIL:${spring.mail.username:}}
+    from-name: ${BLOG_MAIL_FROM_NAME:Blog}
+    admin-email: ${BLOG_MAIL_ADMIN_EMAIL:}
+  subscribe:
+    confirm-base-url: ${BLOG_SUBSCRIBE_BASE_URL:}
+    site-name: ${BLOG_SUBSCRIBE_SITE_NAME:MyBlog}
+  notify:
+    enabled: ${BLOG_NOTIFY_ENABLED:false}
+    base-url: ${BLOG_NOTIFY_BASE_URL:}
+    interval-ms: ${BLOG_NOTIFY_INTERVAL:300000}
 
-# ──────────────────────────────────────────────────────────────
-# 生产环境：经 Nginx 反代时拿真实访客 IP（访问统计 / 限流依赖真实 IP）
-#   步骤 1：主域 Nginx 反代 /api 时加   proxy_set_header X-Real-IP $remote_addr;
-#           模板见 server-config/blog.example.nginx.conf
-#   步骤 2(可选)：ClientIpResolver 已自动识别可信反代(127.0.0.1/::1)传来的 X-Real-IP,
-#                一般无需再配 RemoteIpValve。如需双保险,可启用：
-# server:
-#   tomcat:
-#     remoteip:
-#       remote-ip-header: X-Real-IP
-#       internal-proxies: 127\.0\.0\.1|::1|10\.\d+\.\d+\.\d+|192\.168\.\d+\.\d+
-# 注意：dev 本地无反代，不要开启 RemoteIpValve，否则 getRemoteAddr() 会是 127.0.0.1；
-#       开发环境靠 blog.visit-log.include-local-ip=true 解决统计空数据问题。
+# 新库管理员没有默认密码。首次启动时临时设置：
+#   BLOG_ADMIN_INITIAL_PASSWORD=<至少 12 位强密码>
+# 应用写入 BCrypt 后立即从环境中删除该变量；后续密码只保存在数据库摘要中。

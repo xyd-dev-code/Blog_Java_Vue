@@ -14,7 +14,7 @@
             <div class="profile-info">
               <div class="name-row">
                 <h2>{{ authorName }}</h2>
-                <span class="role-badge">全栈工程师</span>
+                <span v-if="roleTitle" class="role-badge">{{ roleTitle }}</span>
               </div>
               <p class="bio">{{ bio }}</p>
               <div class="social-row">
@@ -45,7 +45,7 @@
       </section>
 
       <!-- ③ 技能标签云 -->
-      <section class="section container-narrow reveal">
+      <section v-if="skills.length" class="section container-narrow reveal">
         <h3 class="sec-title"><span class="sec-line"></span>技术栈<span class="sec-line"></span></h3>
         <div class="skills-cloud">
           <span class="skill-tag" v-for="sk in skills" :key="sk">{{ sk }}</span>
@@ -67,7 +67,7 @@
       </section>
 
       <!-- ⑤ 成长轨迹时间线 -->
-      <section class="section container-narrow reveal">
+      <section v-if="timeline.length" class="section container-narrow reveal">
         <h3 class="sec-title"><span class="sec-line"></span>成长轨迹<span class="sec-line"></span></h3>
         <div class="timeline">
           <div class="tl-item" v-for="(item, idx) in timeline" :key="idx">
@@ -85,13 +85,13 @@
       <section class="section container-narrow reveal" style="padding-bottom: 80px;">
         <h3 class="sec-title"><span class="sec-line"></span>联系我<span class="sec-line"></span></h3>
         <div class="contact-grid">
-          <div class="contact-item card">
+          <div v-if="siteEmail" class="contact-item card">
             <div class="ci-icon ci-email">@</div>
             <h4>邮箱</h4>
             <p>{{ siteEmail }}</p>
             <a :href="'mailto:' + siteEmail" class="ci-link">发送邮件 &rarr;</a>
           </div>
-          <div class="contact-item card">
+          <div v-if="siteGithub" class="contact-item card">
             <div class="ci-icon ci-github">
               <svg viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.37 1.23-3.205-.135-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.255 2.88.12 3.18.765.84 1.23 1.905 1.23 3.205 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
             </div>
@@ -155,32 +155,17 @@ import { useSiteStore } from '@/stores/site'
 
 const siteStore = useSiteStore()
 const processedMd = ref('')
-
-// 关于页正文：页面管理功能已下线，此处内联静态内容（保留 greeting/昵称/邮箱/github 动态替换）
-const ABOUT_MD = `# 你好，我是站长
-
-一个普通的工程师与写作者。
-白天写代码，晚上偶尔写点别的。
-
-## 在这里
-
-- 记录日常开发里值得记下来的事
-- 整理阅读时划线过的句子
-- 偶尔发一些摄影与生活片段
-
-## 怎么联系我
-
-- Email：见页脚
-- GitHub：见页脚
-
-如果只是想聊聊天，欢迎在 [留言板](/guestbook) 留下几句话。`
 const loading = ref(true)
 const homeData = ref({})
 
-// 站点配置
-const siteEmail = computed(() => siteStore.info?.email || 'site_email@example.com')
-const siteGithub = computed(() => siteStore.info?.github || 'https://github.com/')
-const siteAvatar = computed(() => siteStore.info?.siteLogo || 'https://api.dicebear.com/7.x/notionists/svg?seed=author&backgroundColor=e0f2fe')
+// 个人展示资料全部来自后端 site_config；源码不保留邮箱、履历、技能或个人主页。
+const siteEmail = computed(() => siteStore.info?.email?.trim() || '')
+const siteGithub = computed(() => {
+  const value = siteStore.info?.github?.trim() || ''
+  return value === 'https://github.com/' || value === 'https://github.com' ? '' : value
+})
+const siteAvatar = computed(() => siteStore.info?.siteLogo || '/favicon.svg')
+const roleTitle = computed(() => siteStore.info?.roleTitle?.trim() || '')
 // About 页展示用的昵称 / 简介:跟随后端 admin 用户的资料,后端未填则用站点名做兜底
 const authorName = computed(() => {
   const u = siteStore.info?.userNickname
@@ -188,7 +173,7 @@ const authorName = computed(() => {
   const s = siteStore.info?.siteName
   return u || a || s || '站长'
 })
-const bio = computed(() => siteStore.info?.userBio || siteStore.info?.motto || '一个在代码与文字之间来回切换的人。')
+const bio = computed(() => siteStore.info?.userBio || siteStore.info?.motto || '')
 const githubDisplay = computed(() => {
   const u = siteGithub.value || ''
   return u.replace(/^https?:\/\//, '').replace(/\/$/, '') || 'github.com'
@@ -275,50 +260,30 @@ const statsList = computed(() => {
   ]
 })
 
-// 技术标签：从站点配置读取（后台 Profile 页可编辑），逗号分隔
-// 未配置时 fallback 到默认列表
-const DEFAULT_SKILLS = [
-  'Java', 'Spring Boot', 'Vue 3', 'TypeScript', 'MySQL', 'Redis',
-  'MyBatis-Plus', 'Element Plus', 'Nginx', 'Docker', 'Git', 'Linux',
-  'Kotlin', 'Rust', 'Python', 'Markdown', 'Figma', 'VS Code'
-]
+// 技术标签：从站点配置读取（后台 Profile 页可编辑），逗号分隔。
 const skills = computed(() => {
   const raw = siteStore.info?.aboutSkills
-  if (!raw || !raw.trim()) return DEFAULT_SKILLS
+  if (!raw || !raw.trim()) return []
   return raw.split(/[,，]/).map(s => s.trim()).filter(Boolean)
 })
 
-// 时间线
-const timeline = [
-  {
-    time: '2025 至今',
-    title: '独立开发者 & 博客站长',
-    desc: '搭建并维护个人博客系统，记录技术成长与生活感悟。从设计到部署，全栈独立开发。'
-  },
-  {
-    time: '2024 - 2025',
-    title: '软件工程师',
-    desc: '深耕 Java 后端开发，参与多个 Spring Boot 项目。同时探索前端技术栈，独立开发 Vue 3 项目。'
-  },
-  {
-    time: '2023 - 2024',
-    title: '计算机专业学习',
-    desc: '系统学习数据结构与算法、操作系统、计算机网络。开始接触 Java 与 Spring 生态。'
-  },
-  {
-    time: '2022',
-    title: '编程入门',
-    desc: '写下第一行代码，从此踏上编程之路。从 C 语言到 Python，再到 Java，一步步探索。'
-  }
-]
+// 时间线格式：每行“时间|标题|描述”，避免把个人履历硬编码进前端包。
+const timeline = computed(() => {
+  const raw = siteStore.info?.aboutTimeline
+  if (!raw || !raw.trim()) return []
+  return raw.split(/\r?\n/).map(line => {
+    const [time, title, ...descParts] = line.split('|').map(s => s.trim())
+    return { time, title, desc: descParts.join('|') }
+  }).filter(item => item.time && item.title && item.desc)
+})
 
 onMounted(async () => {
   try {
     if (!siteStore.loaded) await siteStore.load()
     const homeResp = await home().catch(() => ({ data: {} }))
     const greeting = siteStore.info?.greeting
-    // 用后端 greeting 动态替换静态正文里的硬编码问候语
-    let mdStr = ABOUT_MD
+    // 关于页正文与个人资料均由数据库提供；源码只保留替换规则。
+    let mdStr = siteStore.info?.aboutContent || ''
     if (greeting) {
       mdStr = mdStr.replace(/^#\s*你好，我是[^\n]*/m, '# ' + greeting)
     }

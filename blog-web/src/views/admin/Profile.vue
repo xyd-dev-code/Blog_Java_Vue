@@ -66,6 +66,14 @@
             <el-form-item label="站点描述">
               <el-input v-model="siteForm.description" type="textarea" :rows="2" />
             </el-form-item>
+            <el-row :gutter="16">
+              <el-col :md="12">
+                <el-form-item label="职业标题"><el-input v-model="siteForm.roleTitle" placeholder="显示在关于页昵称旁，留空不显示" /></el-form-item>
+              </el-col>
+              <el-col :md="12">
+                <el-form-item label="个人简介"><el-input v-model="siteForm.userBio" placeholder="显示在关于页资料卡，留空使用副标题" /></el-form-item>
+              </el-col>
+            </el-row>
             <el-form-item label="SEO 关键词">
               <el-input v-model="siteForm.keywords" placeholder="个人博客,技术,生活" />
             </el-form-item>
@@ -91,7 +99,16 @@
             <el-form-item label="技术栈标签">
               <el-input v-model="siteForm.aboutSkills" type="textarea" :rows="2"
                 placeholder="用逗号分隔，如：Java, Spring Boot, Vue 3, TypeScript" />
-              <div class="form-tip">显示在「关于我」页面的技术栈区域，留空则使用默认列表</div>
+              <div class="form-tip">显示在「关于我」页面的技术栈区域，留空则隐藏</div>
+            </el-form-item>
+            <el-form-item label="关于正文">
+              <el-input v-model="siteForm.aboutContent" type="textarea" :rows="7"
+                placeholder="支持 Markdown；个人经历和联系方式请只在后台维护" />
+            </el-form-item>
+            <el-form-item label="成长轨迹">
+              <el-input v-model="siteForm.aboutTimeline" type="textarea" :rows="4"
+                placeholder="每行一项：时间|标题|描述" />
+              <div class="form-tip">例如：2026 至今|独立开发者|维护个人项目与技术博客</div>
             </el-form-item>
 
             <el-form-item>
@@ -188,7 +205,7 @@ const pwdForm = reactive({
 const siteForm = reactive({
   siteName: '', motto: '', description: '', keywords: '',
   beian: '', comment_audit: '1', github: '', email: '',
-  aboutSkills: ''
+  roleTitle: '', userBio: '', aboutContent: '', aboutSkills: '', aboutTimeline: ''
 })
 
 // ---- 文件选择 → 裁剪 ----
@@ -348,7 +365,11 @@ const saveSite = async () => {
       comment_audit: siteForm.comment_audit,
       github: siteForm.github,
       email: siteForm.email,
-      aboutSkills: siteForm.aboutSkills
+      roleTitle: siteForm.roleTitle,
+      userBio: siteForm.userBio,
+      aboutContent: siteForm.aboutContent,
+      aboutSkills: siteForm.aboutSkills,
+      aboutTimeline: siteForm.aboutTimeline
     }
     await adminSaveSiteConfig(payload)
     ElMessage.success('站点信息已保存')
