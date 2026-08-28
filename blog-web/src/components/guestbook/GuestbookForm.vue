@@ -18,7 +18,7 @@
       </div>
       <div class="form-col">
         <label class="form-label">邮箱 <span class="required">*</span> <span class="label-hint">（不会公开）</span></label>
-        <el-input v-model="form.email" type="email" inputmode="email" placeholder="your@example.com" class="gb-input" />
+        <el-input v-model="form.email" type="email" inputmode="email" placeholder="user@example.com" class="gb-input" />
       </div>
     </div>
 

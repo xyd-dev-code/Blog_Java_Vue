@@ -103,7 +103,7 @@
           :placeholder="detailRequired ? '请补充具体内容（必填）' : '补充说明（选填）'"
           class="report-detail" />
         <label class="form-label">联系邮箱 <span class="required">*</span> <span class="label-hint">（便于回复处理进展）</span></label>
-        <el-input v-model="reportForm.email" type="email" inputmode="email" placeholder="your@example.com" class="report-email" />
+        <el-input v-model="reportForm.email" type="email" inputmode="email" placeholder="user@example.com" class="report-email" />
       </div>
       <template #footer>
         <el-button @click="reportVisible = false">取消</el-button>

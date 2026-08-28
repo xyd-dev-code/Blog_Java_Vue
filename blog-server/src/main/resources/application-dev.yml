@@ -6,7 +6,8 @@ mybatis-plus:
 logging:
   level:
     com.blog: debug
-    org.springframework.security: debug
+    # DEBUG 可能记录请求匹配/鉴权上下文；默认保持 INFO，按需短时开启并妥善处理日志。
+    org.springframework.security: info
 
 # 开发环境放开本地 IP 过滤：前端 API 经 Vite 代理转发到 localhost:8080,
 # 后端 getRemoteAddr() 看到的是 127.0.0.1,默认会被跳过 -> 开发时统计恒空。

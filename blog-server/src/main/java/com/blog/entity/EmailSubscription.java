@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.time.LocalDateTime;
 
 /**
@@ -21,6 +22,7 @@ public class EmailSubscription {
     /** 0=待确认 1=已确认 */
     private Integer status;
     /** 确认令牌（UUID 去横杠），确认后保留以便幂等 */
+    @JsonIgnore
     private String token;
     /** 订阅来源：web / admin ... */
     private String source;

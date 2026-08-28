@@ -37,9 +37,9 @@ public class SiteController {
     }
 
     @GetMapping
-    @Operation(summary = "读取全部配置")
+    @Operation(summary = "读取公开站点配置")
     public R<Map<String, String>> all() {
-        Map<String, String> data = siteConfigService.allAsMap();
+        Map<String, String> data = siteConfigService.publicAsMap();
         // authorName 兜底:如果站点配置里没有或仍是默认 "站长",直接用 admin 的最新昵称
         String fromConfig = data.get("authorName");
         User admin = userMapper.selectById(1L);
