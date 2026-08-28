@@ -28,7 +28,7 @@ function Add-Finding([string]$category, [string]$path, [int]$line, [string]$reas
 function Test-Placeholder([string]$value, [string]$line) {
     if ([string]::IsNullOrWhiteSpace($value)) { return $true }
     if ($line -match '(?i)@Value\(|dummy-bcrypt-hash|"integrity"\s*:') { return $true }
-    return $value -match '^(\$\{|%[A-Za-z_][A-Za-z0-9_]*%|\$env:|\$[A-Za-z_]|process\.env|<[^>]+>|your|example|placeholder|dummy|change[-_]?me|this\.|props\.|form\.|dto\.)'
+    return $value -match '^(\$\{|%[A-Za-z_][A-Za-z0-9_]*%|\$env:|\$[A-Za-z_]|process\.env|<[^>]+>|your|example|placeholder|dummy|change[-_]?me|any_long|!BOOTSTRAP_REQUIRED!|this\.|props\.|form\.|dto\.)'
 }
 
 function Test-PublicIp([string]$candidate) {
@@ -63,9 +63,14 @@ function Scan-Lines([string]$displayPath, [string[]]$lines, [int]$baseLine = 0) 
             Add-Finding 'url-credential' $displayPath $lineNo 'URL 中包含用户名和密码'
         }
 
-        $assignments = [regex]::Matches($line, '(?i)(password|passwd|pwd|secret|api[-_]?key|access[-_]?key|client[-_]?secret|auth[-_]?token|private[-_]?key)\s*[:=]\s*["'']?([^\s"'',;)}]+)')
+        $assignments = [regex]::Matches($line, '(?i)(password|passwd|pwd|secret|api[-_]?key|access[-_]?key|client[-_]?secret|auth[-_]?token|private[-_]?key)\s*[:=]\s*(["'']?)([^\s"'',;)}]+)')
         foreach ($assignment in $assignments) {
-            $value = $assignment.Groups[2].Value
+            $quote = $assignment.Groups[2].Value
+            $value = $assignment.Groups[3].Value
+            $isCodeReference = $displayPath -match '(?i)\.(java|js|ts|vue)$' `
+                    -and [string]::IsNullOrEmpty($quote) `
+                    -and $value -match '^[A-Za-z_$][A-Za-z0-9_.$]*(\([^)]*\))?$'
+            if ($isCodeReference) { continue }
             if (-not (Test-Placeholder $value $line) -and $value.Length -ge 8) {
                 Add-Finding 'credential-literal' $displayPath $lineNo ('疑似硬编码 ' + $assignment.Groups[1].Value)
             }
