@@ -57,7 +57,7 @@ public class IpRegionUtil {
         }
 
         if (!resource.exists()) {
-            log.warn("[IpRegion] 数据文件不存在: {},省份解析功能不可用", configured);
+            log.warn("[IpRegion] 配置的数据文件不存在，省份解析功能不可用");
             return;
         }
 
@@ -65,9 +65,9 @@ public class IpRegionUtil {
             byte[] bytes = in.readAllBytes();
             this.searcher = Searcher.newWithBuffer(bytes);
             this.available = true;
-            log.info("[IpRegion] ip2region 数据加载成功,路径: {}", configured);
+            log.info("[IpRegion] ip2region 数据加载成功");
         } catch (IOException e) {
-            log.warn("[IpRegion] 读取数据文件失败: {}", configured, e);
+            log.warn("[IpRegion] 读取数据文件失败: {}", e.getClass().getSimpleName());
         } catch (Exception e) {
             log.warn("[IpRegion] 初始化 Searcher 失败", e);
         }
@@ -103,7 +103,7 @@ public class IpRegionUtil {
             }
             return normalize(parts[0]);
         } catch (Exception e) {
-            log.debug("[IpRegion] 解析 IP 失败: {}", ip, e);
+            log.debug("[IpRegion] IP 地域解析失败: {}", e.getClass().getSimpleName());
             return "";
         }
     }

@@ -64,8 +64,8 @@ public class StartupTableInitializer implements ApplicationRunner {
             }
         } catch (Exception e) {
             // 建表失败不应阻止应用启动 — 让运维手动建
-            log.warn("[StartupTable] 自动建表失败(可忽略,运维手动建即可): {} - {}",
-                    tableName, e.getMessage());
+            log.warn("[StartupTable] 自动建表失败（可忽略，运维手动建即可）: table={}, errType={}",
+                    tableName, e.getClass().getSimpleName());
         }
     }
 }

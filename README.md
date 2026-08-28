@@ -4,7 +4,7 @@
 
 > 草木蔓发，春山可望。
 
-> ⚠️ **部署后请立即在后台「个人中心」重置 admin 密码，并在「站点配置」中替换 `email` / `github` 等占位值。**
+> ⚠️ **项目没有可登录的默认密码。首次启动前用一次性环境变量初始化 admin 密码，并在「站点配置」中维护对外展示的个人资料。**
 
 ---
 
@@ -83,8 +83,9 @@ cp application-example.yml application.yml
 # 按需修改 application.yml 中的 DB / Redis / JWT / CORS / 图床 段落
 ```
 
-所有敏感字段都已改为环境变量占位符（`DB_PASSWORD` / `BLOG_JWT_SECRET` / `FRONTEND_ORIGIN` / `IMG_BASE_URL` 等），
-生产部署时强烈建议通过环境变量注入。**`BLOG_JWT_SECRET` 必填**（无值时 Spring 启动失败，避免意外用默认 key 签 token）。
+所有敏感字段都使用环境变量占位符（`DB_PASSWORD` / `REDIS_PASSWORD` / `BLOG_JWT_SECRET` /
+`BLOG_MAIL_PASSWORD` 等）。生产部署时必须从服务环境或密钥管理器注入，不能写入 YAML、脚本、前端变量或 `site_config`。
+**`BLOG_JWT_SECRET` 必填**（空值时 Spring 启动失败，避免意外用默认 key 签 token）。
 
 ### 3. 初始化数据库
 
@@ -92,8 +93,9 @@ cp application-example.yml application.yml
 mysql -u<user> -p<pass> < blog-server/src/main/resources/db/init.sql
 ```
 
-`init.sql` 已脱敏：admin 用户的 `password` 字段是**无效占位 hash**（任何密码都登不上），
-请按文件内提示用 `BCryptPasswordEncoder.encode("你的新密码")` 生成新 hash 后入库。
+`init.sql` 中 admin 密码为禁用标记，任何默认口令都无法登录。首次启动时临时设置
+`BLOG_ADMIN_INITIAL_PASSWORD`（至少 12 位）；应用只在检测到禁用标记时将其编码为 BCrypt 写入数据库。
+成功后立即从服务环境删除该一次性变量，后续在后台修改密码。
 
 > 后续表结构变更请走 **增量迁移脚本**（见下文「🗄 数据库迁移规范」），不要把改动直接手改进 `init.sql` 又忘了老库。
 
@@ -129,7 +131,7 @@ npm run dev
 
 | 角色 | 用户名 | 密码 |
 |---|---|---|
-| 管理员 | admin | 见 `db/init.sql` 顶部说明，需自行重置 |
+| 管理员 | admin | 无默认密码；由 `BLOG_ADMIN_INITIAL_PASSWORD` 一次性初始化 |
 
 ## 📚 接口文档
 
@@ -256,7 +258,7 @@ API 前缀：`/api/v1`
 
 ## 🔐 安全 / 隐私注意事项
 
-1. **重置 admin 密码**：部署后立即在后台「个人中心 → 修改密码」
+1. **初始化 admin 密码**：仅首次启动临时设置 `BLOG_ADMIN_INITIAL_PASSWORD`，写入数据库后立即移除
 2. **不要将 `application.yml` / `application-prod.yml` 提交到仓库**——本仓库已通过 `.gitignore` 屏蔽这两个文件，只保留 `application-example.yml` 模板
 3. **不要打开外网端口**：3306 / 6379 / 8080 仅监听 `127.0.0.1`，通过 Nginx 443 反代访问
 4. **MySQL 用户**：应用使用低权限用户，不要用 `root` 连接 Spring Boot
@@ -264,6 +266,10 @@ API 前缀：`/api/v1`
 6. **JWT secret**：生产环境通过 `BLOG_JWT_SECRET` 环境变量注入，至少 64 字节随机
 7. **访客隐私**：访问统计仅记录 IP 与派生地理位置用于展示分布，不展示完整 IP 明细给非授权用户
 8. **评论者隐私**：公开评论 API 通过 `CommentPublicVO` 返回，自动剥离邮箱 / IP / UA 等字段，匿名访客无法读取评论者隐私信息
+9. **站点配置分级**：匿名 `/api/v1/site` 只返回展示字段白名单；名称含 password / secret / token / key 的配置拒绝保存和序列化
+10. **提交前扫描**：运行 `pwsh ./scripts/privacy-scan.ps1`；审计全部历史时追加 `-History`
+
+完整的公开仓库清理、凭据轮换和既有数据库迁移步骤见 [隐私迁移清单](docs/PRIVACY-MIGRATION.md)。
 
 ## 📝 License
 

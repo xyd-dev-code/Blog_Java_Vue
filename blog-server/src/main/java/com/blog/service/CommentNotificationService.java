@@ -92,18 +92,19 @@ public class CommentNotificationService {
                 subject = "[待审核-留言板] " + safe(c.getNickname());
                 link = siteUrl + "/admin/guestbook";
                 text = String.format(
-                        "留言板有新留言待审核:\n\n作者:%s\n邮箱:%s\nIP:%s\n内容:%s\n\n去审核:%s\n\n— DevCoding Blog",
-                        safe(c.getNickname()), safe(c.getEmail()), safe(c.getIp()), snippet, link);
+                        "留言板有新留言待审核:\n\n作者:%s\n邮箱:%s\nIP:%s\n内容:%s\n\n去审核:%s\n\n%s",
+                        safe(c.getNickname()), safe(c.getEmail()), safe(c.getIp()), snippet, link, signature());
             } else {
                 subject = "[待审核] " + safe(articleTitle);
                 link = siteUrl + "/admin/comments";
                 text = String.format(
-                        "文章《%s》有新评论待审核:\n\n作者:%s\n邮箱:%s\nIP:%s\n内容:%s\n\n去审核:%s\n\n— DevCoding Blog",
-                        articleTitle, safe(c.getNickname()), safe(c.getEmail()), safe(c.getIp()), snippet, link);
+                        "文章《%s》有新评论待审核:\n\n作者:%s\n邮箱:%s\nIP:%s\n内容:%s\n\n去审核:%s\n\n%s",
+                        articleTitle, safe(c.getNickname()), safe(c.getEmail()), safe(c.getIp()), snippet, link, signature());
             }
             mailService.send(adminEmail, subject, text, null);
         } catch (Exception e) {
-            log.warn("[CommentNotify] onCreated 失败 id={} err={}", c.getId(), e.toString());
+            log.warn("[CommentNotify] onCreated 失败 id={} errType={}",
+                    c.getId(), e.getClass().getSimpleName());
         }
     }
 
@@ -137,7 +138,8 @@ public class CommentNotificationService {
                 }
             }
         } catch (Exception e) {
-            log.warn("[CommentNotify] onApproved 失败 id={} err={}", commentId, e.toString());
+            log.warn("[CommentNotify] onApproved 失败 id={} errType={}",
+                    commentId, e.getClass().getSimpleName());
         }
     }
 
@@ -157,7 +159,8 @@ public class CommentNotificationService {
             if (!isValidEmail(parent.getEmail()) || equalsIgnoreCase(parent.getEmail(), reply.getEmail())) return;
             sendReplyNotify(parent, reply);
         } catch (Exception e) {
-            log.warn("[CommentNotify] onAdminReply 失败 id={} err={}", reply.getId(), e.toString());
+            log.warn("[CommentNotify] onAdminReply 失败 id={} errType={}",
+                    reply.getId(), e.getClass().getSimpleName());
         }
     }
 
@@ -175,11 +178,11 @@ public class CommentNotificationService {
             link = siteUrl + "/articles/" + c.getArticleId() + "#comment-" + c.getId();
         }
         String text = String.format(
-                "%s,你%s的评论已通过审核,谢谢!\n\n文章:%s\n内容:%s\n\n查看:%s\n\n— DevCoding Blog",
+                "%s,你%s的评论已通过审核,谢谢!\n\n文章:%s\n内容:%s\n\n查看:%s\n\n%s",
                 safe(c.getNickname()),
                 c.getArticleId() != null && c.getArticleId() == CommentService.GUESTBOOK_ARTICLE_ID
                         ? "在留言板留下" : "在文章下留下",
-                articleTitle, snippet, link);
+                articleTitle, snippet, link, signature());
         mailService.send(c.getEmail(), subject, text, null);
     }
 
@@ -195,8 +198,8 @@ public class CommentNotificationService {
             link = siteUrl + "/articles/" + reply.getArticleId() + "#comment-" + reply.getId();
         }
         String text = String.format(
-                "%s 在文章《%s》中回复了你的评论:\n\n原评论:%s\n\n回复内容:%s\n\n查看:%s\n\n— DevCoding Blog",
-                safe(reply.getNickname()), articleTitle, clip(parent.getContent()), snippet, link);
+                "%s 在文章《%s》中回复了你的评论:\n\n原评论:%s\n\n回复内容:%s\n\n查看:%s\n\n%s",
+                safe(reply.getNickname()), articleTitle, clip(parent.getContent()), snippet, link, signature());
         mailService.send(parent.getEmail(), subject, text, null);
     }
 
@@ -210,6 +213,10 @@ public class CommentNotificationService {
         } catch (Exception e) {
             return "(文章#" + articleId + ")";
         }
+    }
+
+    private String signature() {
+        return "— " + safe(siteConfigService.get("siteName", "Blog"));
     }
 
     private String clip(String s) {
@@ -236,10 +243,10 @@ public class CommentNotificationService {
             rateLimiter.acquireOrThrow("mailnotify:to:" + hash, 1, 3600);
             return true;
         } catch (BizException e) {
-            log.info("[CommentNotify] 1h 内已发过,跳过 to={}", email);
+            log.info("[CommentNotify] 1h 内已发送过，跳过重复通知");
             return false;
         } catch (Exception e) {
-            log.warn("[CommentNotify] rateLimiter 异常,放行 to={} err={}", email, e.toString());
+            log.warn("[CommentNotify] rateLimiter 异常，放行通知: {}", e.getClass().getSimpleName());
             return true;
         }
     }

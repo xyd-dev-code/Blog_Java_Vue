@@ -118,22 +118,23 @@ public class VisitLogFilter extends OncePerRequestFilter {
                 } else if (SKIPPED_PATHS.contains(path)) {
                     log.debug("[VisitLog] 跳过自动请求路径: path={}", path);
                 } else if (isAdminReferer(request)) {
-                    log.debug("[VisitLog] 跳过后台 admin 页面来源: referer={}, path={}", request.getHeader("Referer"), path);
+                    log.debug("[VisitLog] 跳过后台 admin 页面来源: path={}", path);
                 } else if (isRecentDuplicate(ip, path, ua)) {
-                    log.debug("[VisitLog] 跳过短期内重复记录: ip={}, path={}", ip, path);
+                    log.debug("[VisitLog] 跳过短期内重复记录: path={}", path);
                 } else if (isSessionDuplicate(ip, ua)) {
-                    log.debug("[VisitLog] 跳过同会话重复访问: ip={}, sessionWindow={}s", ip,
+                    log.debug("[VisitLog] 跳过同会话重复访问: sessionWindow={}s",
                             props.getVisitLog().getSessionIntervalSeconds());
                 } else if (localIp) {
                     if (includeLocalIp) {
-                        log.debug("[VisitLog] 本地/回环 IP 但已开启 include-local-ip,将记录: ip={}, path={}", ip, path);
+                        log.debug("[VisitLog] 本地/回环 IP 但已开启 include-local-ip，将记录: path={}", path);
                     } else {
-                        log.debug("[VisitLog] 跳过本地/回环 IP: ip={}, path={}", ip, path);
+                        log.debug("[VisitLog] 跳过本地/回环 IP: path={}", path);
                     }
                 } else if (UserAgentUtil.isBot(ua)) {
-                    log.debug("[VisitLog] 跳过爬虫 UA: ua={}, path={}", ua, path);
+                    log.debug("[VisitLog] 跳过爬虫 UA: path={}", path);
                 } else {
-                    log.debug("[VisitLog] 准备记录: ip={}, path={}, status={}, ua={}", ip, path, status, ua);
+                    log.debug("[VisitLog] 准备记录: path={}, status={}, uaPresent={}",
+                            path, status, ua != null && !ua.isBlank());
                 }
             }
 
