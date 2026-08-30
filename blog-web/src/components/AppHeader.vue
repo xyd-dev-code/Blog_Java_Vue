@@ -194,9 +194,9 @@ watch(drawerOpen, (v) => {
   display: block;
   width: 40px;
   height: 40px;
-  border-radius: inherit;
-  -webkit-clip-path: inherit;
-  clip-path: inherit;
+  border-radius: 50%;
+  -webkit-clip-path: circle(50% at 50% 50%);
+  clip-path: circle(50% at 50% 50%);
   object-fit: cover;
   padding: 0;
   background: transparent;

@@ -19,12 +19,12 @@
       <!-- 头部 -->
       <div class="ci-head">
         <div class="ci-avatar">
-          <!-- 首字母 fallback 仅在没头像 / 头像加载失败时显示,避免遮住真实头像 -->
+          <!-- 博主头像失败时先尝试当前站点 Logo，仍失败才显示首字母 -->
           <span v-if="!hasAvatar || imgError" class="ci-av-fallback" :style="{ backgroundColor: avatarColor }">
             {{ firstLetter(comment.nickname) }}
           </span>
           <img v-if="hasAvatar && !imgError"
-            :src="comment.avatar" alt="avatar"
+            :src="avatarSrc" :alt="`${comment.nickname || '用户'}的头像`"
             loading="lazy" decoding="async"
             class="ci-av-img" :class="{ 'is-loaded': imgLoaded }"
             @load="imgLoaded = true" @error="onImgError" />
@@ -104,6 +104,7 @@
 import { computed, ref, watch } from 'vue'
 import { TopLeft, Loading, Pointer, Star, WarnTriangleFilled, ArrowDown, ArrowUp } from '@element-plus/icons-vue'
 import { fromNow, renderComment } from '@/utils/format'
+import { useSiteStore } from '@/stores/site'
 
 const props = defineProps({
   comment: { type: Object, required: true },
@@ -114,25 +115,45 @@ const props = defineProps({
   maxReplies: { type: Number, default: 3 }      // 卡片/便签模式默认折叠子回复,只露前 N 条
 })
 const emit = defineEmits(['reply', 'like', 'report', 'mention'])
+const siteStore = useSiteStore()
 
 const imgLoaded = ref(false)
 const imgError = ref(false)
+const avatarSrc = ref('')
+const usingSiteFallback = ref(false)
 const allRepliesShown = ref(false)
 
 // 头像是否存在:有 URL 且 trim 后非空。决定 fallback 是否渲染
 const hasAvatar = computed(() => {
-  const a = props.comment.avatar
+  const a = avatarSrc.value
   return !!a && a.trim() !== ''
 })
 
 // 头像 URL 变更或重渲染时,重置加载状态,避免新旧头像错乱
-watch(hasAvatar, () => {
-  imgLoaded.value = false
-  imgError.value = false
-})
+watch(
+  [() => props.comment.avatar, () => props.comment.isAdmin ? siteStore.info?.siteLogo : ''],
+  () => {
+    avatarSrc.value = props.comment.avatar?.trim() || ''
+    usingSiteFallback.value = false
+    imgLoaded.value = false
+    imgError.value = false
+  },
+  { immediate: true }
+)
 
-// 头像加载失败 → 触发 fallback 接管
-const onImgError = () => { imgError.value = true }
+// 博主头像失效时尝试当前站点 Logo；普通访客或 Logo 也失效时才显示首字母。
+const onImgError = () => {
+  const siteLogo = props.comment.isAdmin ? siteStore.info?.siteLogo?.trim() : ''
+  if (!usingSiteFallback.value && siteLogo && siteLogo !== avatarSrc.value) {
+    usingSiteFallback.value = true
+    avatarSrc.value = siteLogo
+    imgLoaded.value = false
+    return
+  }
+  avatarSrc.value = ''
+  imgLoaded.value = false
+  imgError.value = true
+}
 
 // 子回复折叠:同一卡片内最多展示 maxReplies 条,其余通过"展开 X 条回复"按钮点开
 const visibleReplies = computed(() => {

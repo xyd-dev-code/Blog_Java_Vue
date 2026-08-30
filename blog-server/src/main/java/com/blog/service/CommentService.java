@@ -189,7 +189,7 @@ public class CommentService {
     }
 
     /** 前台提交评论成功后回显也走公开 VO，避免把作者自己的邮箱/IP/UA 回吐给客户端 */
-    public CommentPublicVO toPublic(Comment c) { return toPublicVo(c); }
+    public CommentPublicVO toPublic(Comment c) { return toPublicVo(c, findPublicAdmin()); }
 
     public List<Comment> treeAll() {
         List<Comment> all = commentMapper.selectList(new LambdaQueryWrapper<Comment>()
@@ -280,6 +280,30 @@ public class CommentService {
         return c;
     }
 
+    /**
+     * 管理员修改个人资料时，同步历史后台回复保存的昵称、邮箱和头像快照。
+     *
+     * <p>后台回复不会接受客户端 IP/UA，而访客评论一定由服务端写入这两个字段；
+     * 再叠加修改前的管理员邮箱/昵称，可以避免把普通访客评论误判为后台回复。
+     * 该同步不需要新增数据库字段或表。</p>
+     */
+    public int syncAdminReplyProfile(User previous, User current) {
+        if (previous == null || current == null) return 0;
+
+        String oldEmail = normalized(previous.getEmail());
+        String oldNickname = normalized(previous.getNickname());
+        String username = normalized(previous.getUsername());
+        if (oldEmail.isEmpty() && oldNickname.isEmpty() && username.isEmpty()) return 0;
+
+        return commentMapper.syncAdminReplyProfile(
+                oldEmail,
+                oldNickname,
+                username,
+                displayName(current),
+                normalized(current.getEmail()),
+                normalized(current.getAvatar()));
+    }
+
     public long totalApproved() {
         return commentMapper.selectCount(new LambdaQueryWrapper<Comment>().eq(Comment::getStatus, 1));
     }
@@ -356,10 +380,11 @@ public class CommentService {
     /** 公开视图：剔除 email/ip/ua 等隐私字段，并递归转换子回复 */
     private List<CommentPublicVO> toPublicTree(List<Comment> all) {
         List<Comment> roots = buildTree(all);
-        return roots.stream().map(this::toPublicVo).collect(Collectors.toList());
+        User admin = findPublicAdmin();
+        return roots.stream().map(c -> toPublicVo(c, admin)).collect(Collectors.toList());
     }
 
-    private CommentPublicVO toPublicVo(Comment c) {
+    private CommentPublicVO toPublicVo(Comment c, User admin) {
         CommentPublicVO v = new CommentPublicVO();
         v.setId(c.getId());
         v.setArticleId(c.getArticleId());
@@ -367,7 +392,10 @@ public class CommentService {
         v.setNickname(c.getNickname());
         v.setWebsite(c.getWebsite());
         v.setContent(c.getContent());
-        v.setAvatar(c.getAvatar());
+        boolean adminReply = isAdminReply(c, admin);
+        v.setIsAdmin(adminReply);
+        v.setAvatar(adminReply && !normalized(admin.getAvatar()).isEmpty()
+                ? normalized(admin.getAvatar()) : c.getAvatar());
         v.setStatus(c.getStatus());
         v.setLikeCount(c.getLikeCount());
         v.setReportCount(c.getReportCount());
@@ -377,9 +405,43 @@ public class CommentService {
         v.setArticleTitle(c.getArticleTitle());
         v.setParentName(c.getParentName());
         if (c.getReplies() != null) {
-            v.setReplies(c.getReplies().stream().map(this::toPublicVo).collect(Collectors.toList()));
+            v.setReplies(c.getReplies().stream().map(reply -> toPublicVo(reply, admin)).collect(Collectors.toList()));
         }
         return v;
+    }
+
+    /** 当前有效管理员仅用于公开昵称/头像覆盖，不会把邮箱等隐私字段写入公开 VO。 */
+    private User findPublicAdmin() {
+        return userMapper.selectOne(new LambdaQueryWrapper<User>()
+                .eq(User::getRole, "ADMIN")
+                .eq(User::getStatus, 1)
+                .orderByAsc(User::getId)
+                .last("LIMIT 1"));
+    }
+
+    private boolean isAdminReply(Comment c, User admin) {
+        if (c == null || admin == null || c.getParentId() == null || c.getParentId() <= 0) return false;
+        if (!normalized(c.getIp()).isEmpty() || !normalized(c.getUa()).isEmpty()) return false;
+
+        String commentEmail = normalized(c.getEmail());
+        String adminEmail = normalized(admin.getEmail());
+        if (!commentEmail.isEmpty() && commentEmail.equalsIgnoreCase(adminEmail)) return true;
+
+        String commentName = normalized(c.getNickname());
+        return !commentName.isEmpty()
+                && (commentName.equals(displayName(admin)) || commentName.equals(normalized(admin.getUsername())));
+    }
+
+    private String displayName(User user) {
+        if (user == null) return "站长";
+        String nickname = normalized(user.getNickname());
+        if (!nickname.isEmpty()) return nickname;
+        String username = normalized(user.getUsername());
+        return username.isEmpty() ? "站长" : username;
+    }
+
+    private String normalized(String value) {
+        return value == null ? "" : value.trim();
     }
 
     private String clean(String html) {

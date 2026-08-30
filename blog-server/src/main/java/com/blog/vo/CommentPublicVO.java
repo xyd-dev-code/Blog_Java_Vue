@@ -18,6 +18,7 @@ public class CommentPublicVO {
     private String website;
     private String content;
     private String avatar;
+    private Boolean isAdmin;
     private Integer status;
     private Integer likeCount;
     private Integer reportCount;
@@ -43,6 +44,8 @@ public class CommentPublicVO {
     public void setContent(String content) { this.content = content; }
     public String getAvatar() { return avatar; }
     public void setAvatar(String avatar) { this.avatar = avatar; }
+    public Boolean getIsAdmin() { return isAdmin; }
+    public void setIsAdmin(Boolean isAdmin) { this.isAdmin = isAdmin; }
     public Integer getStatus() { return status; }
     public void setStatus(Integer status) { this.status = status; }
     public Integer getLikeCount() { return likeCount; }

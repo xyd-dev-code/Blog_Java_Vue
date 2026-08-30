@@ -7,7 +7,7 @@
 
     <aside class="admin-aside" :class="{ collapsed, 'mobile-open': drawerOpen && isMobile }">
       <router-link to="/" class="aside-brand">
-        <img v-if="siteLogo" :src="siteLogo" class="mark mark-img" alt="logo" />
+        <img v-if="siteLogo" :src="siteLogo" class="mark mark-img" alt="" aria-hidden="true" />
         <span v-else class="mark">·</span>
         <span v-if="!collapsed" class="text">Admin</span>
       </router-link>
@@ -197,7 +197,10 @@ onUnmounted(() => {
 }
 .aside-brand .mark {
   width: 32px; height: 32px;
-  border-radius: 8px;
+  border-radius: 50%;
+  overflow: hidden;
+  -webkit-clip-path: circle(50% at 50% 50%);
+  clip-path: circle(50% at 50% 50%);
   display: grid; place-items: center;
   background: linear-gradient(135deg, var(--c-botany-500), var(--c-autumn-500));
   color: #fff;
@@ -206,6 +209,10 @@ onUnmounted(() => {
   flex-shrink: 0;
 }
 .aside-brand .mark-img {
+  display: block;
+  border-radius: 50%;
+  -webkit-clip-path: circle(50% at 50% 50%);
+  clip-path: circle(50% at 50% 50%);
   object-fit: cover;
   padding: 0;
   background: transparent;
