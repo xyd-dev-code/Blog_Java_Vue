@@ -17,17 +17,22 @@ import './styles/effects.scss'
 import vTilt from '@/directives/vTilt'
 import vMagnetic from '@/directives/vMagnetic'
 
-// ── 动态 favicon：绕过 Chrome 顽固缓存，每次加载时从 API 刷新 ──
-;(function refreshFavicon() {
+// ── 动态 favicon：读取圆形 PNG 后改用 Blob URL，彻底绕过 Chrome 独立的 favicon 缓存 ──
+;(async function refreshFavicon() {
   const apiUrl = '/api/v1/site/favicon'
-  const selector = "link[rel='icon'], link[rel='shortcut icon']"
-  const link = document.querySelector(selector)
+  const link = document.querySelector('#site-favicon')
   if (!link) return
-  // 直接给 link 设置带时间戳的 URL 即可强制刷新缓存。
-  // 不要先用 fetch 预取：/favicon 接口会 302 跳转到外部图床，
-  // 外部图床没有 CORS 头，fetch 跨域会被浏览器拦截并报错。
-  // 而 <link rel="icon"> 加载图片不受 CORS 限制，可直接设置。
-  link.href = apiUrl + '?t=' + Date.now()
+  const cacheBuster = apiUrl + '?t=' + Date.now()
+  try {
+    const response = await fetch(cacheBuster, { cache: 'no-store', credentials: 'same-origin' })
+    if (!response.ok) throw new Error('favicon request failed')
+    const blobUrl = URL.createObjectURL(await response.blob())
+    link.href = blobUrl
+    window.addEventListener('pagehide', () => URL.revokeObjectURL(blobUrl), { once: true })
+  } catch (_) {
+    // 兼容尚未升级、仍返回外部重定向的后端。
+    link.href = cacheBuster
+  }
 })()
 
 const app = createApp(App)

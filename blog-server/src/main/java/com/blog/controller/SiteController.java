@@ -111,7 +111,7 @@ public class SiteController {
             if (circular != null) {
                 HttpHeaders headers = new HttpHeaders();
                 headers.setContentType(MediaType.IMAGE_PNG);
-                headers.setCacheControl("public, max-age=300");
+                headers.setCacheControl("no-store, no-cache, must-revalidate");
                 return new ResponseEntity<>(circular, headers, org.springframework.http.HttpStatus.OK);
             }
         } catch (IOException ignored) {
@@ -123,7 +123,7 @@ public class SiteController {
         }
         HttpHeaders headers = new HttpHeaders();
         headers.setLocation(URI.create(url));
-        headers.setCacheControl("public, max-age=300");
+        headers.setCacheControl("no-store, no-cache, must-revalidate");
         return new ResponseEntity<>(headers, org.springframework.http.HttpStatus.FOUND);
     }
 
