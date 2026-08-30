@@ -2,7 +2,7 @@
   <header class="app-header">
     <div class="container nav-inner">
       <router-link to="/" class="brand" @mouseenter="prefetchByName('home')">
-        <img v-if="siteLogo" :src="siteLogo" class="brand-mark brand-mark-img" alt="logo" />
+        <img v-if="siteLogo" :src="siteLogo" class="brand-mark brand-mark-img" alt="" aria-hidden="true" />
         <span v-else-if="siteName" class="brand-mark">{{ brandMark }}</span>
         <span class="brand-text">
           <span class="brand-name">{{ siteName }}</span>
@@ -171,7 +171,11 @@ watch(drawerOpen, (v) => {
 .brand-mark {
   width: 40px;
   height: 40px;
-  border-radius: 10px;
+  flex: 0 0 40px;
+  border-radius: 50%;
+  overflow: hidden;
+  -webkit-clip-path: circle(50% at 50% 50%);
+  clip-path: circle(50% at 50% 50%);
   display: grid;
   place-items: center;
   background: linear-gradient(135deg, var(--c-botany-500), var(--c-autumn-500));
@@ -187,6 +191,12 @@ watch(drawerOpen, (v) => {
   box-shadow: 0 6px 18px rgba(14, 165, 233, 0.3);
 }
 .brand-mark-img {
+  display: block;
+  width: 40px;
+  height: 40px;
+  border-radius: inherit;
+  -webkit-clip-path: inherit;
+  clip-path: inherit;
   object-fit: cover;
   padding: 0;
   background: transparent;

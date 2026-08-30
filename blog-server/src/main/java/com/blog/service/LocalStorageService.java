@@ -80,6 +80,21 @@ public class LocalStorageService {
         }
     }
 
+    /**
+     * 只读取本地图床自身签发的 URL，供 favicon 等服务端派生图片使用。
+     * 外部 URL、越界路径、目录和超限文件一律返回 null，避免 SSRF 与任意文件读取。
+     */
+    public byte[] readByUrl(String url, long maxBytes) throws IOException {
+        if (!StringUtils.hasText(url) || maxBytes <= 0) return null;
+        if (!url.startsWith(publicUrlPrefix + "/")) return null;
+        String rel = url.substring(publicUrlPrefix.length() + 1);
+        Path target = baseDir.resolve(rel).normalize();
+        if (!target.startsWith(baseDir) || !Files.isRegularFile(target)) return null;
+        long size = Files.size(target);
+        if (size <= 0 || size > maxBytes) return null;
+        return Files.readAllBytes(target);
+    }
+
     private static String md5Hex(byte[] bytes) {
         try {
             MessageDigest md = MessageDigest.getInstance("MD5");

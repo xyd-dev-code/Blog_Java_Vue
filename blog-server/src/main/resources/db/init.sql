@@ -386,11 +386,6 @@ INSERT INTO site_config (config_key, config_value, description) VALUES
 ('github', 'https://github.com/', 'GitHub 链接（占位，部署后请在后台替换）'),
 ('email', 'your_email@example.com', '联系邮箱（占位，部署后请在后台替换）'),
 ('authorName', '站长', '站长/博主展示名,默认随 admin 用户昵称同步'),
-('roleTitle', '', '关于页职业标题，留空不显示'),
-('userBio', '', '关于页个人简介，留空回落到站点副标题'),
-('aboutContent', '', '关于页 Markdown 正文，由后台维护'),
-('aboutSkills', '', '关于页技术栈标签，逗号分隔'),
-('aboutTimeline', '', '关于页成长轨迹，每行格式：时间|标题|描述'),
 ('captcha_enabled', '1', '留言/评论提交是否开启算术验证码 (0=关, 1=开)'),
 ('sensitive_words', '', '敏感词列表，逗号或空格分隔；命中后正文将被 ** 掩码');
 
