@@ -1,276 +1,341 @@
-# ☁️ 个人博客系统
+# Blog Java Vue
 
-一个基于 **Spring Boot 3 + Vue 3 + MyBatis-Plus + Element Plus** 的全栈个人博客系统，采用"晴天"主题视觉。
+一个采用“晴天”视觉主题的前后端分离个人博客系统。项目包含公开博客、内容管理后台、评论与留言、项目和工具展示、访问统计、邮箱订阅，以及文章导入导出等功能。
 
 > 草木蔓发，春山可望。
 
-> ⚠️ **项目没有可登录的默认密码。首次启动前用一次性环境变量初始化 admin 密码，并在「站点配置」中维护对外展示的个人资料。**
+## 功能概览
 
----
+### 公开站点
 
-## ✨ 特性
+- 首页、文章列表与详情、全文搜索、分类、标签和归档
+- 项目集、工具集、友链、留言板和关于页面
+- 文章评论、回复、点赞、举报及访客头像上传
+- Open-Meteo 天气卡，支持浏览器定位和城市搜索
+- 文章、项目和工具的分享点击统计
+- 邮箱订阅、确认订阅、退订和内容更新通知
+- 响应式布局、路由懒加载和“晴天”主题动效
 
-- **后端**：Spring Boot 3.5 + Spring Security 6 + JWT + MyBatis-Plus 3.5 + MySQL 8 + Redis + Caffeine（本地缓存）+ SpringDoc OpenAPI
-- **前端**：Vue 3.5 + Vite 6 + Pinia + Vue Router 4 + Element Plus（按需引入）+ Axios + SCSS
-- **图表**：ECharts 5（后台访问统计饼图，按需引入）
-- **编辑器**：Tiptap 3 所见即所得 + Markdown 互转（GFM 表格支持），后台另配 MdEditor
-- **图床**：本地图床（Nginx 静态服务 + Let's Encrypt 签发 HTTPS），不依赖第三方对象存储（七牛云 SDK 已预留，可按需启用）
-- **部署**：Ubuntu + Nginx 反向代理 + systemd + Let's Encrypt；一键发布脚本 `deploy.sh` / `deploy.ps1`
-- **功能**：文章 / 分类 / 标签 / 评论 / 留言板 / 归档 / 搜索 / 项目集 / 工具集 / 友链 / 关于 / 站点配置 / 后台管理 / 首页天气卡 / 访问统计 / **邮箱订阅（新）**
-- **天气卡**：Open-Meteo 实时天气（温度 / 体感 / 湿度 / 风力风向 / 气压 / 天气状况），含 WMO code 校验与高温降级；城市默认定位 + 访客手动搜索切换；拒绝定位时显示"位置信息暂未授权" + 重新授权
-- **访问统计**：基于 ip2region 的 IP 地理解析，按设备 / 系统 / 浏览器 / 省份分布用 ECharts 饼图展示，访客明细按 IP + 日期分组折叠
-- **邮箱订阅（新）**：双确认邮件订阅流（pending → confirmed → unsubscribed），公开接口按 IP 限频；管理员端含 CRUD + CSV 导出（公式注入防护）
-- **内容自动通知（新）**：`@Scheduled` 定时检测新发布文章 / 项目 / 工具，邮件通知全部已确认订阅者；SMTP 未启用时自动停推且不标记 notified，启用后自动补推，避免通知丢失
+### 管理后台
 
-## 🏗 目录结构
+- 仪表盘和站点配置
+- 文章、分类、标签和归档管理
+- Tiptap 富文本编辑，支持 Markdown、DOCX 导入和 Markdown、DOCX、PDF 导出
+- 评论、留言和举报审核
+- 项目、项目分类、工具、工具分类和友链管理
+- 订阅用户管理及 CSV 导出
+- 访问日志和设备、系统、浏览器、地区分布统计
+- 管理员资料与密码维护
 
-```
+### 安全与运行特性
+
+- Spring Security + JWT 无状态认证
+- BCrypt 管理员密码，不提供可登录的默认密码
+- 登录、评论、订阅、分享和上传接口限频
+- 图片扩展名与文件签名校验、尺寸限制和自动压缩
+- Caffeine 本地缓存和进程内 JWT 黑名单
+- 公开评论与站点配置响应脱敏
+- SMTP 默认关闭，通知任务可独立启停
+
+## 技术栈
+
+| 层级 | 技术 |
+|---|---|
+| 后端 | Java 17、Spring Boot 3.5.6、Spring Security 6、MyBatis-Plus 3.5.7 |
+| 数据 | MySQL 8、Caffeine；当前单实例限流和 JWT 黑名单使用进程内存 |
+| API | REST、JWT、SpringDoc OpenAPI 2.6.0 |
+| 前端 | Vue 3.5、Vite 6、Vue Router 4.5、Pinia 2.3、Axios 1.7 |
+| UI | Element Plus 2.9、SCSS、ECharts 5.5 |
+| 编辑器 | Tiptap 3、md-editor-v3、marked、Turndown |
+| 可选集成 | SMTP、Pandoc、ip2region、Open-Meteo、BigDataCloud |
+
+> Maven 中保留了 Redis Starter，但当前业务没有依赖 Redis。单实例开发和部署不需要启动 Redis；多实例部署时，应把限流、JWT 黑名单等状态迁移到共享存储。
+
+## 项目结构
+
+```text
 Blog_Java_Vue/
-├── blog-server/             # 后端 Spring Boot (端口 8080)
-│   ├── src/main/java/com/blog/
-│   │   ├── common/          # 统一响应、异常、PageQuery
-│   │   ├── config/          # MyBatis-Plus、安全、CORS、BlogProperties
-│   │   ├── controller/      # REST 控制器
-│   │   ├── dto/             # 数据传输对象
-│   │   ├── entity/          # 数据库实体
-│   │   ├── mapper/          # MyBatis-Plus mapper
-│   │   ├── security/        # JWT + 登录用户
-│   │   └── service/         # 业务逻辑（LocalStorageService 等）
-│   └── src/main/resources/
-│       ├── application-example.yml   # 配置模板（已脱敏，提交到仓库）
-│       └── db/init.sql      # 新库初始化（建表 + 示例数据）
-├── blog-web/                # 前端 Vue 3 (端口 5173)
+├── blog-server/                         # Spring Boot 后端
+│   ├── pom.xml
 │   └── src/
-│       ├── api/             # axios 封装（front.js / admin.js / share.js）
-│       ├── components/      # 通用组件（含 SkyHero 天气卡、CountUp 等）
-│       ├── composables/     # 组合式函数（useWeather 等）
-│       ├── layouts/         # 布局（前台 / 后台）
-│       ├── router/          # 路由（含懒加载 + 导航预取）
-│       ├── stores/          # Pinia
-│       ├── styles/          # 全局 SCSS
-│       ├── utils/           # 工具
-│       └── views/
-│           ├── front/       # 前台页面
-│           └── admin/       # 后台管理（含 Stats 访问统计）
-├── server-config/           # 部署与迁移配置
-│   ├── deploy.sh            # Linux 一键发布（默认不跑 SQL）
-│   ├── migration-*.sql      # 增量迁移脚本（幂等，可重复执行）
-│   └── *.nginx.conf         # Nginx 站点配置示例
-├── ip2region.xdb            # IP 地理库（访客统计用）
-├── start-backend.bat        # Windows 启动后端
-├── start-frontend.bat       # Windows 启动前端
-├── deploy.ps1               # Windows 一键发布
+│       ├── main/java/com/blog/
+│       │   ├── common/                  # 统一响应与异常处理
+│       │   ├── config/                  # 安全、缓存、OpenAPI、任务配置
+│       │   ├── controller/              # 公开与后台 REST API
+│       │   ├── dto/                     # 请求与响应对象
+│       │   ├── entity/                  # MyBatis-Plus 实体
+│       │   ├── mapper/                  # 数据访问层
+│       │   ├── security/                # JWT、限流、客户端 IP 解析
+│       │   ├── service/                 # 业务服务
+│       │   └── vo/                      # 公开脱敏视图对象
+│       ├── main/resources/
+│       │   ├── application-example.yml  # 可提交的配置模板
+│       │   ├── application-dev.yml      # 开发环境非敏感配置
+│       │   ├── db/init.sql              # 新数据库结构与示例数据
+│       │   └── templates/               # DOCX 导出模板
+│       └── test/                         # 后端测试
+├── blog-web/                            # Vue 3 前端
+│   ├── package.json
+│   ├── vite.config.js
+│   ├── design-prototypes/               # 页面设计原型
+│   └── src/
+│       ├── api/                          # 前后台 API 封装
+│       ├── components/                   # 通用组件与视觉效果
+│       ├── composables/                  # 天气、交互和动画逻辑
+│       ├── layouts/                      # 前台与后台布局
+│       ├── router/                       # 路由与后台鉴权
+│       ├── stores/                       # Pinia 状态
+│       ├── styles/                       # 全局样式
+│       └── views/                        # 前台与后台页面
+├── docs/                                # 需求、隐私迁移和文章草稿
+├── scripts/privacy-scan.ps1             # 隐私信息扫描
+├── start-backend.bat                    # Windows 后端启动辅助脚本
+├── start-frontend.bat                   # Windows 前端启动辅助脚本
+├── reset-db.bat                         # 本地数据库重置脚本（会删除数据库）
 └── README.md
 ```
 
-## 🚀 快速开始（本地开发）
+## 本地开发
 
-### 1. 准备环境
+### 1. 环境要求
 
-| 工具 | 版本 |
-|---|---|
-| JDK | 17 |
-| Maven | 3.8+ |
-| Node.js | 18+ |
-| MySQL | 8.0+ |
-| Redis | 7+（可选，用于评论防刷 / 缓存） |
+- JDK 17
+- Maven 3.8+
+- Node.js 18+ 和 npm
+- MySQL 8.0+
 
-### 2. 准备配置文件（⚠️ 不要提交真实配置）
+以下组件按需安装：
 
-```bash
-cd blog-server/src/main/resources
-cp application-example.yml application.yml
-# 按需修改 application.yml 中的 DB / Redis / JWT / CORS / 图床 段落
-```
+- Pandoc：使用 DOCX/PDF 导入导出时需要
+- SMTP 服务：订阅确认、评论通知和内容通知需要
+- `ip2region.xdb`：需要在访问统计中解析地区时使用
+- Nginx 或其他静态文件服务器：需要查看本地上传图片时使用
 
-所有敏感字段都使用环境变量占位符（`DB_PASSWORD` / `REDIS_PASSWORD` / `BLOG_JWT_SECRET` /
-`BLOG_MAIL_PASSWORD` 等）。生产部署时必须从服务环境或密钥管理器注入，不能写入 YAML、脚本、前端变量或 `site_config`。
-**`BLOG_JWT_SECRET` 必填**（空值时 Spring 启动失败，避免意外用默认 key 签 token）。
+### 2. 初始化数据库
 
-### 3. 初始化数据库
+将 [`blog-server/src/main/resources/db/init.sql`](blog-server/src/main/resources/db/init.sql) 导入 MySQL 8。
 
 ```bash
-mysql -u<user> -p<pass> < blog-server/src/main/resources/db/init.sql
+mysql -u root -p < blog-server/src/main/resources/db/init.sql
 ```
 
-`init.sql` 中 admin 密码为禁用标记，任何默认口令都无法登录。首次启动时临时设置
-`BLOG_ADMIN_INITIAL_PASSWORD`（至少 12 位）；应用只在检测到禁用标记时将其编码为 BCrypt 写入数据库。
-成功后立即从服务环境删除该一次性变量，后续在后台修改密码。
+Windows PowerShell 可通过 `cmd` 调用重定向：
 
-> 后续表结构变更请走 **增量迁移脚本**（见下文「🗄 数据库迁移规范」），不要把改动直接手改进 `init.sql` 又忘了老库。
+```powershell
+cmd /c "mysql -u root -p < blog-server\src\main\resources\db\init.sql"
+```
+
+> `init.sql` 会执行 `DROP DATABASE IF EXISTS blog_java_vue`。它只适合初始化新环境，会完整删除同名数据库；已有数据的环境必须先备份，并使用经过审核的增量 SQL。
+
+推荐为应用创建独立的低权限账号，不要让 Spring Boot 使用 MySQL `root`：
+
+```sql
+CREATE USER IF NOT EXISTS 'blog'@'localhost' IDENTIFIED BY 'replace_with_a_strong_password';
+GRANT ALL PRIVILEGES ON blog_java_vue.* TO 'blog'@'localhost';
+FLUSH PRIVILEGES;
+```
+
+### 3. 创建本地配置
+
+复制配置模板。生成的 `application.yml` 已被 `.gitignore` 忽略，不应提交到仓库。
+
+```powershell
+Copy-Item blog-server/src/main/resources/application-example.yml `
+  blog-server/src/main/resources/application.yml
+```
+
+至少准备以下配置：
+
+| 变量 | 是否必需 | 说明 |
+|---|---:|---|
+| `DB_URL` | 否 | 默认连接 `localhost:3306/blog_java_vue` |
+| `DB_USERNAME` | 否 | 默认 `blog` |
+| `DB_PASSWORD` | 视数据库而定 | MySQL 应用账号密码 |
+| `BLOG_JWT_SECRET` | 是 | JWT 密钥，至少 32 字节随机字符串 |
+| `BLOG_ADMIN_INITIAL_PASSWORD` | 首次登录必需 | 首次启动时初始化 `admin`，至少 12 个字符 |
+| `UPLOAD_DIR` | 否 | 图片目录，默认 `./uploads/img` |
+| `IMG_BASE_URL` | 是 | 图片对外访问 URL 前缀；为空时后端拒绝启动 |
+
+PowerShell 示例：
+
+```powershell
+$env:DB_USERNAME = "blog"
+$env:DB_PASSWORD = "<your-database-password>"
+$env:BLOG_JWT_SECRET = "<your-random-secret-of-at-least-32-bytes>"
+$env:BLOG_ADMIN_INITIAL_PASSWORD = "<your-strong-initial-password>"
+$env:IMG_BASE_URL = "http://localhost:9000"
+```
+
+管理员密码只会在数据库仍为初始化标记时写入一次。第一次成功启动后，应从运行环境中移除一次性变量：
+
+```powershell
+Remove-Item Env:BLOG_ADMIN_INITIAL_PASSWORD
+```
 
 ### 4. 启动后端
 
-```bash
-# Windows
-start-backend.bat
+在设置环境变量的同一个终端中运行：
 
-# 或手动
-cd blog-server
+```powershell
+Set-Location blog-server
 mvn spring-boot:run
 ```
 
-后端启动后访问：<http://localhost:8080>
-Swagger UI：<http://localhost:8080/swagger-ui.html>
+可用地址：
+
+- 健康检查：<http://localhost:8080/api/v1/ping>
+- Swagger UI：<http://localhost:8080/swagger-ui.html>
+- OpenAPI JSON：<http://localhost:8080/v3/api-docs>
+
+Swagger 只在 `dev` Profile 下开放。仓库中的 `start-backend.bat` 带有开发机器专用的 `JAVA_HOME`，其他电脑使用前需要修改；通用启动方式以上面的 Maven 命令为准。
 
 ### 5. 启动前端
 
-```bash
-# Windows
-start-frontend.bat
+打开第二个终端：
 
-# 或手动
-cd blog-web
-npm install
+```powershell
+Set-Location blog-web
+npm ci
 npm run dev
 ```
 
-前端启动后访问：<http://localhost:5173>
+访问地址：
 
-### 6. 默认账号
+- 公开站点：<http://localhost:5173>
+- 管理后台：<http://localhost:5173/admin/login>
 
-| 角色 | 用户名 | 密码 |
-|---|---|---|
-| 管理员 | admin | 无默认密码；由 `BLOG_ADMIN_INITIAL_PASSWORD` 一次性初始化 |
+Vite 会把 `/api` 和 `/uploads` 请求代理到 `http://localhost:8080`。
 
-## 📚 接口文档
+### 6. 本地图片访问
 
-启动后端后访问 Swagger UI：<http://localhost:8080/swagger-ui.html>
+上传服务会把图片写入 `UPLOAD_DIR`，但当前 Spring Boot 不直接暴露该目录。生产环境应由 Nginx 或独立图片域名提供静态文件服务。
 
-API 前缀：`/api/v1`
+如果本地将 `IMG_BASE_URL` 设置为 `http://localhost:9000`，可以在项目根目录临时启动静态服务器：
 
-- 前台：`/api/v1/home`, `/api/v1/articles`, `/api/v1/categories`, `/api/v1/tags`, `/api/v1/projects`, `/api/v1/tools`, `/api/v1/friend-links`, `/api/v1/about`, `/api/v1/comments/guestbook`, `/api/v1/site`
-- 订阅：`/api/v1/subscribe`（POST 订阅 / GET 确认 / GET 退订，公开）
-- 后台：`/api/v1/admin/**`（需登录），含 `/api/v1/admin/stats` 访问统计 + `/api/v1/admin/subscriptions` 订阅管理
-- 认证：`/api/v1/auth/login`
+```powershell
+python -m http.server 9000 --directory blog-server/uploads/img
+```
 
-> 完整端点以 Swagger UI 为准；以上为常用分组示例。
+不测试上传功能时，只需保证 `IMG_BASE_URL` 非空即可启动后端。
 
-## ☁️ 天气卡与访客统计
+## 可选功能配置
 
-### 天气卡（`SkyHero.vue` + `useWeather.js`）
+### 邮件、订阅与内容通知
 
-- **数据源**：Open-Meteo V1 Forecast（免费、无需 Key、CORS 允许）。`current` 取温度 / 体感 / 湿度 / 风速 / 风向 / 气压 / 天气状况。
-- **天气状况校验**：`weather_code`（WMO Code）经完整映射表转中文；并做合理性校验——高温（≥30°C）+ 极端风暴码（95/96/99）属模型偏差，自动降级为「晴 / 局部晴朗 / 多云」。数值字段（温度 / 湿度 / 风力）经温度范围、湿度范围、数据时效（<2h）校验。
-- **城市定位**：默认定位访客所在城市（浏览器定位 + BigDataCloud 反向地理编码中文名）；访客可点 📍 打开搜索面板，用 Open-Meteo Geocoding（中文名）手动切换城市，选定后记忆到 `localStorage`。
-- **拒绝定位**：访客拒绝授权时，天气卡显示「位置信息暂未授权」+「重新授权」按钮，重新触发定位流程；**不**回退显示任何预设城市。
+邮件功能默认关闭。启用前至少配置：
 
-### 访客统计（`views/admin/Stats.vue`）
+```text
+BLOG_MAIL_ENABLED=true
+BLOG_MAIL_HOST=...
+BLOG_MAIL_PORT=...
+BLOG_MAIL_USERNAME=...
+BLOG_MAIL_PASSWORD=...
+BLOG_MAIL_FROM_EMAIL=...
+BLOG_MAIL_ADMIN_EMAIL=...
+```
 
-- **IP 地理解析**：基于 `ip2region.xdb`，将访客 IP 解析到省 / 国家；境外 IP 在省份列显示为「境外(美国)」等友好文案。
-- **分布可视化**：设备 / 系统 / 浏览器 / 省份四类分布用 ECharts 真饼图（按需引入 `PieChart` + 必要组件）展示，空态用 Vue 模板层占位（不依赖图表库自身渲染）。
-- **访客明细**：按「IP + 日期」分组折叠，汇总行展示 IP / 省份 / 设备 / 系统 / 浏览器 / 访问次数 / 时间范围，展开看当日该 IP 全部明细。
+订阅确认和通知邮件中的公开链接还需要配置：
 
-## 🎨 设计说明（晴天主题）
+```text
+BLOG_SITE_BASE_URL=https://your-domain.example
+BLOG_SUBSCRIBE_BASE_URL=https://your-domain.example
+BLOG_NOTIFY_BASE_URL=https://your-domain.example
+BLOG_NOTIFY_ENABLED=true
+```
 
-**主色板**
+SMTP 未启用或发送失败时，业务请求不会因为普通异步通知而中断；订阅确认等关键流程会返回实际发送状态。
 
-| 名称 | 色值 | 用途 |
-|---|---|---|
-| 天空蓝 Sky | `#38bdf8` | 品牌主色、按钮、强调 |
-| 薄荷青 Mint | `#22d3ee` | 二级色、辅色、过渡 |
-| 暖阳金 Sun | `#fbbf24` | 点缀色、高亮 |
+### IP 地区解析
 
-**字体**
-- 中文衬线：`Noto Serif SC / Songti SC`
-- 中文无衬线：`PingFang SC / Microsoft YaHei`
+仓库不提交大型 `ip2region.xdb` 数据文件。下载兼容 ip2region 2.x 的 XDB 后，通过以下方式指定：
 
-## ☁️ 图床与部署
+```text
+IP2_REGION_DB_PATH=D:/path/to/ip2region.xdb
+```
 
-图床采用独立 HTTPS 子域（如 `img.yourdomain.com`），与主站分离，
-避免主站反代时携带大图片流量。
+文件缺失时，访问统计仍可工作，但地区字段为空。
 
-浏览器 → https://img.yourdomain.com/yyyy/MM/xxx.jpg
-                      ↓
-                  Nginx (ssl + static)
-                      ↓
-           ${UPLOAD_DIR}/yyyy/MM/xxx.jpg
+### Pandoc 导入导出
 
-- 证书：Let's Encrypt，3 个月自动续期
-- 上传：`LocalStorageService` 按 MD5 自动去重，按日期分目录
-- URL 格式：`${IMG_BASE_URL}/{yyyy/MM}/{md5}.{ext}`
+Markdown 导入导出不依赖额外程序。DOCX/PDF 转换需要安装 Pandoc，并在无法从 `PATH` 发现时指定：
 
-## 🗄 数据库迁移规范
+```text
+BLOG_PANDOC_BIN=D:/path/to/pandoc.exe
+```
 
-> ⚠️ **铁律**：改 Java 实体 / SQL 前，必须先把对应的迁移 SQL 跑进目标库，否则 MyBatis-Plus 会报 `Unknown column` / `Data too long` 导致接口 500。
+生成中文 PDF 还需要系统中存在可用的 PDF 引擎和中文字体。
 
-- **新库**：`blog-server/src/main/resources/db/init.sql`（建表 + 示例数据）。**每次加表 / 加列必须 `init.sql` 与迁移脚本双写**，否则新库照样缺列。
-- **增量**：`server-config/migration-*.sql`，统一用 `information_schema` 探测 + `ALTER ADD COLUMN` / `CREATE TABLE IF NOT EXISTS` + `ON DUPLICATE KEY UPDATE`，**幂等、可重复执行**。
-  - ⚠️ 注意：`CREATE TABLE IF NOT EXISTS` 在表已存在时会整段跳过，**不会补列**。老库补列必须写 `information_schema` 探测 + 动态 `PREPARE/EXECUTE ALTER` 段（`no-op` 分支用 `DO 0`）。
-- **部署时执行迁移**：
-  - Linux：`RUN_MIGRATION=1 DB_PASS='<pwd>' bash server-config/deploy.sh`（默认不跑 SQL）
-  - Windows：`deploy.ps1` 加 `-Migrate` 参数或设 `$RunMigration=$true`
-  - 迁移脚本按文件名顺序逐个应用，失败会打印 `FAILED` 但不中断其余脚本。
+## API 分组
 
-## 🛠 技术栈版本
+所有业务 API 使用 `/api/v1` 前缀。
 
-| 技术 | 版本 |
+| 分组 | 路径示例 |
 |---|---|
-| Spring Boot | 3.5.6 |
-| Java | 17 |
-| MyBatis-Plus | 3.5.7 |
-| Spring Security | 6.x |
-| jjwt | 0.12.6 |
-| SpringDoc OpenAPI | 2.6.0 |
-| MySQL | 8.0 |
-| Redis | 7.x |
-| Vue | 3.5 |
-| Vite | 6 |
-| Element Plus | 2.9（按需引入：unplugin-vue-components + unplugin-auto-import） |
-| ECharts | 5.5 |
-| Pinia | 2.x |
-| Tiptap | 3.x |
-| md-editor-v3 | 4.x |
-| highlight.js | 11.x |
+| 系统 | `/api/v1/ping` |
+| 认证 | `/api/v1/auth/login`、`/api/v1/auth/me` |
+| 文章 | `/api/v1/articles`、`/api/v1/categories`、`/api/v1/tags` |
+| 内容 | `/api/v1/projects`、`/api/v1/tools`、`/api/v1/friend-links` |
+| 互动 | `/api/v1/comments`、`/api/v1/share`、`/api/v1/upload/avatar` |
+| 订阅 | `/api/v1/subscribe` |
+| 管理后台 | `/api/v1/admin/**` |
 
-## 🚢 生产部署（Ubuntu）
+完整参数、响应结构和状态码以开发环境的 Swagger UI 为准。
 
-1. **服务器初始化**：创建 `blog` 用户，安装 JDK 17、MySQL、Redis、Nginx、certbot
-2. **初始化数据库**：将 `db/init.sql` 导入 MySQL，按文件内提示重置 admin 密码
-3. **打包后端**：
-   ```bash
-   cd blog-server
-   mvn -DskipTests clean package
-   ```
-4. **构建前端**：
-   ```bash
-   cd blog-web
-   npm install
-   npm run build        # 产物在 blog-web/dist
-   ```
-5. **一键发布**（Linux）：
-   ```bash
-   PROJECT_ROOT=/path/to/Blog_Java_Vue \
-   RUN_MIGRATION=1 DB_PASS='<pwd>' \
-   bash server-config/deploy.sh
-   ```
-   - 备份并覆盖 jar（chown `blog:blog`）、灌入 `dist`、重启 systemd + reload Nginx、健康检查
-   - 需应用增量迁移时务必带 `RUN_MIGRATION=1`（否则只发代码不跑 SQL）
-   - Windows 用 `deploy.ps1`（参数 `-Migrate` 开启迁移）
-6. **（首次 / 手动）配置 systemd**：写入 `/etc/systemd/system/blog.service`
-7. **（首次 / 手动）配置 Nginx**：主域（前台 + `/api/` 反代到 `127.0.0.1:8080`）、图床子域（HTTPS 静态服务）
-8. **申请证书**：
-   ```bash
-   sudo certbot --nginx -d yourdomain.com -d www.yourdomain.com -d img.yourdomain.com
-   ```
+## 构建与检查
 
-> 详细 SOP 见团队《博客部署上线教程》；`deploy.sh` 顶部注释含全部可覆盖的环境变量（`BACKEND_DIR` / `FRONTEND_DIR` / `SKIP_FRONTEND` / `SKIP_BACKEND` 等）。
+后端测试与打包：
 
-## 🔐 安全 / 隐私注意事项
+```powershell
+Set-Location blog-server
+mvn test
+mvn -DskipTests clean package
+```
 
-1. **初始化 admin 密码**：仅首次启动临时设置 `BLOG_ADMIN_INITIAL_PASSWORD`，写入数据库后立即移除
-2. **不要将 `application.yml` / `application-prod.yml` 提交到仓库**——本仓库已通过 `.gitignore` 屏蔽这两个文件，只保留 `application-example.yml` 模板
-3. **不要打开外网端口**：3306 / 6379 / 8080 仅监听 `127.0.0.1`，通过 Nginx 443 反代访问
-4. **MySQL 用户**：应用使用低权限用户，不要用 `root` 连接 Spring Boot
-5. **图床目录权限**：建议 `drwxr-x---`，Nginx 以独立用户读取
-6. **JWT secret**：生产环境通过 `BLOG_JWT_SECRET` 环境变量注入，至少 64 字节随机
-7. **访客隐私**：访问统计仅记录 IP 与派生地理位置用于展示分布，不展示完整 IP 明细给非授权用户
-8. **评论者隐私**：公开评论 API 通过 `CommentPublicVO` 返回，自动剥离邮箱 / IP / UA 等字段，匿名访客无法读取评论者隐私信息
-9. **站点配置分级**：匿名 `/api/v1/site` 只返回展示字段白名单；名称含 password / secret / token / key 的配置拒绝保存和序列化
-10. **提交前扫描**：运行 `pwsh ./scripts/privacy-scan.ps1`；审计全部历史时追加 `-History`
+产物为 `blog-server/target/blog-server.jar`。
 
-完整的公开仓库清理、凭据轮换和既有数据库迁移步骤见 [隐私迁移清单](docs/PRIVACY-MIGRATION.md)。
+前端生产构建：
 
-## 📝 License
+```powershell
+Set-Location blog-web
+npm ci
+npm run build
+```
 
-MIT
+产物位于 `blog-web/dist/`。
+
+提交公开仓库前可运行隐私扫描：
+
+```powershell
+pwsh ./scripts/privacy-scan.ps1
+pwsh ./scripts/privacy-scan.ps1 -History
+```
+
+## 生产部署说明
+
+当前公开仓库不包含生产服务器地址、Nginx 配置、systemd 单元、证书配置或一键部署脚本。一个完整部署至少需要：
+
+1. 设置 `SPRING_PROFILES_ACTIVE=prod`，并从外部文件或环境变量注入全部敏感配置。
+2. 运行后端 JAR，仅向反向代理暴露服务端口。
+3. 使用 Nginx 等静态服务器托管 `blog-web/dist/`。
+4. 将 `/api/` 反向代理到 Spring Boot。
+5. 独立托管 `UPLOAD_DIR`，并让公开地址与 `IMG_BASE_URL` 一致。
+6. 配置 HTTPS、日志轮转、数据库备份和最小权限账号。
+
+仓库目前只提供全量初始化 SQL，没有可直接用于生产老库的增量迁移脚本。升级已有数据库前必须先备份并审查表结构差异。
+
+## 安全注意事项
+
+- 不要提交 `application.yml`、`.env`、数据库备份、证书、令牌或真实服务器配置。
+- `admin` 没有默认密码；不要长期保留 `BLOG_ADMIN_INITIAL_PASSWORD`。
+- 生产 JWT 密钥应使用密码学安全的随机值，并至少包含 32 字节。
+- `reset-db.bat` 和 `init.sql` 都会删除 `blog_java_vue` 数据库，只能用于可丢弃的本地环境。
+- 生产环境不要直接暴露 MySQL、后端管理端口或上传目录写权限。
+- 当前限流、缓存和 JWT 黑名单面向单实例设计；多实例部署前必须改为共享状态方案。
+- 访问统计会处理访客 IP 和 User-Agent，部署时应根据适用法律提供隐私说明和保留策略。
+- 公开仓库清理和凭据轮换流程参见 [`docs/PRIVACY-MIGRATION.md`](docs/PRIVACY-MIGRATION.md)。
+
+## 仓库状态说明
+
+- 本项目当前没有独立的 `LICENSE` 文件。
+- `target/`、`dist/`、`node_modules/`、上传文件、私密配置和生产部署文件不会进入 Git。
+- 设计原型位于 [`blog-web/design-prototypes/`](blog-web/design-prototypes/)，需求文档位于 [`docs/需求分析文档.md`](docs/需求分析文档.md)。
