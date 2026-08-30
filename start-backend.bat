@@ -17,7 +17,7 @@ if exist "%~dp0start-backend.local.bat" (
 ) else (
     echo.
     echo [WARN] start-backend.local.bat not found, falling back to defaults.
-    echo        Create start-backend.local.bat (git-ignored) and set:
+    echo        Create start-backend.local.bat ^(git-ignored^) and set:
     echo            set DB_PASSWORD=your_mysql_password
     echo            set BLOG_JWT_SECRET=any_long_random_string_min_32_chars
     echo        Spring will refuse to start without BLOG_JWT_SECRET.

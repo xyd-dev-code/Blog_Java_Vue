@@ -61,8 +61,8 @@ public class AdminSiteController {
             "authorName", "userNickname", "email",
             // 前台与旧 seed 使用的 key(与数据库实际 key 保持一致,避免后台保存被拒)
             "siteName", "motto", "description", "keywords", "beian", "comment_audit", "github",
-            // 关于页个人资料（公开展示内容统一从数据库读取）
-            "greeting", "roleTitle", "userBio", "aboutContent", "aboutSkills", "aboutTimeline",
+            // 关于页原有技术栈配置
+            "aboutSkills",
             // 天气卡：博主所在城市（访客定位失败时的兜底）
             "weatherCity", "weatherLat", "weatherLon"
     );

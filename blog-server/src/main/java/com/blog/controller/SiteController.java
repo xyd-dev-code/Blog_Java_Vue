@@ -3,15 +3,25 @@ package com.blog.controller;
 import com.blog.common.R;
 import com.blog.entity.User;
 import com.blog.mapper.UserMapper;
+import com.blog.service.LocalStorageService;
 import com.blog.service.SiteConfigService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.jsoup.Jsoup;
 import org.jsoup.safety.Safelist;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.imageio.ImageIO;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
+import java.awt.geom.Ellipse2D;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.net.InetAddress;
 import java.net.URI;
 import java.net.UnknownHostException;
@@ -27,13 +37,19 @@ public class SiteController {
             "^(127\\.|10\\.|172\\.(1[6-9]|2[0-9]|3[01])\\.|192\\.168\\.|0\\.|169\\.254\\.|::1|fc|fd|fe80)"
     );
     private static final Safelist PLAINTEXT = Safelist.none();
+    private static final int FAVICON_SIZE = 64;
+    private static final long MAX_FAVICON_SOURCE_BYTES = 5L * 1024 * 1024;
 
     private final SiteConfigService siteConfigService;
     private final UserMapper userMapper;
+    private final LocalStorageService storage;
 
-    public SiteController(SiteConfigService siteConfigService, UserMapper userMapper) {
+    public SiteController(SiteConfigService siteConfigService,
+                          UserMapper userMapper,
+                          LocalStorageService storage) {
         this.siteConfigService = siteConfigService;
         this.userMapper = userMapper;
+        this.storage = storage;
     }
 
     @GetMapping
@@ -69,9 +85,8 @@ public class SiteController {
     }
 
     /**
-     * favicon：取 admin 头像 URL，302 重定向到实际图片。
-     * 优先用 admin 头像，否则 fallback 到 site_config.siteLogo，再否则 fallback 到项目自带 SVG。
-     * 安全:只重定向到 http/https 的公网 URL,拒绝 javascript:/data:/file:/私网 IP。
+     * favicon：优先读取本地图床头像并输出带透明四角的圆形 PNG。
+     * 外部旧头像无法在本地派生时才回退到安全的公网 URL 重定向。
      */
     @GetMapping("/favicon")
     @Operation(summary = "站点头像（用于浏览器 tab 图标）")
@@ -90,6 +105,18 @@ public class SiteController {
         if (url == null) {
             return ResponseEntity.notFound().build();
         }
+        try {
+            byte[] source = storage.readByUrl(url, MAX_FAVICON_SOURCE_BYTES);
+            byte[] circular = toCircularPng(source);
+            if (circular != null) {
+                HttpHeaders headers = new HttpHeaders();
+                headers.setContentType(MediaType.IMAGE_PNG);
+                headers.setCacheControl("public, max-age=300");
+                return new ResponseEntity<>(circular, headers, org.springframework.http.HttpStatus.OK);
+            }
+        } catch (IOException ignored) {
+            // 派生失败时继续走经过校验的外部 URL 兜底，不输出文件路径或头像 URL。
+        }
         // 安全校验:只允许 http/https 公网 URL
         if (!isSafeRedirectUrl(url)) {
             return ResponseEntity.badRequest().build();
@@ -98,6 +125,34 @@ public class SiteController {
         headers.setLocation(URI.create(url));
         headers.setCacheControl("public, max-age=300");
         return new ResponseEntity<>(headers, org.springframework.http.HttpStatus.FOUND);
+    }
+
+    /** 将任意横竖比图片居中裁成 64×64 圆形透明 PNG。 */
+    static byte[] toCircularPng(byte[] source) throws IOException {
+        if (source == null || source.length == 0) return null;
+        BufferedImage input = ImageIO.read(new ByteArrayInputStream(source));
+        if (input == null || input.getWidth() <= 0 || input.getHeight() <= 0) return null;
+
+        int cropSize = Math.min(input.getWidth(), input.getHeight());
+        int sourceX = (input.getWidth() - cropSize) / 2;
+        int sourceY = (input.getHeight() - cropSize) / 2;
+        BufferedImage output = new BufferedImage(FAVICON_SIZE, FAVICON_SIZE, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D graphics = output.createGraphics();
+        try {
+            graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            graphics.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+            graphics.setClip(new Ellipse2D.Double(0, 0, FAVICON_SIZE, FAVICON_SIZE));
+            graphics.drawImage(input,
+                    0, 0, FAVICON_SIZE, FAVICON_SIZE,
+                    sourceX, sourceY, sourceX + cropSize, sourceY + cropSize,
+                    null);
+        } finally {
+            graphics.dispose();
+        }
+
+        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+        ImageIO.write(output, "png", bytes);
+        return bytes.toByteArray();
     }
 
     private static boolean isSafeRedirectUrl(String url) {

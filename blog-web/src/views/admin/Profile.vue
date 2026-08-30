@@ -66,14 +66,6 @@
             <el-form-item label="站点描述">
               <el-input v-model="siteForm.description" type="textarea" :rows="2" />
             </el-form-item>
-            <el-row :gutter="16">
-              <el-col :md="12">
-                <el-form-item label="职业标题"><el-input v-model="siteForm.roleTitle" placeholder="显示在关于页昵称旁，留空不显示" /></el-form-item>
-              </el-col>
-              <el-col :md="12">
-                <el-form-item label="个人简介"><el-input v-model="siteForm.userBio" placeholder="显示在关于页资料卡，留空使用副标题" /></el-form-item>
-              </el-col>
-            </el-row>
             <el-form-item label="SEO 关键词">
               <el-input v-model="siteForm.keywords" placeholder="个人博客,技术,生活" />
             </el-form-item>
@@ -99,16 +91,7 @@
             <el-form-item label="技术栈标签">
               <el-input v-model="siteForm.aboutSkills" type="textarea" :rows="2"
                 placeholder="用逗号分隔，如：Java, Spring Boot, Vue 3, TypeScript" />
-              <div class="form-tip">显示在「关于我」页面的技术栈区域，留空则隐藏</div>
-            </el-form-item>
-            <el-form-item label="关于正文">
-              <el-input v-model="siteForm.aboutContent" type="textarea" :rows="7"
-                placeholder="支持 Markdown；个人经历和联系方式请只在后台维护" />
-            </el-form-item>
-            <el-form-item label="成长轨迹">
-              <el-input v-model="siteForm.aboutTimeline" type="textarea" :rows="4"
-                placeholder="每行一项：时间|标题|描述" />
-              <div class="form-tip">例如：2026 至今|独立开发者|维护个人项目与技术博客</div>
+              <div class="form-tip">显示在「关于我」页面的技术栈区域，留空则使用默认列表</div>
             </el-form-item>
 
             <el-form-item>
@@ -187,7 +170,6 @@ const uploadInput = ref(null)
 const cropperRef = ref(null)
 const cropVisible = ref(false)
 const cropSrc = ref('')
-const cropSrcMime = ref('image/jpeg')
 
 // 记录旧头像 URL，保存后删除
 const oldAvatar = ref('')
@@ -205,7 +187,7 @@ const pwdForm = reactive({
 const siteForm = reactive({
   siteName: '', motto: '', description: '', keywords: '',
   beian: '', comment_audit: '1', github: '', email: '',
-  roleTitle: '', userBio: '', aboutContent: '', aboutSkills: '', aboutTimeline: ''
+  aboutSkills: ''
 })
 
 // ---- 文件选择 → 裁剪 ----
@@ -213,7 +195,6 @@ const siteForm = reactive({
 const onFileSelected = (e) => {
   const file = e.target.files?.[0]
   if (!file) return
-  cropSrcMime.value = file.type || 'image/jpeg'
   cropSrc.value = URL.createObjectURL(file)
   cropVisible.value = true
   uploadInput.value.value = ''
@@ -221,8 +202,8 @@ const onFileSelected = (e) => {
 
 // ---- 裁剪并上传 ----
 
-// 将裁剪后的 canvas 缩放为合适尺寸并压缩输出。PNG 输入保留 PNG(透明不丢),其他格式走 JPEG 节省体积。
-const canvasToFile = (sourceCanvas, sourceMime, maxSize = 512, quality = 0.92) => {
+// 将裁剪结果输出为带透明四角的圆形 PNG，使导航头像与浏览器 favicon 保持正圆。
+const canvasToFile = (sourceCanvas, maxSize = 512) => {
   return new Promise((resolve, reject) => {
     const { width: sw, height: sh } = sourceCanvas
     let dw = sw
@@ -236,20 +217,19 @@ const canvasToFile = (sourceCanvas, sourceMime, maxSize = 512, quality = 0.92) =
     canvas.width = dw
     canvas.height = dh
     const ctx = canvas.getContext('2d')
-    const isPng = sourceMime === 'image/png'
-    if (!isPng) {
-      // 仅 JPEG 走白底(避免透明填黑色)
-      ctx.fillStyle = '#ffffff'
-      ctx.fillRect(0, 0, dw, dh)
-    }
+    ctx.clearRect(0, 0, dw, dh)
+    ctx.save()
+    ctx.beginPath()
+    ctx.arc(dw / 2, dh / 2, Math.min(dw, dh) / 2, 0, Math.PI * 2)
+    ctx.closePath()
+    ctx.clip()
     ctx.drawImage(sourceCanvas, 0, 0, dw, dh)
+    ctx.restore()
 
-    const outMime = isPng ? 'image/png' : 'image/jpeg'
-    const outName = isPng ? 'avatar.png' : 'avatar.jpg'
     canvas.toBlob((blob) => {
       if (!blob) { reject(new Error('无法生成裁剪图片')); return }
-      resolve(new File([blob], outName, { type: outMime }))
-    }, outMime, isPng ? undefined : quality)
+      resolve(new File([blob], 'avatar.png', { type: 'image/png' }))
+    }, 'image/png')
   })
 }
 
@@ -261,8 +241,8 @@ const doCrop = async () => {
     if (!canvas || canvas.width === 0 || canvas.height === 0) {
       throw new Error('裁剪区域无效，请重新选择图片')
     }
-    // 缩放到最大 512px 并压缩,防止原图过大导致网络/服务端拒绝;PNG 原样保留(透明不丢)
-    const file = await canvasToFile(canvas, cropSrcMime.value, 512, 0.92)
+    // 缩放到最大 512px，并输出带透明四角的圆形 PNG。
+    const file = await canvasToFile(canvas, 512)
     if (file.size > 5 * 1024 * 1024) {
       throw new Error('裁剪后图片仍超过 5MB，请选择更小的图片')
     }
@@ -365,11 +345,7 @@ const saveSite = async () => {
       comment_audit: siteForm.comment_audit,
       github: siteForm.github,
       email: siteForm.email,
-      roleTitle: siteForm.roleTitle,
-      userBio: siteForm.userBio,
-      aboutContent: siteForm.aboutContent,
-      aboutSkills: siteForm.aboutSkills,
-      aboutTimeline: siteForm.aboutTimeline
+      aboutSkills: siteForm.aboutSkills
     }
     await adminSaveSiteConfig(payload)
     ElMessage.success('站点信息已保存')

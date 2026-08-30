@@ -45,7 +45,7 @@ WHERE username = 'admin';
 
 重启前临时设置 `BLOG_ADMIN_INITIAL_PASSWORD`；日志出现初始化成功后立即删除该变量。该 SQL 会先禁用原密码，应在可控维护窗口执行。
 
-关于页的新字段可在后台“个人中心 → 站点信息”填写：`roleTitle`、`userBio`、`aboutContent`、`aboutSkills`、`aboutTimeline`。成长轨迹每行格式为 `时间|标题|描述`。
+关于页已恢复原有默认内容；后台“个人中心 → 站点信息”只保留原有的技术栈标签配置，不再提供职业标题、个人简介、关于正文和成长轨迹编辑项。
 
 ## 必须轮换的凭据
 
