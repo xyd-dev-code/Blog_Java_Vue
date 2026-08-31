@@ -18,8 +18,8 @@ import { useInkInteractions } from '@/composables/useInkInteractions'
 import { useWuxiaCopy } from '@/composables/useWuxiaCopy'
 
 const route = useRoute()
-const { isWuxiaPage } = useWuxiaCopy()
-const uiLocale = computed(() => isWuxiaPage.value ? {
+const { isWuxiaPage, isWuxiaCopyEnabled } = useWuxiaCopy()
+const uiLocale = computed(() => isWuxiaCopyEnabled.value ? {
   ...zhCn,
   el: { ...zhCn.el, table: { ...zhCn.el.table, emptyText: '暂无卷宗' } },
 } : zhCn)

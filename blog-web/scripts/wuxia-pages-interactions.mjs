@@ -71,10 +71,10 @@ try {
   await page.screenshot({ path: resolve(output, 'login.png') })
 
   for (const [path, labels] of [
-    ['/admin/articles',['秘籍名录','秘籍门派','标签']],
-    ['/admin/comments',['论剑','举报']],
-    ['/admin/projects',['兵谱名录','兵谱门类']],
-    ['/admin/tools',['兵器名录','兵器门类']],
+    ['/admin/articles',['文章列表','文章分类','标签']],
+    ['/admin/comments',['评论','举报']],
+    ['/admin/projects',['项目列表','项目分类']],
+    ['/admin/tools',['工具列表','工具分类']],
   ]) {
     await ready(path)
     for (const label of labels) {
@@ -87,8 +87,8 @@ try {
   await ready('/tools')
   await page.getByRole('button', { name: '菜单', exact: true }).click()
   await page.locator('.drawer-panel').waitFor({ state: 'visible' })
-  await page.waitForFunction(() => document.querySelector('.drawer-link[href="/articles"]')?.textContent.trim() === '秘籍')
-  check('mobile themed menu', (await page.locator('.drawer-link[href="/articles"]').innerText()).trim() === '秘籍')
+  await page.waitForFunction(() => document.querySelector('.drawer-link[href="/articles"]')?.textContent.trim() === '文章')
+  check('mobile menu keeps original copy', (await page.locator('.drawer-link[href="/articles"]').innerText()).trim() === '文章')
   await page.screenshot({ path: resolve(output, 'mobile-menu.png') })
   await page.locator('.drawer-link[href="/articles"]').click()
   await page.waitForURL('**/articles')

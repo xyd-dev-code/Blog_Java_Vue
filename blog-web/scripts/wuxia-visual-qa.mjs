@@ -62,16 +62,21 @@ try {
     await page.waitForURL('**/articles')
 
     // Full theme transitions are driven through the real store, without saving
-    // admin settings. Verify presentation copy and media do not leak into sunny.
+    // admin settings. The configured motto must survive both theme transitions.
     await page.goto('http://localhost:5173/', { waitUntil: 'domcontentloaded' })
     await page.locator('.sky-hero').waitFor()
+    const configuredMotto = await page.evaluate(async () => {
+      const site = (await import('/src/stores/site.js')).useSiteStore()
+      await site.load()
+      return site.info?.motto || '春山可望'
+    })
     await page.evaluate(async () => (await import('/src/stores/theme.js')).useThemeStore().setTheme('sunny'))
-    await page.waitForFunction(() => document.querySelector('.title-accent').textContent !== '仗剑天涯')
-    assert.notEqual(await page.locator('.title-accent').textContent(), '仗剑天涯')
+    await page.waitForFunction(motto => document.querySelector('.title-accent').textContent.trim() === motto, configuredMotto)
+    assert.equal((await page.locator('.title-accent').textContent()).trim(), configuredMotto)
     assert.equal(await page.locator('.wuxia-duelist video').count(), 0)
     await page.evaluate(async () => (await import('/src/stores/theme.js')).useThemeStore().setTheme('ink'))
-    await page.waitForFunction(() => document.querySelector('.title-accent').textContent === '仗剑天涯')
-    assert.equal(await page.locator('.title-accent').textContent(), '仗剑天涯')
+    await page.waitForFunction(motto => document.querySelector('.title-accent').textContent.trim() === motto, configuredMotto)
+    assert.equal((await page.locator('.title-accent').textContent()).trim(), configuredMotto)
     assert.equal(await page.locator('.wuxia-duelist video').count(), 0)
     await page.emulateMedia({ reducedMotion: 'no-preference' })
     // The completed outline is a still asset. Motion preferences must not
