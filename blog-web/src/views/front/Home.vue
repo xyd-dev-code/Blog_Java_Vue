@@ -120,8 +120,8 @@ const tags = ref([])
 
 const heroTitle = computed(() => {
   const name = siteStore.info?.siteName || 'MyBlog'
-  // Theme copy is presentational; the administrator's motto remains untouched in the header/config.
-  const motto = isWuxia.value ? '仗剑天涯' : (siteStore.info?.motto || '春山可望')
+  // 所有主题共用后台配置的副标题，主题只控制展示样式。
+  const motto = siteStore.info?.motto || '春山可望'
   return { main: name, accent: motto }
 })
 

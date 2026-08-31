@@ -121,7 +121,8 @@ const updatePageTitle = (to) => {
   if (typeof custom === 'string' && custom) {
     document.title = custom
   } else if (pageName) {
-    const themed = to.path !== '/' && document.documentElement.dataset.theme === 'ink'
+    const themed = to.path !== '/' && !/^\/admin(?:\/|$)/i.test(to.path)
+      && document.documentElement.dataset.theme === 'ink'
     document.title = `${themed ? (wuxiaCopy[pageName] || pageName) : pageName} · ${SITE_NAME}`
   } else {
     document.title = SITE_NAME

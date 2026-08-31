@@ -181,20 +181,9 @@ html[data-theme='ink'] {
     visibility: visible;
   }
 
-  /* 所有内页共享江湖画卷；首页仅补精选及后续内容区，首屏保持原样。
-     固定背景使用同一视口坐标，滚动长页或跨 section 时不会重起一张画。 */
-  .front-layout:not(:has(.home-sky)),
-  .home-sky > .section,
-  .admin-layout,
-  .notfound {
+  /* 首页保留上一版画卷；内页在文件末尾单独按页面定义纯 CSS 背景。 */
+  .home-sky > .section {
     @include wuxia-page-backdrop;
-  }
-
-  // 阅读页和后台只在页面空白处留淡墨，卡片、表格与正文表面不动。
-  .front-layout:has(.article-detail),
-  .admin-layout {
-    --wuxia-scene-edge: .76;
-    --wuxia-scene-center: .98;
   }
 
   .gradient-border-card {
@@ -553,8 +542,8 @@ html[data-theme='ink'] {
    圆角或伪元素内容。根节点标记同时约束 body 下的 Teleport 弹层；
    回到首页或切回晴天时整组规则立即失效。 */
 html[data-theme='ink']:has(.app-root[data-wuxia-page]) {
-  --wuxia-paper-grain: linear-gradient(rgba(var(--theme-paper-rgb), .95), rgba(var(--theme-paper-rgb), .95)),
-    url('/images/ink-paper-texture-v2.png');
+  --wuxia-paper-grain: repeating-linear-gradient(8deg,
+    rgba(var(--theme-ink-rgb), .012) 0 1px, transparent 1px 6px);
   --wuxia-scroll-edge: linear-gradient(90deg,
     rgba(var(--theme-ink-rgb), .08), transparent 2.5% 97.5%, rgba(var(--theme-ink-rgb), .08));
   --wuxia-sword-glint: linear-gradient(118deg,
@@ -616,9 +605,6 @@ html[data-theme='ink']:has(.app-root[data-wuxia-page]) {
     border-color: var(--c-line);
   }
 
-  .login-page {
-    @include wuxia-page-backdrop;
-  }
 
   :is(.el-input__wrapper, .el-textarea__inner, .el-select__wrapper) {
     background-image: var(--wuxia-paper-grain);
@@ -726,6 +712,267 @@ html[data-theme='ink']:has(.app-root[data-wuxia-page]) {
   0% { opacity: 0; transform: scale(0.12); }
   28% { opacity: 1; }
   100% { opacity: 0; transform: scale(1); }
+}
+
+/* 内页背景目录。所有参数仅用于绘制，首页、内容 DOM、排版指标均不参与。
+   场景复用已有透明水墨插画，纸纹由 CSS 绘制；不新增图片资源。 */
+@mixin wuxia-page-scene($angle, $tone, $entry, $exit, $pitch, $grain-angle: 0deg, $breath: 68%) {
+  --wuxia-page-angle: #{$angle};
+  --wuxia-page-tint: var(#{$tone});
+  --wuxia-page-entry: #{$entry};
+  --wuxia-page-exit: #{$exit};
+  --wuxia-page-pitch: #{$pitch};
+  --wuxia-page-grain-angle: #{$grain-angle};
+  --wuxia-page-breath: #{$breath};
+}
+
+@mixin wuxia-distinct-backdrop {
+  background-color: var(--wuxia-page-base, var(--c-paper)) !important;
+  background-image:
+    var(--wuxia-scene-grain, repeating-linear-gradient(7deg, rgba(var(--theme-ink-rgb), .018) 0 var(--wuxia-page-line), transparent var(--wuxia-page-line) 5px)),
+    var(--wuxia-page-safe-wash, linear-gradient(90deg,
+      rgba(var(--theme-paper-rgb), .22), rgba(var(--theme-paper-rgb), .62) 12%,
+      rgba(var(--theme-paper-rgb), .96) 32% 68%, rgba(var(--theme-paper-rgb), .6) 88%, rgba(var(--theme-paper-rgb), .2))),
+    linear-gradient(180deg, rgba(var(--theme-paper-rgb), .26), transparent 20% 72%, rgba(var(--theme-paper-rgb), .5)),
+    radial-gradient(ellipse 44% 40% at var(--wuxia-page-entry), rgba(var(--wuxia-page-tint), .07), transparent 80%),
+    var(--wuxia-scene-foliage, none),
+    var(--wuxia-scene-near, url('/images/wuxia-jianghu-border.webp')),
+    var(--wuxia-scene-far, url('/images/ink-mountain-layer-v2.png')),
+    linear-gradient(var(--wuxia-page-angle), rgba(var(--wuxia-page-tint), .08), transparent 48%, rgba(var(--wuxia-page-tint), .04));
+  background-repeat: no-repeat;
+  background-size: auto, 100% 100%, 100% 100%, 100% 100%,
+    var(--wuxia-foliage-size, 360px auto), var(--wuxia-near-size, max(100%, 1560px) auto),
+    var(--wuxia-far-size, max(100%, 1440px) auto), 100% 100%;
+  background-position: center, center, center, center,
+    var(--wuxia-foliage-position, right -80px top 10vh),
+    var(--wuxia-near-position, center bottom -2vh), var(--wuxia-far-position, center top 10vh), center;
+  background-attachment: fixed;
+  background-blend-mode: normal, normal, normal, normal, luminosity, luminosity, luminosity, normal;
+}
+
+html[data-theme='ink']:has(.app-root[data-wuxia-page]) {
+  --wuxia-page-line: 1px;
+  --wuxia-page-pattern-alpha: .028;
+  --wuxia-nav-surface-alpha: .98;
+  // These describe the existing stacking contract; no z-index is overridden.
+  --wuxia-layer-navigation: 100;
+  --wuxia-layer-content: 1;
+  --wuxia-layer-decoration: -1;
+  @include wuxia-page-scene(120deg, --theme-primary-rgb, 0% 0%, 100% 100%, 40px);
+
+  .front-layout:not(:has(.home-sky)), .admin-layout, .login-page, .notfound {
+    @include wuxia-distinct-backdrop;
+  }
+  .admin-layout {
+    --wuxia-scene-grain: var(--wuxia-page-pattern, repeating-linear-gradient(var(--wuxia-page-grain-angle),
+      rgba(var(--wuxia-page-tint), .02) 0 var(--wuxia-page-line), transparent var(--wuxia-page-line) var(--wuxia-page-pitch)));
+    --wuxia-near-position: right -12vw bottom -12vh;
+    --wuxia-far-position: left -28vw top 4vh;
+  }
+
+  .front-layout:has(.front-main > .articles-page) {
+    // 藏书山阁：客栈近景压左下，远山自右上隐入纸面。
+    @include wuxia-page-scene(118deg, --theme-primary-rgb, 0% 0%, 100% 100%, 32px, 0deg, 70%);
+    --wuxia-near-size: max(115%, 1560px) auto;
+    --wuxia-near-position: left -80px bottom -6vh;
+    --wuxia-far-position: right -180px top 8vh;
+    --wuxia-far-size: max(110%, 1680px) auto;
+  }
+  .front-layout:has(.front-main > .article-detail) {
+    // 阅读：撤去客栈近景，只让远山从页面底部透出。
+    @include wuxia-page-scene(90deg, --theme-primary-rgb, 0% 40%, 0% 100%, 112px, 90deg, 88%);
+    --wuxia-page-pattern-alpha: .018;
+    --wuxia-scene-near: none;
+    --wuxia-far-position: center bottom;
+  }
+  .front-layout:has(.front-main > .category-page) {
+    @include wuxia-page-scene(145deg, --theme-cyan-rgb, 0% 0%, 100% 90%, 64px, 90deg, 74%);
+  }
+  .front-layout:has(.front-main > .tag-page) {
+    @include wuxia-page-scene(35deg, --theme-plum-rgb, 100% 0%, 0% 90%, 56px, 35deg, 72%);
+  }
+  .front-layout:has(.front-main > .proj-page) {
+    // 剑门叠嶂：右上主峰与左下山门形成对角取景，不再铺规则斜带。
+    @include wuxia-page-scene(132deg, --theme-accent-rgb, 100% 0%, 0% 100%, 160px, 132deg, 68%);
+    --wuxia-far-size: max(100%, 1440px) auto;
+    --wuxia-far-position: right -25vw top 5vh;
+    --wuxia-near-size: max(140%, 1800px) auto;
+    --wuxia-near-position: left -32vw bottom -8vh;
+    --wuxia-page-safe-wash: linear-gradient(90deg, rgba(var(--theme-paper-rgb), .55),
+      rgba(var(--theme-paper-rgb), .97) 12% 38%, rgba(var(--theme-paper-rgb), .72) 57%,
+      rgba(var(--theme-paper-rgb), .32) 80%, rgba(var(--theme-paper-rgb), .22));
+  }
+  .front-layout:has(.front-main > .tools-page) {
+    @include wuxia-page-scene(180deg, --theme-weather-blue-rgb, 50% 0%, 100% 100%, 28px, 90deg, 64%);
+    --wuxia-scene-foliage: url('/images/ink-foliage-right-v2.png');
+    --wuxia-foliage-position: right -90px top -8vh;
+    --wuxia-foliage-size: auto 120vh;
+    --wuxia-scene-near: none;
+    --wuxia-far-position: left -32vw bottom 0;
+    --wuxia-far-size: max(140%, 1800px) auto;
+  }
+  .front-layout:has(.front-main > .friends-page) {
+    @include wuxia-page-scene(155deg, --theme-cyan-rgb, 0% 20%, 100% 80%, 52px, 0deg, 72%);
+    --wuxia-near-size: max(130%, 1900px) auto;
+    --wuxia-near-position: left 0 bottom -12vh;
+    --wuxia-far-position: right -38vw top 0;
+    --wuxia-far-size: max(100%, 1400px) auto;
+  }
+  .front-layout:has(.front-main > .guestbook-page) {
+    @include wuxia-page-scene(165deg, --theme-accent-rgb, 100% 18%, 0% 100%, 36px, 0deg, 76%);
+    --wuxia-scene-foliage: url('/images/ink-foliage-left-v2.png');
+    --wuxia-foliage-position: left -90px top 5vh;
+    --wuxia-foliage-size: auto 120vh;
+    --wuxia-near-position: right -26vw bottom -5vh;
+    --wuxia-near-size: max(140%, 1900px) auto;
+    --wuxia-scene-far: none;
+  }
+  .front-layout:has(.front-main > .about-page) {
+    @include wuxia-page-scene(42deg, --theme-plum-rgb, 0% 0%, 100% 100%, 120px, 42deg, 80%);
+    --wuxia-scene-foliage: url('/images/ink-foliage-left-v2.png');
+    --wuxia-foliage-position: left -12vw top -10vh;
+    --wuxia-foliage-size: auto 125vh;
+    --wuxia-scene-near: none;
+    --wuxia-far-position: right -25vw bottom -28vh;
+    --wuxia-far-size: max(125%, 1680px) auto;
+  }
+  .front-layout:has(.front-main > .archives-page) {
+    @include wuxia-page-scene(90deg, --theme-accent-dark-rgb, 0% 30%, 0% 100%, 88px, 90deg, 82%);
+  }
+  .front-layout:has(.front-main > .search-page) {
+    @include wuxia-page-scene(210deg, --theme-weather-blue-rgb, 100% 0%, 0% 90%, 96px, 0deg, 82%);
+    --wuxia-scene-near: none;
+    --wuxia-far-position: right -18vw bottom -10vh;
+  }
+  .notfound {
+    @include wuxia-page-scene(180deg, --theme-primary-rgb, 50% 100%, 100% 100%, 240px, 0deg, 90%);
+    --wuxia-scene-near: none;
+    --wuxia-far-position: center bottom -14vh;
+  }
+  .login-page {
+    @include wuxia-page-scene(135deg, --theme-primary-deep-rgb, 0% 0%, 100% 100%, 96px, 135deg, 72%);
+    --wuxia-near-position: center bottom -7vh;
+    --wuxia-far-position: right -25vw top 2vh;
+  }
+
+  // 管理页沿用同一纸墨语汇，密度低于工具页，按工作性质区分。
+  .admin-layout:has(.admin-content > .dashboard) {
+    @include wuxia-page-scene(135deg, --theme-cyan-rgb, 100% 0%, 0% 100%, 72px, 90deg, 78%);
+  }
+  .admin-layout:has(.admin-content > .article-mgmt-page) {
+    @include wuxia-page-scene(110deg, --theme-primary-rgb, 0% 0%, 100% 100%, 40px, 0deg, 80%);
+  }
+  .admin-layout:has(.admin-content > .admin-archives-page) {
+    @include wuxia-page-scene(90deg, --theme-accent-dark-rgb, 0% 20%, 0% 100%, 96px, 90deg, 84%);
+  }
+  .admin-layout:has(.admin-content > .article-edit) {
+    @include wuxia-page-scene(180deg, --theme-primary-rgb, 50% 0%, 100% 100%, 144px, 0deg, 92%);
+  }
+  .admin-layout:has(.admin-content > .comment-mgmt-page) {
+    @include wuxia-page-scene(155deg, --theme-plum-rgb, 100% 0%, 0% 100%, 48px, 155deg, 80%);
+  }
+  .admin-layout:has(.admin-content > .gb-page) {
+    @include wuxia-page-scene(165deg, --theme-accent-rgb, 100% 20%, 0% 100%, 36px, 0deg, 82%);
+  }
+  .admin-layout:has(.admin-content > .project-mgmt-page) {
+    @include wuxia-page-scene(132deg, --theme-accent-rgb, 100% 0%, 0% 100%, 96px, 132deg, 80%);
+  }
+  .admin-layout:has(.admin-content > .tool-mgmt-page) {
+    @include wuxia-page-scene(180deg, --theme-weather-blue-rgb, 50% 0%, 100% 100%, 36px, 90deg, 78%);
+  }
+  .admin-layout:has(.admin-content > .fl-page) {
+    @include wuxia-page-scene(145deg, --theme-cyan-rgb, 0% 15%, 100% 100%, 60px, 145deg, 80%);
+  }
+  .admin-layout:has(.admin-content > .sub-page) {
+    @include wuxia-page-scene(25deg, --theme-plum-rgb, 100% 0%, 0% 100%, 64px, 25deg, 84%);
+  }
+  .admin-layout:has(.admin-content > .stats-page) {
+    @include wuxia-page-scene(180deg, --theme-weather-blue-rgb, 0% 0%, 100% 100%, 32px, 0deg, 82%);
+  }
+  .admin-layout:has(.admin-content > .theme-management) {
+    @include wuxia-page-scene(120deg, --theme-cyan-rgb, 0% 0%, 100% 100%, 120px, 120deg, 76%);
+    --wuxia-page-pattern: linear-gradient(120deg, rgba(var(--theme-cyan-rgb), .05) 0 32%,
+      transparent 32% 68%, rgba(var(--theme-accent-rgb), .05) 68%);
+  }
+  .admin-layout:has(.admin-content > .profile-page) {
+    @include wuxia-page-scene(45deg, --theme-plum-rgb, 0% 0%, 100% 100%, 128px, 45deg, 86%);
+  }
+
+  .app-header .nav-inner {
+    background-color: rgba(var(--theme-paper-rgb), var(--wuxia-nav-surface-alpha));
+    background-image: var(--wuxia-paper-grain);
+  }
+
+  // background-clip:text can paint the hidden source glyphs behind the artwork.
+  // Clear only the old gradient after the lettering is ready; fallback text stays intact.
+  .hg-title:has(.wuxia-heading-lettering.is-ready) { background: none; }
+
+  // These are existing, absolutely positioned background decorations, not content.
+  // Hide the sunny clouds / geometric light effects without removing their nodes.
+  .tools-page .hero-bg,
+  .hero-about :is(.ha-aura, .ha-beam, .ha-shapes, .ha-dust, .ha-light-scan),
+  .hero-articles :is(.ha-beam, .ha-page, .ha-sun-spot),
+  .hero-friends :is(.hf-constellation, .hf-glow) { opacity: 0; }
+
+  // 无封面文章不应沿用照片的暗色遮罩，否则深色标题会失去对比度。
+  .art-hero:not(.has-cover) .hero-cover-mask { background: none; }
+  .art-hero:not(.has-cover) {
+    background: linear-gradient(90deg, var(--c-paper-soft), var(--c-white) 30% 80%, var(--c-paper));
+  }
+  .art-hero.has-cover .hero-cover-mask {
+    background: linear-gradient(180deg, rgba(var(--theme-black-rgb), .86), rgba(var(--theme-black-rgb), .9));
+  }
+
+  // 这些既有页头使用浅色文字，保留深底，只替换背景角度与色阶。
+  .category-page .sky-page-head {
+    background: repeating-linear-gradient(90deg, transparent 0 63px, rgba(var(--theme-paper-rgb), .035) 63px 64px),
+      linear-gradient(145deg, var(--c-ink-900), var(--c-cyan-800));
+  }
+  .tag-page .sky-page-head {
+    background: repeating-linear-gradient(35deg, transparent 0 55px, rgba(var(--theme-paper-rgb), .035) 55px 56px),
+      linear-gradient(35deg, var(--c-ink-900), var(--c-plum-500));
+  }
+  .archives-page .sky-page-head {
+    background: repeating-linear-gradient(90deg, transparent 0 87px, rgba(var(--theme-paper-rgb), .03) 87px 88px),
+      linear-gradient(90deg, var(--c-ink-900), var(--c-brown-text));
+  }
+
+  @media (min-resolution: 2dppx) { --wuxia-page-line: .5px; }
+  @media (min-resolution: 3dppx) { --wuxia-page-line: .333333px; }
+  @media (max-width: 768px) {
+    --wuxia-page-pattern-alpha: .018;
+    .front-layout:not(:has(.home-sky)), .admin-layout, .login-page, .notfound {
+      // Pattern pitch stays in CSS px; no bitmap enlargement or layout changes.
+      background-attachment: scroll;
+      --wuxia-near-size: 1000px auto;
+      --wuxia-near-position: right -130px top 32vh;
+      --wuxia-far-size: 1100px auto;
+      --wuxia-far-position: right -170px top 5vh;
+      --wuxia-foliage-size: auto 110vh;
+      --wuxia-foliage-position: right -85vw top 4vh;
+      --wuxia-page-safe-wash: linear-gradient(90deg, rgba(var(--theme-paper-rgb), .35),
+        rgba(var(--theme-paper-rgb), .94) 24% 76%, rgba(var(--theme-paper-rgb), .3));
+    }
+    .front-layout:has(.front-main > .guestbook-page) { --wuxia-foliage-position: left -110vw top 6vh; }
+    .front-layout:has(.front-main > .about-page) { --wuxia-foliage-position: left -110vw top -6vh; }
+  }
+  @media (prefers-color-scheme: dark) {
+    // 背景限定的夜间方案：暗色画布 + 明亮阅读面。禁止反转既有文字色。
+    --wuxia-page-base: var(--c-ink-950);
+    --wuxia-page-rest: var(--c-ink-900);
+    --wuxia-night-wash: linear-gradient(90deg, transparent,
+      rgba(var(--theme-paper-rgb), .96) max(6px, calc((100% - 1280px) / 2)),
+      rgba(var(--theme-paper-rgb), .96) min(calc(100% - 6px), calc((100% + 1280px) / 2)), transparent);
+    .front-layout:not(:has(.home-sky)), .admin-layout, .login-page, .notfound {
+      --wuxia-page-safe-wash: var(--wuxia-night-wash);
+    }
+    --wuxia-nav-surface-alpha: 1;
+  }
+  @media print {
+    .front-layout:not(:has(.home-sky)), .admin-layout, .login-page, .notfound {
+      background: var(--c-white) !important;
+    }
+  }
 }
 
 @keyframes ink-mountain-breathe {

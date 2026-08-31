@@ -9,8 +9,10 @@ export function useWuxiaCopy() {
   const route = useRoute()
   const theme = useThemeStore()
   const isWuxiaPage = computed(() => theme.activeThemeId === 'ink' && route.path !== '/')
+  // Admin keeps the theme's visuals, but always uses the original UI wording.
+  const isWuxiaCopyEnabled = computed(() => isWuxiaPage.value && !/^\/admin(?:\/|$)/i.test(route.path))
   const wx = (original, themed = wuxiaCopy[original] ?? original) => (
-    isWuxiaPage.value ? themed : original
+    isWuxiaCopyEnabled.value ? themed : original
   )
-  return { wx, isWuxiaPage }
+  return { wx, isWuxiaPage, isWuxiaCopyEnabled }
 }
