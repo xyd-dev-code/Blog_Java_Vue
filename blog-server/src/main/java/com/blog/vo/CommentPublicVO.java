@@ -29,6 +29,10 @@ public class CommentPublicVO {
     private String articleTitle;
     private String parentName;
     private List<CommentPublicVO> replies;
+    private boolean hasMoreReplies;
+
+    public boolean isHasMoreReplies() { return hasMoreReplies; }
+    public void setHasMoreReplies(boolean hasMoreReplies) { this.hasMoreReplies = hasMoreReplies; }
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }

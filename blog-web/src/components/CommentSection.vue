@@ -1,6 +1,6 @@
 <template>
   <section class="comment-section">
-    <h3 class="cs-title">{{ wx('评论') }} <span class="cs-count">({{ total }})</span></h3>
+    <h3 class="cs-title">{{ wx('评论') }} <span class="cs-count">(已加载 {{ total }})</span></h3>
 
     <!-- 首次加载骨架 -->
     <div class="comment-list skeleton-list" v-if="loading && !tree.length">
@@ -26,17 +26,20 @@
       <el-empty :description="wx('还没有评论，来抢沙发吧～')" />
     </div>
 
+    <el-button v-if="hasMoreComments" :loading="loading" @click="load(true)">加载更多评论</el-button>
+    <p v-if="!allowComment" role="status">文章已关闭评论</p>
+
     <!-- 触发式写评论：默认只显示「我来说一句」按钮 -->
-    <div class="comment-trigger" v-if="!formExpanded">
+    <div class="comment-trigger" v-if="allowComment && !formExpanded">
       <el-button type="primary" round class="trigger-btn" @click="openForm">
         <el-icon><EditPen /></el-icon>
         <span>{{ wx('我来说一句') }}</span>
       </el-button>
-      <span class="trigger-hint">已有 {{ total }} 条评论，期待你的声音</span>
+      <span class="trigger-hint">已加载 {{ total }} 条评论，期待你的声音</span>
     </div>
 
     <!-- 展开后的写评论表单 -->
-    <div class="comment-form" ref="formRef" v-else>
+    <div class="comment-form" ref="formRef" v-else-if="allowComment">
       <div class="form-header">
         <span class="form-title">{{ replyTo ? '回复 @' + replyTo.nickname : wx('写下你的评论') }}</span>
         <el-button link type="info" size="small" @click="closeForm" class="form-close">
@@ -56,7 +59,7 @@
             :show-file-list="false"
             :before-upload="beforeAvatarUpload"
             :http-request="uploadAvatar"
-            accept="image/png,image/jpeg,image/webp,image/gif"
+            accept="image/png,image/jpeg,image/gif"
           >
             <el-button size="small" :loading="avatarUploading">
               <el-icon><Plus /></el-icon>
@@ -114,17 +117,17 @@
 import { useWuxiaCopy } from '@/composables/useWuxiaCopy'
 const { wx } = useWuxiaCopy()
 
-import { ref, reactive, computed, onMounted, nextTick, onBeforeUnmount } from 'vue'
+import { ref, reactive, computed, watch, onMounted, nextTick, onBeforeUnmount } from 'vue'
 import { Close, Plus, EditPen, ChatLineRound, Loading } from '@element-plus/icons-vue'
 import { ElMessage, ElNotification } from 'element-plus'
 import { submitComment, commentsByArticle, getCaptcha } from '@/api/front'
 import { uploadAvatar as uploadAvatarApi } from '@/api/admin'
 import CommentItem from '@/components/CommentItem.vue'
 
-const props = defineProps({ articleId: { type: Number, required: true } })
+const props = defineProps({ articleId: { type: Number, required: true }, allowComment: { type: Boolean, default: true } })
 
 const tree = ref([])
-const total = ref(0)
+const total = computed(() => countTree(tree.value))
 const loading = ref(false)
 const submitting = ref(false)
 const replyTo = ref(null)
@@ -185,12 +188,12 @@ const revokeLocal = () => {
   }
 }
 const beforeAvatarUpload = (file) => {
-  if (file.size > 5 * 1024 * 1024) {
-    ElMessage.warning('头像不能超过 5MB')
+  if (file.size > 2 * 1024 * 1024) {
+    ElMessage.warning('头像不能超过 2MB')
     return false
   }
-  if (!file.type.startsWith('image/')) {
-    ElMessage.warning('请选择图片文件')
+  if (!['image/png', 'image/jpeg', 'image/gif'].includes(file.type)) {
+    ElMessage.warning('请选择 PNG、JPEG 或 GIF 图片')
     return false
   }
   // 选完文件立刻给一个本地预览,避免等 1-2 秒后端压缩完才显示
@@ -217,25 +220,38 @@ const clearAvatar = () => {
   revokeLocal()
 }
 
-const load = async () => {
+const commentPage = ref(1)
+const hasMoreComments = ref(false)
+let loadGeneration = 0
+const load = async (append = false) => {
+  if (loading.value && append) return
+  const generation = ++loadGeneration
+  if (!append) commentPage.value = 1
   if (!props.articleId) {
     tree.value = []
-    total.value = 0
+
+    loading.value = false
+    hasMoreComments.value = false
     return
   }
   loading.value = true
   try {
-    const resp = await commentsByArticle(props.articleId)
-    tree.value = resp.data || []
-    total.value = countTree(tree.value)
+    const resp = await commentsByArticle(props.articleId, { page: commentPage.value, size: 50 })
+    if (generation !== loadGeneration) return
+    const records = resp.data || []
+    tree.value = append ? [...tree.value, ...records] : records
+    hasMoreComments.value = records.length === 50
+    commentPage.value += 1
+
   } catch (e) {
-    ElMessage.error(wx('评论加载失败,稍后重试'))
+    if (generation === loadGeneration) ElMessage.error(wx('评论加载失败,稍后重试'))
   } finally {
-    loading.value = false
+    if (generation === loadGeneration) loading.value = false
   }
 }
 
 const onReply = (c) => {
+  if (!props.allowComment) return ElMessage.info('文章已关闭评论')
   replyTo.value = c
   form.parentId = c.id
   // 自动展开表单(若未展开)
@@ -315,7 +331,7 @@ const insertOptimistic = (c) => {
       tree.value.unshift(node)
     }
   }
-  total.value = countTree(tree.value)
+
   nextTick(() => {
     const el = document.getElementById(`comment-${c.id}`)
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
@@ -333,11 +349,18 @@ const findInTree = (arr, id) => {
   return null
 }
 
-onMounted(() => {
+watch(() => props.articleId, () => {
+  tree.value = []
+
+  hasMoreComments.value = false
+  cancelReply()
+  formExpanded.value = false
   load()
+}, { immediate: true })
+onMounted(() => {
   refreshCaptcha()   // 提前拉取，展开表单即显示
 })
-onBeforeUnmount(() => revokeLocal())
+onBeforeUnmount(() => { loadGeneration++; revokeLocal() })
 </script>
 
 <style scoped lang="scss">

@@ -103,7 +103,7 @@
 import { ref, computed, watch } from 'vue'
 import { UploadFilled, WarningFilled, Download } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
-import yaml from 'js-yaml'
+import { parseMarkdownInWorker } from '@/utils/markdownImportWorker'
 import { adminImportArticles, adminDownloadMarkdownTemplate, adminDownloadDocxTemplate, triggerDownload } from '@/api/admin'
 
 const props = defineProps({
@@ -124,6 +124,10 @@ async function onPickFile(file) {
   if (!file?.raw) return
   const f = file.raw
   const name = f.name || ''
+  if (f.size > 5 * 1024 * 1024 || rawByName.size >= 20) {
+    ElMessage.warning('每个文件最多 5MB，一次最多 20 个文件')
+    return
+  }
   rawByName.set(name, f)
   if (name.toLowerCase().endsWith('.zip')) {
     ElMessage.warning('暂不支持直接上传 zip,请先解压后选择其中的 .md / .docx')
@@ -158,8 +162,12 @@ async function onPickFile(file) {
     return
   }
 
-  const p = parseMd(name, text)
-  previews.value.push(p)
+  try {
+    const p = await parseMarkdownInWorker(name, text)
+    previews.value.push(p)
+  } catch (error) {
+    previews.value.push(mkErr(name, error.message || '解析失败'))
+  }
 }
 
 function mkErr(filename, msg) {
@@ -175,46 +183,6 @@ function mkErr(filename, msg) {
   }
 }
 
-function parseMd(filename, text) {
-  text = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n')
-  let body = text
-  let fm = {}
-  if (text.startsWith('---\n') || text.startsWith('---\r\n')) {
-    const firstNl = text.indexOf('\n')
-    const secondDash = text.indexOf('\n---', firstNl + 1)
-    if (secondDash > 0) {
-      const fmRaw = text.substring(firstNl + 1, secondDash)
-      body = text.substring(secondDash + 4)
-      if (body.startsWith('\n')) body = body.substring(1)
-      try {
-        const parsed = yaml.load(fmRaw)
-        if (parsed && typeof parsed === 'object') fm = parsed
-      } catch (e) {
-        return {
-          filename, status: 'err', error: `YAML 解析失败: ${e.message}`,
-          existed: false, title: filename, category: '', tags: [], bodyLength: body.length
-        }
-      }
-    }
-  }
-
-  const title = (fm.title && String(fm.title).trim()) || filename.replace(/\.md$/i, '')
-  const slug = fm.slug ? String(fm.slug) : ''
-  const category = fm.category ? String(fm.category) : ''
-  const tags = Array.isArray(fm.tags) ? fm.tags.filter(t => t != null).map(String) : []
-
-  return {
-    filename,
-    status: 'ok',
-    title,
-    slug,
-    category,
-    tags,
-    bodyLength: body.length,
-    existed: false,        // 前端**只**展示;真伪由后端权威判定
-    error: ''
-  }
-}
 
 const hasError = computed(() => previews.value.some(p => p.status === 'err'))
 

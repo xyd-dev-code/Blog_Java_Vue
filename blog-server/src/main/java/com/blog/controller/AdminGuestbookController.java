@@ -31,7 +31,7 @@ public class AdminGuestbookController {
                                  @RequestParam(required = false) @Min(0) @Max(2) Integer status) {
         Page<Comment> p = Page.of(page, size);
         LambdaQueryWrapper<Comment> w = new LambdaQueryWrapper<Comment>()
-                .eq(Comment::getArticleId, CommentService.GUESTBOOK_ARTICLE_ID)
+                .eq(Comment::getTargetType, CommentService.GUESTBOOK)
                 .orderByDesc(Comment::getCreateTime);
         if (status != null) w.eq(Comment::getStatus, status);
         Page<Comment> result = commentService.page(p, w);

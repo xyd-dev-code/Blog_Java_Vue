@@ -89,6 +89,8 @@
       <!-- 正文（与后台 MdEditor 渲染一致） -->
       <article ref="contentRef" class="art-content md-preview-wrap">
         <MdPreview
+          :sanitize="sanitizeMarkdown"
+          :sanitize-mermaid="sanitizeDiagram"
           :model-value="article.content"
           v-bind="previewProps"
         />
@@ -123,7 +125,7 @@
 
       <RelatedArticles :list="related" />
 
-      <CommentSection :article-id="article.id" />
+      <CommentSection :article-id="article.id" :allow-comment="article.allowComment === 1" />
       </div>
     </div>
   </div>
@@ -141,6 +143,7 @@ import { useRoute } from 'vue-router'
 import { Calendar, View, ChatDotRound, Folder } from '@element-plus/icons-vue'
 import { articleBySlug } from '@/api/front'
 import { MdPreview } from 'md-editor-v3'
+import { sanitizeMarkdown, sanitizeDiagram } from '@/utils/markdownSecurity'
 import 'md-editor-v3/lib/preview.css'
 import { fmtDate } from '@/utils/format'
 import { useAuthor } from '@/composables/useAuthor'

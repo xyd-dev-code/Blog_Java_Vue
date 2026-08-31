@@ -61,12 +61,11 @@ http.interceptors.response.use(
     const msg = status >= 500 ? '服务暂时不可用,请稍后再试'
       : (err.response?.data?.message || err.message || '网络错误')
     if (silent) return Promise.reject(err)
-    // 401 一律视为会话过期;403 在 admin 路径上也按会话过期处理
-    // (后端若未配 AuthenticationEntryPoint,过期 token 会落到 403,这里兜底)
-    const isAuthFailure = status === 401 || (status === 403 && url.includes('/admin/'))
+    // 只有需要登录的接口返回 401 才清理会话；403 表示权限不足。
+    const isAuthFailure = status === 401 && (url.startsWith('/admin/') || url.startsWith('/auth/'))
     if (isAuthFailure) {
       const userStore = useUserStore()
-      userStore.logout()
+      userStore.clearSession()
       router.push('/admin/login')
       ElMessage.error('登录已过期，请重新登录')
     } else {

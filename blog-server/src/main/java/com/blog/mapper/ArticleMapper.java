@@ -22,14 +22,11 @@ public interface ArticleMapper extends BaseMapper<Article> {
     @Update("UPDATE article SET view_count = GREATEST(0, view_count + #{delta}) WHERE id = #{id}")
     int incrByView(@Param("id") Long id, @Param("delta") long delta);
 
-    @Select("SELECT slug FROM article WHERE id = #{id}")
-    String findSlugById(@Param("id") Long id);
-
     @Select("SELECT DATE_FORMAT(publish_time, '%Y-%m') AS ym, COUNT(*) AS cnt " +
-            "FROM article WHERE status = 1 AND deleted = 0 AND publish_time IS NOT NULL " +
+            "FROM article WHERE status = 1 AND deleted = 0 AND (password IS NULL OR password = '') AND publish_time IS NOT NULL " +
             "GROUP BY ym ORDER BY ym DESC")
     List<Map<String, Object>> archiveStats();
 
-    @Select("SELECT COALESCE(SUM(view_count), 0) FROM article WHERE status = 1 AND deleted = 0")
+    @Select("SELECT COALESCE(SUM(view_count), 0) FROM article WHERE status = 1 AND deleted = 0 AND (password IS NULL OR password = '')")
     Long sumViews();
 }

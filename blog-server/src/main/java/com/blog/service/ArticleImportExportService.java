@@ -40,7 +40,13 @@ public class ArticleImportExportService {
     private final CategoryMapper categoryMapper;
     private final TagMapper tagMapper;
     private final PandocRunner pandocRunner;
-    private final Yaml yaml = new Yaml();
+    private static Yaml newYaml() {
+        org.yaml.snakeyaml.LoaderOptions options = new org.yaml.snakeyaml.LoaderOptions();
+        options.setCodePointLimit(20_000);
+        options.setMaxAliasesForCollections(10);
+        options.setNestingDepthLimit(20);
+        return new Yaml(new org.yaml.snakeyaml.constructor.SafeConstructor(options));
+    }
 
     public ArticleImportExportService(ArticleMapper articleMapper,
                                       ArticleService articleService,
@@ -60,7 +66,7 @@ public class ArticleImportExportService {
     public String exportOneAsString(Long id) {
         Article a = articleService.detailById(id);
         Map<String, Object> fm = buildFrontMatter(a);
-        String yamlStr = yaml.dump(fm);
+        String yamlStr = newYaml().dump(fm);
         String body = a.getContent() == null ? "" : a.getContent();
         if (!body.startsWith("\n")) body = "\n" + body;
         return "---\n" + yamlStr + "---\n" + body;
@@ -85,15 +91,20 @@ public class ArticleImportExportService {
     /** 全部文章打包成 zip,文件名 {slug}.{ext} 或 article-{id}.{ext} */
     public byte[] exportAllAsZip(ExportFormat fmt) throws IOException {
         ExportFormat f = fmt == null ? ExportFormat.MD : fmt;
-        List<Article> all = articleMapper.selectList(null);
+        List<Article> all = articleMapper.selectList(new LambdaQueryWrapper<Article>().select(Article::getId, Article::getSlug)
+                .orderByAsc(Article::getId).last("LIMIT 201"));
+        if (all.size() > 200) throw new BizException("一次最多导出 200 篇，请分批导出");
+        long totalBytes = 0;
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         try (ZipOutputStream zos = new ZipOutputStream(baos, StandardCharsets.UTF_8)) {
             for (Article a : all) {
                 Long id = a.getId();
                 String slug = a.getSlug();
-                String base = StringUtils.hasText(slug) ? slug : ("article-" + id);
+                String base = slug != null && slug.matches("[a-zA-Z0-9_\\p{IsHan}-]{1,100}") ? slug + "-" + id : "article-" + id;
                 String entryName = base + "." + f.extension();
                 byte[] content = exportOne(id, f);
+                totalBytes += content.length;
+                if (totalBytes > 50 * 1024 * 1024) throw new BizException("导出内容超过 50MB，请分批导出");
                 ZipEntry entry = new ZipEntry(entryName);
                 entry.setSize(content.length);
                 zos.putNextEntry(entry);
@@ -174,9 +185,6 @@ System.out.println("hello, blog");
     public static class ParseResult {
         public ArticleDTO dto;
         public boolean existed;        // slug 命中已有文章
-        public Long existingId;        // 命中的 id(null 表示将新建)
-        public String frontMatterRaw;
-        public String bodyRaw;
         public String sourceFilename;
         // 已在 parseOne 里解析好的 front matter Map(供 upsert/preview 直接复用,避免重复 yaml.load)
         public Map<String, Object> parsedFrontMatter = Collections.emptyMap();
@@ -188,6 +196,7 @@ System.out.println("hello, blog");
      */
     @SuppressWarnings("unchecked")
     public ParseResult parseOne(byte[] content, String filename) {
+        if (content == null || content.length > 1_000_000) throw new BizException("Markdown 文件不能超过 1MB");
         ParseResult r = new ParseResult();
         r.sourceFilename = filename;
         String text = new String(content, StandardCharsets.UTF_8);
@@ -208,7 +217,7 @@ System.out.println("hello, blog");
                 body = text.substring(secondDash + 4);
                 if (body.startsWith("\n")) body = body.substring(1);
                 try {
-                    Object parsed = yaml.load(fmRaw);
+                    Object parsed = newYaml().load(fmRaw);
                     if (parsed instanceof Map) fm = (Map<String, Object>) parsed;
                 } catch (Exception e) {
                     throw new BizException("YAML 解析失败: " + e.getMessage());
@@ -235,7 +244,7 @@ System.out.println("hello, blog");
                 }
                 fmForYaml = fmClean.toString();
                 try {
-                    Object parsed = yaml.load(fmForYaml);
+                    Object parsed = newYaml().load(fmForYaml);
                     if (parsed instanceof Map) fm = (Map<String, Object>) parsed;
                 } catch (Exception e) {
                     // 解析失败不要整个挂掉,把它当成纯正文
@@ -246,8 +255,6 @@ System.out.println("hello, blog");
             }
         }
 
-        r.frontMatterRaw = fmRaw;
-        r.bodyRaw = body;
         r.parsedFrontMatter = fm;
 
         ArticleDTO dto = new ArticleDTO();
@@ -268,13 +275,12 @@ System.out.println("hello, blog");
 
         // 暂存 name 列表,upsert 时再转 ID
         r.dto = dto;
-        // 这里先按 slug 探测一次(existed 标记用于预览)
+        // 这里先按 slug 探测一次，供导入结果区分新增与更新。
         if (StringUtils.hasText(dto.getSlug())) {
             Article exist = articleMapper.selectOne(new LambdaQueryWrapper<Article>()
                     .eq(Article::getSlug, dto.getSlug()));
             if (exist != null) {
                 r.existed = true;
-                r.existingId = exist.getId();
             }
         }
         return r;
@@ -288,9 +294,11 @@ System.out.println("hello, blog");
     @CacheEvict(value = "articles", allEntries = true)
     public Article upsertWithFrontMatter(ParseResult r, Map<String, Object> fm) {
         ArticleDTO dto = r.dto;
+        articleService.validate(dto);
         // category name -> id(自动创建)
         Object catObj = fm == null ? null : fm.get("category");
         if (catObj != null && StringUtils.hasText(catObj.toString().trim())) {
+            if (catObj.toString().trim().length() > 50) throw new BizException("分类名称不能超过 50 字符");
             Long cid = findOrCreateCategory(catObj.toString().trim());
             dto.setCategoryId(cid);
         }
@@ -312,9 +320,10 @@ System.out.println("hello, blog");
                 tagNames.add(name);
             }
         }
+        if (tagNames.size() > 30 || tagNames.stream().anyMatch(name -> name.length() > 50)) throw new BizException("标签数量或名称长度超过限制");
         if (!tagNames.isEmpty()) {
             List<Long> ids = new ArrayList<>();
-            for (String name : tagNames) ids.add(findOrCreateTag(name));
+            for (String name : new java.util.LinkedHashSet<>(tagNames)) ids.add(findOrCreateTag(name));
             dto.setTagIds(ids);
         }
 
@@ -341,116 +350,15 @@ System.out.println("hello, blog");
      * 映射为 503),让用户得到明确提示 — 这比静默吞掉正文要好。
      */
     private Object[] prepareBytesForParsing(byte[] content, String filename) {
+        if (content == null || content.length > 5 * 1024 * 1024) throw new BizException("导入文件不能超过 5MB");
+        if (filename == null || !filename.toLowerCase(java.util.Locale.ROOT).matches(".*\\.(md|markdown|docx)$"))
+            throw new BizException("仅支持 md/markdown/docx 文件");
         if (filename != null && filename.toLowerCase().endsWith(".docx")) {
             String md = pandocRunner.docxToMarkdown(content);
             String newName = filename.replaceAll("\\.docx$", ".md");
             return new Object[] { md.getBytes(StandardCharsets.UTF_8), newName };
         }
         return new Object[] { content, filename };
-    }
-
-    /** docx 段落抽取结果:frontMatterRaw 是 key:value 段;bodyRaw 是剩余正文,前面拼个空行隔开 */
-    @Deprecated
-    static class ParsedDocx {
-        String frontMatterRaw = "";
-        String bodyRaw = "";
-    }
-
-    /**
-     * 兜底方法:把 .docx 解压,只读 word/document.xml,把每个 <w:p> 转成一行纯文本。
-     * 然后按"前若干个 key:value 行为 front matter,其余是 body"切分。
-     *
-     * 已被 pandoc 路径取代:该方法会把短正文(< 24 字无标点)误判为"装饰章节标题"吞掉,
-     * 也无法识别图片 / 表格 / 样式。保留仅作 pandoc 完全不可用时的最后手段,
-     * 正式 docx 导入请用 PandocRunner.docxToMarkdown。
-     */
-    @Deprecated
-    private static ParsedDocx parseDocxParagraphs(byte[] docxBytes) {
-        ParsedDocx out = new ParsedDocx();
-        if (docxBytes == null || docxBytes.length == 0) return out;
-        try (var zis = new java.util.zip.ZipInputStream(new java.io.ByteArrayInputStream(docxBytes))) {
-            java.util.zip.ZipEntry e;
-            byte[] documentXml = null;
-            while ((e = zis.getNextEntry()) != null) {
-                if ("word/document.xml".equals(e.getName())) {
-                    documentXml = zis.readAllBytes();
-                    break;
-                }
-            }
-            if (documentXml == null) return out;
-            javax.xml.parsers.DocumentBuilderFactory dbf = javax.xml.parsers.DocumentBuilderFactory.newInstance();
-            dbf.setNamespaceAware(false);
-            javax.xml.parsers.DocumentBuilder db = dbf.newDocumentBuilder();
-            org.w3c.dom.Document doc = db.parse(new java.io.ByteArrayInputStream(documentXml));
-            org.w3c.dom.NodeList paragraphs = doc.getElementsByTagName("w:p");
-            java.util.List<String> lines = new java.util.ArrayList<>();
-            for (int i = 0; i < paragraphs.getLength(); i++) {
-                StringBuilder sb = new StringBuilder();
-                org.w3c.dom.NodeList runs = paragraphs.item(i).getChildNodes();
-                for (int j = 0; j < runs.getLength(); j++) {
-                    org.w3c.dom.Node n = runs.item(j);
-                    if ("w:r".equals(n.getNodeName())) {
-                        org.w3c.dom.NodeList t = n.getChildNodes();
-                        for (int k = 0; k < t.getLength(); k++) {
-                            if ("w:t".equals(t.item(k).getNodeName())) {
-                                sb.append(t.item(k).getTextContent());
-                            }
-                        }
-                    } else if ("w:br".equals(n.getNodeName())) {
-                        sb.append('\n');
-                    }
-                }
-                lines.add(sb.toString());
-            }
-
-            // 切 front matter / body
-            // 算法:从前往后扫,
-            //   - 空白行 → 跳过(不终止 front matter)
-            //   - key: value → 收集
-            //   - 列表项 → 收集(限前几行)
-            //   - "短章节标题"(≤ 30 字,无句号/冒号)→ 跳过(视为装饰)
-            //   - 其它(明显正文)→ 终止 front matter,从此行起开始 body
-            StringBuilder fm = new StringBuilder();
-            StringBuilder body = new StringBuilder();
-            boolean pastFrontMatter = false;
-            int consecListItems = 0;
-            for (String line : lines) {
-                String trimmed = line.trim();
-                if (!pastFrontMatter) {
-                    if (trimmed.isEmpty()) {
-                        // 还没 front matter 就遇空行:跳过
-                        continue;
-                    }
-                    if (trimmed.matches("^[A-Za-z_][\\w-]*\\s*:.*")) {
-                        // 进入 front matter
-                        fm.append(trimmed).append('\n');
-                        consecListItems = 0;
-                        continue;
-                    }
-                    if (trimmed.matches("^[-*][\\s\\S].*") || trimmed.matches("^\\d+\\.[\\s\\S].*")) {
-                        // 列表项续 front matter(只在前几行)
-                        if (consecListItems++ < 8) {
-                            fm.append(trimmed).append('\n');
-                            continue;
-                        }
-                    }
-                    // 短章节标题(如"文章元数据"、"正文"、"Metadata"):< 24 字、无句末标点
-                    if (trimmed.length() < 24
-                            && !trimmed.matches(".*[.!?。！？;；,].*")
-                            && !trimmed.contains(":")) {
-                        continue; // 跳过,继续往下找 key:value
-                    }
-                    // 其它行:front matter 结束,从这里起开始 body
-                    pastFrontMatter = true;
-                }
-                body.append(line).append('\n');
-            }
-            out.frontMatterRaw = fm.toString().trim();
-            out.bodyRaw = body.toString().trim();
-        } catch (Exception ex) {
-            // 解析失败直接当成空,留给上一层兜底
-        }
-        return out;
     }
 
     /** 单文件批量导入入口(供 controller 直接调用) */
@@ -464,51 +372,6 @@ System.out.println("hello, blog");
         Article saved = upsertWithFrontMatter(r, fm);
         boolean updated = r.existed;
         return new ImportResult.Item(filename, saved.getTitle(), saved.getId(), updated);
-    }
-
-    /** 供 controller 解析预览(不写库)—— 给前端弹窗展示 */
-    public ParsePreview preview(byte[] content, String filename) {
-        Object[] prep = prepareBytesForParsing(content, filename);
-        ParseResult r = parseOne((byte[]) prep[0], (String) prep[1]);
-        Map<String, Object> fm = r.parsedFrontMatter == null ? Collections.emptyMap() : r.parsedFrontMatter;
-        ParsePreview p = new ParsePreview();
-        p.title = r.dto.getTitle();
-        p.slug = r.dto.getSlug();
-        p.category = fm.get("category") == null ? null : fm.get("category").toString();
-        p.tags = new ArrayList<>();
-        Object t = fm.get("tags");
-        if (t instanceof List) {
-            for (Object x : (List<?>) t) if (x != null) p.tags.add(x.toString());
-        } else if (t != null) {
-            for (String s : t.toString().split("[,,,;\\s]+")) {
-                String name = s.trim();
-                if (StringUtils.hasText(name)) p.tags.add(name);
-            }
-        }
-        p.status = r.dto.getStatus();
-        p.top = r.dto.getIsTop();
-        p.featured = r.dto.getIsFeatured();
-        p.allowComment = r.dto.getAllowComment();
-        p.bodyLength = r.bodyRaw == null ? 0 : r.bodyRaw.length();
-        p.existed = r.existed;
-        p.existingId = r.existingId;
-        p.sourceFilename = filename;
-        return p;
-    }
-
-    public static class ParsePreview {
-        public String title;
-        public String slug;
-        public String category;
-        public List<String> tags = new ArrayList<>();
-        public Integer status;
-        public Integer top;
-        public Integer featured;
-        public Integer allowComment;
-        public int bodyLength;
-        public boolean existed;
-        public Long existingId;
-        public String sourceFilename;
     }
 
     // ====================== 工具方法 ======================
@@ -578,7 +441,7 @@ System.out.println("hello, blog");
         //    终止条件:碰到 markdown 标题(以 # 开头)或其他非 fm 行,返回该位置
         while (pos < text.length()) {
             int eol = text.indexOf('\n', pos);
-            String line = nl < 0 ? text.substring(pos) : text.substring(pos, eol);
+            String line = eol < 0 ? text.substring(pos) : text.substring(pos, eol);
             String trimmed = line.trim();
             // 空行:可能是 fm 段之间的间隔,继续往下扫
             if (trimmed.isEmpty()) {

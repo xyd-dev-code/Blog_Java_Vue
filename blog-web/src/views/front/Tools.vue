@@ -164,11 +164,11 @@
 import { useWuxiaCopy } from '@/composables/useWuxiaCopy'
 const { wx } = useWuxiaCopy()
 
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { Clock, InfoFilled, StarFilled, Plus, WarningFilled } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { useRouter } from 'vue-router'
-import { publicTools, publicClickTool, publicHotTools, publicToolCategories } from '@/api/front'
+import { publicTools, publicClickTool, publicToolCategories } from '@/api/front'
 import TextReveal from '@/components/effects/TextReveal.vue'
 
 const router = useRouter()

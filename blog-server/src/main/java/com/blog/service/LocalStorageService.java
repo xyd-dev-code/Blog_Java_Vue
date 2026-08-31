@@ -65,19 +65,10 @@ public class LocalStorageService {
         return publicUrlPrefix + "/" + name;
     }
 
-    /** 从 URL 删除本地文件（容错，不存在也算成功）。 */
+    /** Content-addressed objects are shared; deleting a profile must not delete the underlying object. */
     public boolean deleteByUrl(String url) {
         if (!StringUtils.hasText(url)) return false;
-        if (!url.startsWith(publicUrlPrefix + "/")) return false;
-        String rel = url.substring(publicUrlPrefix.length() + 1);
-        Path target = baseDir.resolve(rel).normalize();
-        if (!target.startsWith(baseDir)) return false;
-        try {
-            return Files.deleteIfExists(target);
-        } catch (IOException e) {
-            log.warn("删除本地图片失败: {}", e.getClass().getSimpleName());
-            return false;
-        }
+        throw new com.blog.common.BizException(409, "共享媒体不能直接删除，请先核对引用并执行离线清理");
     }
 
     /**

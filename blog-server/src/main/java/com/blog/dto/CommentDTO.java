@@ -7,7 +7,9 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 public class CommentDTO {
-    @NotNull private Long articleId;
+    private Long articleId;
+    @NotNull @Pattern(regexp = "ARTICLE|GUESTBOOK")
+    private String targetType = "ARTICLE";
     private Long parentId;
     @NotBlank
     @Size(max = 30, message = "昵称不能超过 30 字符")
@@ -30,6 +32,8 @@ public class CommentDTO {
     private String captchaAnswer;
 
     public Long getArticleId() { return articleId; }
+    public String getTargetType() { return targetType; }
+    public void setTargetType(String targetType) { this.targetType = targetType; }
     public void setArticleId(Long articleId) { this.articleId = articleId; }
     public Long getParentId() { return parentId; }
     public void setParentId(Long parentId) { this.parentId = parentId; }

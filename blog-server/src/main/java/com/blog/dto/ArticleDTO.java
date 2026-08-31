@@ -45,10 +45,12 @@ public class ArticleDTO {
     private Integer allowComment;
 
     @Size(max = 128)
+    @Pattern(regexp = "^$", message = "暂不支持文章口令，请使用草稿状态保护非公开内容")
     private String password;
 
     private java.time.LocalDateTime publishTime;
-    private List<Long> tagIds;
+    @Size(max = 30)
+    private List<@jakarta.validation.constraints.NotNull @jakarta.validation.constraints.Positive Long> tagIds;
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }

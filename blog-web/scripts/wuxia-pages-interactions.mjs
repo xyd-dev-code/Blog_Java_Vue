@@ -98,7 +98,7 @@ try {
   check('sunny title restored', (await page.title()).startsWith('文章'))
   check('sunny decorations removed', await page.locator('.app-root').getAttribute('data-wuxia-page') === null)
   await theme('ink')
-  check('ink title restored', (await page.title()).startsWith('秘籍'))
+  check('ink title matches navigation', (await page.title()) === '文章 · 个人博客')
   await page.locator('.brand').click()
   await page.waitForURL(origin + '/')
   check('homepage scope stays untouched', await page.locator('.app-root').getAttribute('data-wuxia-page') === null)

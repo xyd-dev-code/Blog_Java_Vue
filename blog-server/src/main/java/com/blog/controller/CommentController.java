@@ -39,20 +39,27 @@ public class CommentController {
 
     @GetMapping("/article/{articleId}")
     @Operation(summary = "某文章的评论树 (仅已通过)")
-    public R<List<CommentPublicVO>> tree(@PathVariable Long articleId) {
-        return R.ok(commentService.treeByArticle(articleId, false));
+    public R<List<CommentPublicVO>> tree(@PathVariable Long articleId, @RequestParam(defaultValue = "1") long page, @RequestParam(defaultValue = "50") long size) {
+        return R.ok(commentService.treeByArticle(articleId, false, page, size));
     }
 
     @GetMapping("/guestbook")
     @Operation(summary = "留言板公共评论树 (仅已通过)")
-    public R<List<CommentPublicVO>> guestbook() {
-        return R.ok(commentService.guestbook());
+    public R<List<CommentPublicVO>> guestbook(@RequestParam(defaultValue = "1") long page, @RequestParam(defaultValue = "50") long size) {
+        return R.ok(commentService.guestbook(page, size));
     }
 
     @GetMapping("/captcha")
     @Operation(summary = "获取留言验证码（算术题）")
     public R<Map<String, Object>> captcha() {
         return R.ok(captchaService.generate());
+    }
+
+    @GetMapping("/{id}/replies")
+    @Operation(summary = "按游标加载已通过的直接回复")
+    public R<Map<String, Object>> replies(@PathVariable Long id,
+            @RequestParam(defaultValue = "0") long afterId, @RequestParam(defaultValue = "50") long size) {
+        return R.ok(commentService.replies(id, afterId, size));
     }
 
     @PostMapping
@@ -78,6 +85,7 @@ public class CommentController {
     @Operation(summary = "点赞 / 取消点赞留言或评论")
     public R<Map<String, Object>> like(@PathVariable Long id, HttpServletRequest req) {
         String ip = ipResolver.resolve(req);
+        rateLimiter.acquireOrThrow("comment:like:" + ip, 60, 60);
         Long userId = null;
         LoginUser u = SecurityUtil.current();
         if (u != null) userId = u.getId();

@@ -145,7 +145,7 @@
 import { useWuxiaCopy } from '@/composables/useWuxiaCopy'
 const { wx } = useWuxiaCopy()
 
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { User, Lock, Setting, Camera, WarningFilled } from '@element-plus/icons-vue'
 import { Cropper } from 'vue-advanced-cropper'
@@ -154,7 +154,7 @@ import { useSiteStore } from '@/stores/site'
 import { useUserStore } from '@/stores/user'
 import {
   adminProfile, adminUpdateProfile, adminChangePassword,
-  adminSiteConfig, adminSaveSiteConfig, adminUpload, adminDeleteUpload
+  adminSiteConfig, adminSaveSiteConfig, adminUpload
 } from '@/api/admin'
 
 const siteStore = useSiteStore()
@@ -263,13 +263,12 @@ const doCrop = async () => {
   uploading.value = false
 }
 
-// ---- 保存资料（含删除旧头像） ----
+// ---- 保存资料 ----
 
 const saveProfile = async () => {
   profileSaving.value = true
   let ok = false
   try {
-    const prev = oldAvatar.value
     await adminUpdateProfile({
       nickname: profileForm.nickname,
       email: profileForm.email,
@@ -305,11 +304,8 @@ const saveProfile = async () => {
       try { await siteStore.reload() } catch (_) {}
     }
     ElMessage.success('资料已保存')
-    // 如果头像有变化，删除旧文件
-    if (prev && prev !== profileForm.avatar) {
-      try { await adminDeleteUpload(prev) } catch (_) {}
-      oldAvatar.value = profileForm.avatar
-    }
+    // 图床按内容去重，旧头像可能仍被其他内容引用。
+    oldAvatar.value = profileForm.avatar
     ok = true
   } catch (e) {
     ElMessage.error('保存失败: ' + (e?.response?.data?.message || e?.message || '未知错误'))
@@ -328,7 +324,9 @@ const savePassword = async () => {
       oldPassword: pwdForm.oldPassword,
       newPassword: pwdForm.newPassword
     })
-    ElMessage.success('密码已修改，下次登录时生效')
+    ElMessage.success('密码已修改，所有旧会话已失效，请重新登录')
+    userStore.clearSession()
+    window.location.assign('/admin/login')
     Object.assign(pwdForm, { oldPassword: '', newPassword: '', confirmPassword: '' })
     pwdVisible.value = false
   } catch (_) {}

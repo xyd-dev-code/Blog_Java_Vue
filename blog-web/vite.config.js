@@ -17,8 +17,8 @@ const ElementPlusIconsResolver = (name, type) => {
 }
 
 // 阻止 ElementPlusResolver 自动 inject ElMessage / ElMessageBox / ElNotification / ElLoading 等
-// 命令式 API —— 它们已经在 main.js 顶端从 element-plus/es/components/<name> 深路径
-// 显式 import 了；这里若不阻止，unplugin-auto-import 会按默认解析走
+// 命令式 API —— 它们由使用处显式导入，共享样式在 main.js 中导入；
+// 这里若不阻止，unplugin-auto-import 会按默认解析走
 // `from 'element-plus'` 全量 ESM 入口，瞬间把整包 EP（~336KB gzip）拉回首屏。
 const elementPlusApiBlocker = (name) => {
   if (
@@ -84,7 +84,7 @@ export default defineConfig(({ mode }) => ({
       output: {
         // 只把首屏关键路径上的重型依赖拆成独立 chunk（并行下载 + 内容哈希可跨部署缓存）。
         // ⚠️ 其余一律交还 Rollup 自然分包：绝不能把仅懒加载用到的重型依赖
-        // （如 md-editor / tiptap / prosemirror / highlight.js，只在后台 ArticleEdit 用到）
+        // （如 md-editor / codemirror，只在后台 ArticleEdit 用到）
         // 强拉进首屏 vendor，否则首页反而会多下载数百 KB。
         manualChunks(id) {
           if (!id.includes('node_modules')) return

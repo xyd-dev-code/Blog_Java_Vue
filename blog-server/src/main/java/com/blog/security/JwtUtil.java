@@ -9,6 +9,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
+import javax.crypto.Mac;
+import com.blog.entity.User;
+import java.security.MessageDigest;
+import java.util.HexFormat;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.Map;
@@ -50,18 +54,40 @@ public class JwtUtil {
         return Keys.hmacShaKeyFor(props.getJwt().getSecret().getBytes(StandardCharsets.UTF_8));
     }
 
-    public String generate(Long userId, String username, String role) {
+    public String generate(User user) {
         Date now = new Date();
         Date exp = new Date(now.getTime() + props.getJwt().getExpiration());
         return Jwts.builder()
-                .subject(String.valueOf(userId))
+                .subject(String.valueOf(user.getId()))
                 .id(UUID.randomUUID().toString())
-                .claim("username", username)
-                .claim("role", role)
+                .claim("username", user.getUsername())
+                .claim("role", user.getRole())
+                .claim("credentials", credentialsVersion(user))
                 .issuedAt(now)
                 .expiration(exp)
                 .signWith(key())
                 .compact();
+    }
+
+    // HMAC binds sessions to the current password without exposing its BCrypt hash in JWTs.
+    // Legacy tokens without this claim require a fresh login after deployment.
+    private String credentialsVersion(User user) {
+        try {
+            Mac mac = Mac.getInstance("HmacSHA256");
+            mac.init(new javax.crypto.spec.SecretKeySpec(
+                    props.getJwt().getSecret().getBytes(StandardCharsets.UTF_8), "HmacSHA256"));
+            return HexFormat.of().formatHex(mac.doFinal((user.getId() + ":" + user.getPassword())
+                    .getBytes(StandardCharsets.UTF_8)));
+        } catch (java.security.GeneralSecurityException e) {
+            throw new IllegalStateException("Cannot verify credentials version", e);
+        }
+    }
+
+    public boolean matchesCredentials(Claims claims, User user) {
+        String version = claims.get("credentials", String.class);
+        return user != null && user.getPassword() != null && version != null
+                && MessageDigest.isEqual(version.getBytes(StandardCharsets.UTF_8),
+                        credentialsVersion(user).getBytes(StandardCharsets.UTF_8));
     }
 
     public Claims parse(String token) {

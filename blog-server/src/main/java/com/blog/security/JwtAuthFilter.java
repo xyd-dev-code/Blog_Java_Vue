@@ -1,6 +1,8 @@
 package com.blog.security;
 
 import io.jsonwebtoken.Claims;
+import com.blog.entity.User;
+import com.blog.mapper.UserMapper;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -25,10 +27,12 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
     private final JwtBlacklist blacklist;
+    private final UserMapper userMapper;
 
-    public JwtAuthFilter(JwtUtil jwtUtil, JwtBlacklist blacklist) {
+    public JwtAuthFilter(JwtUtil jwtUtil, JwtBlacklist blacklist, UserMapper userMapper) {
         this.jwtUtil = jwtUtil;
         this.blacklist = blacklist;
+        this.userMapper = userMapper;
     }
 
     @Override
@@ -42,20 +46,17 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 // 先 parse 拿到 jti,再按 jti 查黑名单(跟 logout 时 revoke 的 key 一致)
                 Claims c = jwtUtil.parse(token);
                 String jti = c.getId();
-                if (jti != null && blacklist.isRevoked(jti)) {
-                    // 已撤销,直接放过去但不设认证上下文,后续 SecurityConfig 会 401
-                    chain.doFilter(request, response);
-                    return;
+                if (jti != null && !blacklist.isRevoked(jti)) {
+                    Long userId = Long.parseLong(c.getSubject());
+                    User user = userMapper.selectById(userId);
+                    if (user != null && Integer.valueOf(1).equals(user.getStatus()) && jwtUtil.matchesCredentials(c, user)) {
+                        LoginUser login = new LoginUser(userId, user.getUsername(), user.getRole());
+                        UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
+                                login, null, List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole())));
+                        auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                        SecurityContextHolder.getContext().setAuthentication(auth);
+                    }
                 }
-                Long userId = Long.parseLong(c.getSubject());
-                String username = c.get("username", String.class);
-                String role = c.get("role", String.class);
-                LoginUser login = new LoginUser(userId, username, role);
-                UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
-                        login, null,
-                        List.of(new SimpleGrantedAuthority("ROLE_" + role)));
-                auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(auth);
             } catch (JwtException | IllegalArgumentException ex) {
                 log.debug("Invalid JWT: {}", ex.getClass().getSimpleName());
             }

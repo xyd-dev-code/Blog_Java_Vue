@@ -37,7 +37,7 @@
           </span>
         </div>
         <div class="gb-avatar-actions">
-          <el-upload :show-file-list="false" :before-upload="beforeAvatarUpload" :http-request="uploadAvatar" accept="image/*">
+          <el-upload :show-file-list="false" :before-upload="beforeAvatarUpload" :http-request="uploadAvatar" accept="image/png,image/jpeg,image/gif">
             <el-button size="small" :loading="avatarUploading" class="gb-avatar-upload">
               <el-icon><Plus /></el-icon>
               <span style="margin-left:4px">{{ avatarUploading ? '上传中…' : '上传头像' }}</span>
@@ -179,8 +179,8 @@ const revokeLocal = () => {
   }
 }
 const beforeAvatarUpload = (file) => {
-  if (file.size > 5 * 1024 * 1024) { ElMessage.warning('头像不能超过 5MB'); return false }
-  if (!file.type.startsWith('image/')) { ElMessage.warning('请选择图片文件'); return false }
+  if (file.size > 2 * 1024 * 1024) { ElMessage.warning('头像不能超过 2MB'); return false }
+  if (!['image/png', 'image/jpeg', 'image/gif'].includes(file.type)) { ElMessage.warning('请选择 PNG/JPEG/GIF 图片'); return false }
   // 选完文件立刻给一个本地预览 URL,避免等 1-2 秒后端压缩上传完才显示
   revokeLocal()
   avatarLocalPreview.value = URL.createObjectURL(file)
@@ -286,7 +286,7 @@ const submit = async () => {
   submitting.value = true
   try {
     const resp = await submitComment({
-      articleId: 1,
+      targetType: 'GUESTBOOK',
       nickname: form.nickname.trim(),
       email: form.email.trim(),
       website: form.website.trim(),

@@ -2,12 +2,8 @@ import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
 import App from './App.vue'
-// ── Element Plus 命令式 API（ElMessage / ElMessageBox / ElNotification）按需从深路径 import ──
-// 仅打包 ElMessage 函数自身的依赖链（不会拉到 el-table / el-form 等业务组件），
-// 并手动注入对应 CSS —— unplugin-auto-import 不会自动接管这些命令式 API 的样式。
-import { ElMessage } from 'element-plus/es/components/message/index.mjs'
-import { ElMessageBox } from 'element-plus/es/components/message-box/index.mjs'
-import { ElNotification } from 'element-plus/es/components/notification/index.mjs'
+// Element Plus 命令式 API 由使用它们的组件自行导入；这里保留共享样式。
+// unplugin-auto-import 不会自动接管这些命令式 API 的样式。
 import 'element-plus/theme-chalk/el-message.css'
 import 'element-plus/theme-chalk/el-message-box.css'
 import 'element-plus/theme-chalk/el-notification.css'

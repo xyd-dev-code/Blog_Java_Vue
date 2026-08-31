@@ -16,33 +16,25 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 
-/**
- * 调用 pandoc 把 markdown → docx/pdf。
- * - 二进制路径由 ${BLOG_PANDOC_BIN} 控制,默认 /usr/bin/pandoc
- * - reference.docx 在 @PostConstruct 时从 classpath 复制到本地 template 目录,后续复用
- * - 找不到二进制 / ProcessBuilder.start() 抛 IOException → PandocUnavailableException(503)
- * - 其余非零退出 / 超时 → BizException(400)
- */
+/** Converts documents only in a read-only, network-isolated, resource-limited Docker container. */
 @Component
 public class PandocRunner {
 
     private static final Logger log = LoggerFactory.getLogger(PandocRunner.class);
 
-    private final String pandocBinConfig;
     private final String templateDirConfig;
 
+    @Value("${blog.export.docker-bin:docker}")
+    private String dockerBin = "docker";
+    @Value("${blog.export.container-image:pandoc/latex:3.6.4}")
+    private String containerImage = "pandoc/latex:3.6.4";
+    private static final java.util.concurrent.Semaphore CONVERSIONS = new java.util.concurrent.Semaphore(2);
     private Path referenceDocx;
     private Path fontsDir;       // 解包后的字体目录
-    private String pdfEngine = "xelatex";   // 默认 + 启动时检测覆盖
 
-    public PandocRunner(@Value("${blog.export.pandoc-bin:/usr/bin/pandoc}") String pandocBin,
-                        @Value("${blog.export.template-dir:/tmp/blog-export-templates}") String templateDir) {
-        this.pandocBinConfig = pandocBin;
+    public PandocRunner(@Value("${blog.export.template-dir:/tmp/blog-export-templates}") String templateDir) {
         this.templateDirConfig = templateDir;
     }
 
@@ -83,11 +75,10 @@ public class PandocRunner {
             }
             // 生成 fontspec preamble,告诉 xelatex 从字体文件路径加载
             // 用文件名(不含扩展名)+ Path,不要写 Extension/font family name;
-            // fontspec auto-detect by magic bytes,这套在 Windows MiKTeX + Linux TeXLive 都过
-            // fontspec Path 字段会把 \ 当 TeX 转义,windows 路径必须转成正斜杠
+            // 字体通过只读挂载提供，preamble 仅使用容器内路径。
             Path preamble = fontsDir.resolve("fontspec.tex");
             try {
-                String fontsDirStr = fontsDir.toAbsolutePath().toString().replace('\\', '/');
+                String fontsDirStr = "/fonts";
                 String content = "\\usepackage{fontspec}\n"
                         + "\\setmainfont{NotoSerifSC-VF.ttf}[\n"
                         + "  Path = " + fontsDirStr + "/ ,\n"
@@ -102,212 +93,101 @@ public class PandocRunner {
                 log.warn("生成 fontspec preamble 失败: {}", e.getClass().getSimpleName());
             }
 
-            // 探测 PDF engine 优先级:env override > xelatex > weasyprint > 兜底
-            String envOverride = System.getenv("BLOG_PANDOC_PDF_ENGINE");
-            if (envOverride != null && !envOverride.isBlank()) {
-                pdfEngine = envOverride.trim();
-            } else if (which("xelatex") == null) {
-                if (which("weasyprint") != null) pdfEngine = "weasyprint";
-                else pdfEngine = "";   // 让 pandoc 用默认
-            }
-            log.info("Pandoc 初始化完成，PDF engine 模式: {}", pdfEngine.isEmpty() ? "default" : "custom");
+
         } catch (IOException e) {
             log.warn("PandocRunner 初始化失败（非致命）: {}", e.getClass().getSimpleName());
         }
     }
 
-    /** 把 markdown 转成目标格式字节流。MD 走 JDK 直接编码,字节相等。 */
-    public byte[] convert(String markdown, ExportFormat fmt) {
-        if (fmt == ExportFormat.MD) {
-            return markdown.getBytes(StandardCharsets.UTF_8);
-        }
-        String bin = resolveBinary();
-        if (bin == null) {
-            throw new PandocUnavailableException(
-                    "Pandoc 未找到(配置 blog.export.pandoc-bin=" + pandocBinConfig
-                            + ")。请在服务器安装 pandoc 或设置 BLOG_PANDOC_BIN 环境变量。");
-        }
+    /** Markdown export is local; document converters never inherit the application's filesystem or network. */
+    public byte[] convert(String markdown, ExportFormat format) {
+        if (markdown == null || markdown.length() > 250_000) throw new BizException("文档正文过大或为空");
+        byte[] bytes = markdown.getBytes(StandardCharsets.UTF_8);
+        if (format == ExportFormat.MD) return bytes;
+        return convertInContainer(bytes, "in.md", "out." + format.extension(), format);
+    }
 
-        Path tmp = null;
+    public String docxToMarkdown(byte[] bytes) {
+        if (bytes == null || bytes.length == 0 || bytes.length > 5 * 1024 * 1024) throw new BizException("DOCX 文件不能为空或超过 5MB");
+        return new String(convertInContainer(bytes, "in.docx", "out.md", ExportFormat.MD), StandardCharsets.UTF_8);
+    }
+
+    private byte[] convertInContainer(byte[] bytes, String inputName, String outputName, ExportFormat format) {
+        if (!CONVERSIONS.tryAcquire()) throw new BizException(429, "转换任务繁忙，请稍后重试");
+        Path temp = null;
+        String container = "blog-convert-" + java.util.UUID.randomUUID();
         try {
-            tmp = Files.createTempDirectory("blog-export-");
-            Path in = tmp.resolve("in.md");
-            Path out = tmp.resolve("out." + fmt.extension());
-            Files.writeString(in, markdown, StandardCharsets.UTF_8);
+            temp = Files.createTempDirectory("blog-convert-").toAbsolutePath().normalize();
+            // This unique, disposable directory is the only writable host mount.
+            try { Files.setPosixFilePermissions(temp, java.nio.file.attribute.PosixFilePermissions.fromString("rwxrwxrwx")); }
+            catch (UnsupportedOperationException ignored) { /* Windows uses its directory ACL. */ }
+            Path input = temp.resolve(inputName);
+            Files.write(input, bytes);
+            try { Files.setPosixFilePermissions(input, java.nio.file.attribute.PosixFilePermissions.fromString("rw-r--r--")); }
+            catch (UnsupportedOperationException ignored) { }
 
-            List<String> cmd = new ArrayList<>();
-            cmd.add(bin);
-            cmd.add(in.toString());
+            List<String> cmd = containerCommand(temp, container);
+            cmd.add(containerImage);
+            cmd.add("/work/" + inputName);
             cmd.add("-o");
-            cmd.add(out.toString());
-            cmd.add("--from=markdown+yaml_metadata_block+pipe_tables+strikeout+task_lists");
-
-            if (fmt == ExportFormat.DOCX && referenceDocx != null) {
-                cmd.add("--reference-doc=" + referenceDocx);
-            }
-            if (fmt == ExportFormat.PDF) {
-                if (!pdfEngine.isEmpty()) {
-                    cmd.add("--pdf-engine=" + pdfEngine);
-                }
-                cmd.addAll(Arrays.asList(
-                        "-V", "geometry:margin=1in",
-                        "-V", "lang=zh-CN"
-                ));
-                // 显式指定字体文件路径 + include-in-header,让 fontspec 从 classpath 解包的字体里取
-                if (fontsDir != null) {
-                    Path preamble = fontsDir.resolve("fontspec.tex");
-                    if (Files.exists(preamble)) {
-                        cmd.add("--include-in-header=" + preamble.toAbsolutePath());
+            cmd.add("/work/" + outputName);
+            cmd.add("--sandbox");
+            if (inputName.endsWith(".docx")) {
+                cmd.add("--from=docx");
+                cmd.add("--to=markdown+yaml_metadata_block");
+            } else {
+                cmd.add("--from=markdown-raw_html-raw_tex+pipe_tables+strikeout+task_lists");
+                if (format == ExportFormat.DOCX && referenceDocx != null) cmd.add("--reference-doc=/reference.docx");
+                if (format == ExportFormat.PDF) {
+                    cmd.add("--pdf-engine=xelatex");
+                    cmd.add("-V"); cmd.add("geometry:margin=1in");
+                    if (fontsDir != null && Files.exists(fontsDir.resolve("NotoSerifSC-VF.ttf"))) {
+                        cmd.add("--include-in-header=/fonts/fontspec.tex");
                     }
                 }
             }
-
-            ProcessBuilder pb = new ProcessBuilder(cmd)
-                    .directory(tmp.toFile())
-                    .redirectErrorStream(true);
-            Process p;
-            try {
-                p = pb.start();
-            } catch (IOException ioe) {
-                throw new PandocUnavailableException(
-                        "Pandoc 二进制无法执行(" + bin + "): " + ioe.getMessage());
-            }
-            p.getOutputStream().close();
-
-            // 异步 read,避免填满 pipe buffer 死锁
-            byte[] outBytes;
-            try (var stdout = p.getInputStream()) {
-                outBytes = stdout.readAllBytes();
-            }
-            boolean finished = p.waitFor(30, TimeUnit.SECONDS);
-            if (!finished) {
-                p.destroyForcibly();
-                throw new BizException("pandoc 转换超时(>30s)");
-            }
-            if (p.exitValue() != 0) {
-                // stderr 写到服务端日志,对外只暴露简短原因(可能含绝对路径)
-                log.warn("pandoc convert 失败(exit={}): {}", p.exitValue(),
-                        new String(outBytes, StandardCharsets.UTF_8));
-                throw new BizException("pandoc 转换失败");
-            }
-            if (!Files.exists(out)) {
-                throw new BizException("pandoc 退出成功但未生成产物文件");
-            }
-            return Files.readAllBytes(out);
-        } catch (BizException e) {
-            throw e;
-        } catch (Exception e) {
-            log.warn("pandoc 转换异常", e);
-            throw new BizException("pandoc 转换失败");
+            BoundedProcessRunner.run(new ProcessBuilder(cmd), java.time.Duration.ofSeconds(30), 256 * 1024);
+            Path output = temp.resolve(outputName);
+            if (!Files.isRegularFile(output, java.nio.file.LinkOption.NOFOLLOW_LINKS) || Files.size(output) > 20 * 1024 * 1024) throw new BizException("转换产物缺失或超过 20MB");
+            return Files.readAllBytes(output);
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+            throw new BizException("文档转换已取消");
+        } catch (IOException ex) {
+            throw new PandocUnavailableException("隔离转换容器不可用，请配置 Docker 并预先拉取转换镜像");
         } finally {
-            if (tmp != null) bestEffortDelete(tmp);
+            // Killing only the docker CLI would leave its container running.
+            try { BoundedProcessRunner.run(new ProcessBuilder(dockerBin, "rm", "-f", container), java.time.Duration.ofSeconds(5), 8192); }
+            catch (Exception ignored) { log.debug("转换容器已退出或 Docker 不可用"); }
+            if (temp != null) bestEffortDelete(temp);
+            CONVERSIONS.release();
         }
     }
 
-    /**
-     * 把 .docx 字节流转成 markdown 字符串(走 pandoc -f docx -t markdown)。
-     * 仅用于导入场景的预处理;失败抛 BizException(400)。
-     */
-    public String docxToMarkdown(byte[] docxBytes) {
-        if (docxBytes == null || docxBytes.length == 0) {
-            throw new BizException("docx 字节流为空");
+    List<String> containerCommand(Path temp, String name) {
+        List<String> command = new ArrayList<>(List.of(dockerBin, "run", "--rm", "--pull=never", "--name", name,
+                "--network=none", "--read-only", "--cap-drop=ALL", "--security-opt=no-new-privileges",
+                "--memory=512m", "--cpus=1", "--pids-limit=64", "--ulimit=fsize=20971520:20971520", "--user=65534:65534",
+                "--tmpfs=/tmp:rw,nosuid,nodev,size=64m", "--workdir=/work",
+                "--mount", "type=bind,source=" + temp + ",target=/work"));
+        if (referenceDocx != null) {
+            command.add("--mount"); command.add("type=bind,source=" + referenceDocx + ",target=/reference.docx,readonly");
         }
-        String bin = resolveBinary();
-        if (bin == null) {
-            throw new PandocUnavailableException(
-                    "Pandoc 未找到,无法解析 docx。请设置 BLOG_PANDOC_BIN。");
+        if (fontsDir != null) {
+            command.add("--mount"); command.add("type=bind,source=" + fontsDir.toAbsolutePath() + ",target=/fonts,readonly");
         }
-        Path tmp = null;
-        try {
-            tmp = Files.createTempDirectory("blog-docx-import-");
-            Path in = tmp.resolve("in.docx");
-            Path out = tmp.resolve("out.md");
-            Files.write(in, docxBytes);
-
-            List<String> cmd = new ArrayList<>();
-            cmd.add(bin);
-            cmd.add(in.toString());
-            cmd.add("-o");
-            cmd.add(out.toString());
-            cmd.add("--from=docx");
-            cmd.add("--to=markdown+yaml_metadata_block");
-
-            ProcessBuilder pb = new ProcessBuilder(cmd)
-                    .directory(tmp.toFile())
-                    .redirectErrorStream(true);
-            Process p;
-            try {
-                p = pb.start();
-            } catch (IOException ioe) {
-                throw new PandocUnavailableException(
-                        "Pandoc 二进制无法执行(" + bin + "): " + ioe.getMessage());
-            }
-            p.getOutputStream().close();
-            byte[] outBytes;
-            try (var stdout = p.getInputStream()) {
-                outBytes = stdout.readAllBytes();
-            }
-            boolean finished = p.waitFor(30, TimeUnit.SECONDS);
-            if (!finished) {
-                p.destroyForcibly();
-                throw new BizException("pandoc docx→md 转换超时(>30s)");
-            }
-            if (p.exitValue() != 0) {
-                log.warn("pandoc docx→md 失败(exit={}): {}", p.exitValue(),
-                        new String(outBytes, StandardCharsets.UTF_8));
-                throw new BizException("pandoc docx→md 转换失败");
-            }
-            if (!Files.exists(out)) {
-                throw new BizException("pandoc docx→md 退出成功但未生成产物文件");
-            }
-            return Files.readString(out, StandardCharsets.UTF_8);
-        } catch (BizException e) {
-            throw e;
-        } catch (Exception e) {
-            log.warn("pandoc docx→md 异常", e);
-            throw new BizException("pandoc docx→md 转换失败");
-        } finally {
-            if (tmp != null) bestEffortDelete(tmp);
-        }
+        return command;
     }
 
-    private static void bestEffortDelete(Path dir) {
-        if (dir == null) return;
-        try {
-            Files.walk(dir)
-                    .sorted((a, b) -> b.getNameCount() - a.getNameCount())
-                    .forEach(p -> { try { Files.deleteIfExists(p); } catch (IOException ignore) {} });
-        } catch (IOException ignore) {}
+    private static void bestEffortDelete(Path directory) {
+        Path root = directory.toAbsolutePath().normalize();
+        Path tempRoot = Paths.get(System.getProperty("java.io.tmpdir")).toAbsolutePath().normalize();
+        if (!root.startsWith(tempRoot) || root.equals(tempRoot)) throw new IllegalArgumentException("Unsafe temporary path");
+        try (var paths = Files.walk(root)) {
+            paths.sorted(java.util.Comparator.reverseOrder()).forEach(path -> {
+                try { Files.deleteIfExists(path); } catch (IOException ex) { log.warn("转换临时文件清理失败: {}", ex.getClass().getSimpleName()); }
+            });
+        } catch (IOException ex) { log.warn("转换临时目录清理失败: {}", ex.getClass().getSimpleName()); }
     }
 
-    /** 探测 PATH 上的命令;命中返回绝对路径,否则 null */
-    private static String which(String name) {
-        String path = System.getenv("PATH");
-        if (path == null) return null;
-        for (String dir : path.split(java.io.File.pathSeparator)) {
-            try {
-                Path p = Paths.get(dir, name);
-                if (Files.isExecutable(p)) return p.toAbsolutePath().toString();
-            } catch (Exception ignore) {}
-        }
-        return null;
-    }
-
-    /** 解析二进制路径:env override > 配置值 > PATH 中的 pandoc。命中返回绝对路径,否则 null。 */
-    private String resolveBinary() {
-        String envOverride = System.getenv("BLOG_PANDOC_BIN");
-        String[] candidates = envOverride != null && !envOverride.isBlank()
-                ? new String[]{ envOverride.trim(), pandocBinConfig, "/usr/bin/pandoc", "/usr/local/bin/pandoc" }
-                : new String[]{ pandocBinConfig, "/usr/bin/pandoc", "/usr/local/bin/pandoc" };
-        for (String c : candidates) {
-            try {
-                Path p = Paths.get(c);
-                // Windows 上 Files.isExecutable 对带空格/UNC 路径判定不准,
-                // 改为"文件存在即可"——路径是用户显式配的,可信度高
-                if (Files.exists(p)) return p.toAbsolutePath().toString();
-            } catch (Exception ignore) {}
-        }
-        String pathHit = which("pandoc");
-        return pathHit;
-    }
 }

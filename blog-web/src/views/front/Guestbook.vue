@@ -53,14 +53,14 @@
 
         <!-- 无限滚动哨兵 -->
         <div ref="sentinel" class="gb-sentinel" v-if="hasMore">
-          <el-icon class="gb-spin"><Loading /></el-icon>
-          <span>展开更多 {{ gridList.length - visibleCount }} 条回复</span>
+          <el-icon v-if="loading" class="gb-spin"><Loading /></el-icon>
+          <el-button :disabled="loading" @click="loadMore">加载更多留言</el-button>
         </div>
 
         <!-- 底部：到底 + 总数 -->
         <div class="gb-footer" v-if="allList.length">
-          <span class="gb-overline">{{ wx('— 已经到底啦 —') }}</span>
-          <span class="gb-total">共 {{ totalCount }} 条回复</span>
+          <span v-if="!hasMore" class="gb-overline">{{ wx('— 已经到底啦 —') }}</span>
+          <span class="gb-total">已加载 {{ totalCount }} 条留言和回复</span>
         </div>
       </template>
     </div>
@@ -156,9 +156,11 @@ const detailRequired = computed(() =>
 )
 
 const PAGE_BATCH = 12
+const serverPage = ref(1)
+const serverHasMore = ref(false)
 
 // 仅顶层留言参与精选/网格判断
-const topLevelList = computed(() => allList.value.filter(c => !c.parentId))
+const topLevelList = computed(() => allList.value)
 
 // 精选 = 仅人工置顶（featured=1），没人设就不显示精选区
 const featuredComment = computed(() => {
@@ -173,7 +175,7 @@ const gridList = computed(() => {
 })
 
 const visibleGridList = computed(() => gridList.value.slice(0, visibleCount.value))
-const hasMore = computed(() => visibleCount.value < gridList.value.length)
+const hasMore = computed(() => visibleCount.value < gridList.value.length || serverHasMore.value)
 
 const countAll = (arr) => arr.reduce((n, c) => n + 1 + (c.replies ? countAll(c.replies) : 0), 0)
 const totalCount = computed(() => countAll(allList.value))
@@ -185,12 +187,17 @@ const nicknames = computed(() => {
   return [...set]
 })
 
-const load = async () => {
+const load = async (append = false) => {
+  if (loading.value) return
+  if (!append) serverPage.value = 1
   loading.value = true
   try {
-    const resp = await guestbookComments()
-    allList.value = resp.data || []
-    visibleCount.value = Math.min(PAGE_BATCH, gridList.value.length) || 12
+    const resp = await guestbookComments({ page: serverPage.value, size: 50 })
+    const records = resp.data || []
+    allList.value = append ? [...allList.value, ...records] : records
+    serverHasMore.value = records.length === 50
+    serverPage.value += 1
+    if (!append) visibleCount.value = Math.min(PAGE_BATCH, gridList.value.length) || 12
   } catch (e) {
     ElMessage.error(wx('留言加载失败，请稍后重试'))
   } finally {
@@ -198,7 +205,8 @@ const load = async () => {
   }
 }
 
-const loadMore = () => {
+const loadMore = async () => {
+  if (visibleCount.value >= gridList.value.length && serverHasMore.value) await load(true)
   if (visibleCount.value < gridList.value.length) {
     visibleCount.value = Math.min(visibleCount.value + PAGE_BATCH, gridList.value.length)
   }

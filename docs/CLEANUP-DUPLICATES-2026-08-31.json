@@ -1,0 +1,800 @@
+{
+  "date": "2026-08-31",
+  "groups": [
+    {
+      "group": 1,
+      "sha256": "a4d1ac7ca3eee1018c6dd87fd01ac8c675176865348e0b606446d96e08f90f20",
+      "bytesPerFile": 803421,
+      "paths": [
+        "blog-web/design-qa-assets/background-only/after-1440-_about-top.png",
+        "blog-web/design-qa-assets/page-backgrounds/before-1440-dark-_about-top.png",
+        "blog-web/design-qa-assets/page-backgrounds/before-1440-light-_about-top.png"
+      ],
+      "action": "保留",
+      "reason": "不同设计验收阶段的留档或正式资源与设计预览副本，不能仅凭内容相同删除"
+    },
+    {
+      "group": 2,
+      "sha256": "b57f1a69a9fc9888c26366fa92b8eda3fd875bbc8ded9157e2cd4e82cce63a9f",
+      "bytesPerFile": 613067,
+      "paths": [
+        "blog-web/design-qa-assets/background-only/after-1440-_articles-top.png",
+        "blog-web/design-qa-assets/page-backgrounds/before-1440-dark-_articles-top.png",
+        "blog-web/design-qa-assets/page-backgrounds/before-1440-light-_articles-top.png"
+      ],
+      "action": "保留",
+      "reason": "不同设计验收阶段的留档或正式资源与设计预览副本，不能仅凭内容相同删除"
+    },
+    {
+      "group": 3,
+      "sha256": "86a82632b52b93a64267d79ff07f4a8aa69515e12ce42477c01b0dec1ab87197",
+      "bytesPerFile": 469197,
+      "paths": [
+        "blog-web/design-qa-assets/background-only/after-1440-_articles_layout_1-top.png",
+        "blog-web/design-qa-assets/page-backgrounds/before-1440-dark-_articles_layout_1-top.png",
+        "blog-web/design-qa-assets/page-backgrounds/before-1440-light-_articles_layout_1-top.png"
+      ],
+      "action": "保留",
+      "reason": "不同设计验收阶段的留档或正式资源与设计预览副本，不能仅凭内容相同删除"
+    },
+    {
+      "group": 4,
+      "sha256": "0fee8b0138714269538cdd7fdc559a03aec27b279a65bbdb3eadb9403a47091a",
+      "bytesPerFile": 830602,
+      "paths": [
+        "blog-web/design-qa-assets/background-only/after-1440-_friends-top.png",
+        "blog-web/design-qa-assets/page-backgrounds/before-1440-dark-_friends-top.png",
+        "blog-web/design-qa-assets/page-backgrounds/before-1440-light-_friends-top.png"
+      ],
+      "action": "保留",
+      "reason": "不同设计验收阶段的留档或正式资源与设计预览副本，不能仅凭内容相同删除"
+    },
+    {
+      "group": 5,
+      "sha256": "6acfc7f16369652010ac96d840f279a15b9f7115303c5ffde4b603a0d3cc2cb3",
+      "bytesPerFile": 606184,
+      "paths": [
+        "blog-web/design-qa-assets/background-only/after-1440-_guestbook-top.png",
+        "blog-web/design-qa-assets/page-backgrounds/before-1440-dark-_guestbook-top.png",
+        "blog-web/design-qa-assets/page-backgrounds/before-1440-light-_guestbook-top.png"
+      ],
+      "action": "保留",
+      "reason": "不同设计验收阶段的留档或正式资源与设计预览副本，不能仅凭内容相同删除"
+    },
+    {
+      "group": 6,
+      "sha256": "893a6dd1079d4a7993b59ed664b8a5d9f56397ac8909dfca7fe651febf862d28",
+      "bytesPerFile": 967221,
+      "paths": [
+        "blog-web/design-qa-assets/background-only/after-1440-_projects-top.png",
+        "blog-web/design-qa-assets/page-backgrounds/before-1440-dark-_projects-top.png",
+        "blog-web/design-qa-assets/page-backgrounds/before-1440-light-_projects-top.png"
+      ],
+      "action": "保留",
+      "reason": "不同设计验收阶段的留档或正式资源与设计预览副本，不能仅凭内容相同删除"
+    },
+    {
+      "group": 7,
+      "sha256": "a72e6cf3fc72e1ff22d8e0827285a2a550ff0fbd66f6e356ef0529ad3c6d4177",
+      "bytesPerFile": 207956,
+      "paths": [
+        "blog-web/design-qa-assets/background-only/after-390-_-top.png",
+        "blog-web/design-qa-assets/background-only/before-390-_-top.png"
+      ],
+      "action": "保留",
+      "reason": "不同设计验收阶段的留档或正式资源与设计预览副本，不能仅凭内容相同删除"
+    },
+    {
+      "group": 8,
+      "sha256": "7e6aa23df6a638f4301962fc683826d60b88b413309b9cc79b6014646a1902c6",
+      "bytesPerFile": 206109,
+      "paths": [
+        "blog-web/design-qa-assets/background-only/after-390-_about-top.png",
+        "blog-web/design-qa-assets/page-backgrounds/before-390-dark-_about-top.png",
+        "blog-web/design-qa-assets/page-backgrounds/before-390-light-_about-top.png"
+      ],
+      "action": "保留",
+      "reason": "不同设计验收阶段的留档或正式资源与设计预览副本，不能仅凭内容相同删除"
+    },
+    {
+      "group": 9,
+      "sha256": "3e45f4363b6f6f8077fc54b1528aa0047fd80f3deb27b282dfb899efd520cb49",
+      "bytesPerFile": 215475,
+      "paths": [
+        "blog-web/design-qa-assets/background-only/after-390-_articles-top.png",
+        "blog-web/design-qa-assets/page-backgrounds/before-390-dark-_articles-top.png",
+        "blog-web/design-qa-assets/page-backgrounds/before-390-light-_articles-top.png"
+      ],
+      "action": "保留",
+      "reason": "不同设计验收阶段的留档或正式资源与设计预览副本，不能仅凭内容相同删除"
+    },
+    {
+      "group": 10,
+      "sha256": "0fcf71f3c002602da04407663b1366a712c7c2a65fe0411adb2e68c1e5cd164f",
+      "bytesPerFile": 167512,
+      "paths": [
+        "blog-web/design-qa-assets/background-only/after-390-_articles_layout_1-top.png",
+        "blog-web/design-qa-assets/page-backgrounds/before-390-dark-_articles_layout_1-top.png",
+        "blog-web/design-qa-assets/page-backgrounds/before-390-light-_articles_layout_1-top.png"
+      ],
+      "action": "保留",
+      "reason": "不同设计验收阶段的留档或正式资源与设计预览副本，不能仅凭内容相同删除"
+    },
+    {
+      "group": 11,
+      "sha256": "d2947270583015646eeb96c6e959dea7715402c6318cdb8acea55a463c1497d6",
+      "bytesPerFile": 211233,
+      "paths": [
+        "blog-web/design-qa-assets/background-only/after-390-_friends-top.png",
+        "blog-web/design-qa-assets/page-backgrounds/before-390-dark-_friends-top.png",
+        "blog-web/design-qa-assets/page-backgrounds/before-390-light-_friends-top.png"
+      ],
+      "action": "保留",
+      "reason": "不同设计验收阶段的留档或正式资源与设计预览副本，不能仅凭内容相同删除"
+    },
+    {
+      "group": 12,
+      "sha256": "968057615f9f7b8804aa3bf34cc301b2c0fc0c92493accc6c313404ea209c567",
+      "bytesPerFile": 270360,
+      "paths": [
+        "blog-web/design-qa-assets/background-only/after-390-_projects-top.png",
+        "blog-web/design-qa-assets/page-backgrounds/before-390-dark-_projects-top.png",
+        "blog-web/design-qa-assets/page-backgrounds/before-390-light-_projects-top.png"
+      ],
+      "action": "保留",
+      "reason": "不同设计验收阶段的留档或正式资源与设计预览副本，不能仅凭内容相同删除"
+    },
+    {
+      "group": 13,
+      "sha256": "4d1bb8f64ad0fd07afb16cdbc6302c2ad2f6e4e2b5084099edd6fa788a3609e4",
+      "bytesPerFile": 269549,
+      "paths": [
+        "blog-web/design-qa-assets/background-only/before-1440-_admin_dashboard-top.png",
+        "blog-web/design-qa-assets/wuxia-pages/final/after-1440-_admin_dashboard.png"
+      ],
+      "action": "保留",
+      "reason": "不同设计验收阶段的留档或正式资源与设计预览副本，不能仅凭内容相同删除"
+    },
+    {
+      "group": 14,
+      "sha256": "139869e968053b04ad4aa4203a6d33de21401d9bec936244dab6b3e382ba97ab",
+      "bytesPerFile": 609013,
+      "paths": [
+        "blog-web/design-qa-assets/background-only/before-1440-_admin_login-top.png",
+        "blog-web/design-qa-assets/wuxia-pages/after-1440-_admin_login.png",
+        "blog-web/design-qa-assets/wuxia-pages/final/after-1440-_admin_login.png",
+        "blog-web/design-qa-assets/wuxia-pages/layout-restored/after-1440-_admin_login.png"
+      ],
+      "action": "保留",
+      "reason": "不同设计验收阶段的留档或正式资源与设计预览副本，不能仅凭内容相同删除"
+    },
+    {
+      "group": 15,
+      "sha256": "92e7706ab11c3092cfd03f7e988a1d075cb8f4fcf7742698a40f99bba894e94f",
+      "bytesPerFile": 89013,
+      "paths": [
+        "blog-web/design-qa-assets/background-only/before-390-_admin_dashboard-top.png",
+        "blog-web/design-qa-assets/wuxia-pages/after-390-_admin_dashboard.png",
+        "blog-web/design-qa-assets/wuxia-pages/final/after-390-_admin_dashboard.png"
+      ],
+      "action": "保留",
+      "reason": "不同设计验收阶段的留档或正式资源与设计预览副本，不能仅凭内容相同删除"
+    },
+    {
+      "group": 16,
+      "sha256": "759130f5376e61195f3b1aff29ae96a355fc8ba486cd56f488c3dca4b119205c",
+      "bytesPerFile": 174648,
+      "paths": [
+        "blog-web/design-qa-assets/background-only/before-390-_admin_login-top.png",
+        "blog-web/design-qa-assets/wuxia-pages/after-390-_admin_login.png",
+        "blog-web/design-qa-assets/wuxia-pages/final/after-390-_admin_login.png",
+        "blog-web/design-qa-assets/wuxia-pages/layout-restored/after-390-_admin_login.png"
+      ],
+      "action": "保留",
+      "reason": "不同设计验收阶段的留档或正式资源与设计预览副本，不能仅凭内容相同删除"
+    },
+    {
+      "group": 17,
+      "sha256": "b69e47445a9b45bf013ccb4704709a6d003219c4f87dd5f29500f52e52f28dbf",
+      "bytesPerFile": 526963,
+      "paths": [
+        "blog-web/design-qa-assets/ink-scenes/before-1910-light-_about-top.png",
+        "blog-web/design-qa-assets/ink-scenes/about-final/before-1910-light-_about-top.png"
+      ],
+      "action": "保留",
+      "reason": "不同设计验收阶段的留档或正式资源与设计预览副本，不能仅凭内容相同删除"
+    },
+    {
+      "group": 18,
+      "sha256": "9ebdc9a6f5f5e3a4f138b1642aeaac53cde7d138465e0207248c0396711e6a8a",
+      "bytesPerFile": 152259,
+      "paths": [
+        "blog-web/design-qa-assets/ink-scenes/before-390-light-_about-top.png",
+        "blog-web/design-qa-assets/ink-scenes/about-final/before-390-light-_about-top.png",
+        "blog-web/design-qa-assets/page-backgrounds/after-390-light-_about-top.png"
+      ],
+      "action": "保留",
+      "reason": "不同设计验收阶段的留档或正式资源与设计预览副本，不能仅凭内容相同删除"
+    },
+    {
+      "group": 19,
+      "sha256": "e17baff9d87c3ce17825b1b1960bf380d2ae2e45206f68ba5dd0b14c7b0be59c",
+      "bytesPerFile": 187426,
+      "paths": [
+        "blog-web/design-qa-assets/ink-scenes/before-390-light-_articles-top.png",
+        "blog-web/design-qa-assets/page-backgrounds/after-390-light-_articles-top.png"
+      ],
+      "action": "保留",
+      "reason": "不同设计验收阶段的留档或正式资源与设计预览副本，不能仅凭内容相同删除"
+    },
+    {
+      "group": 20,
+      "sha256": "d7fac722498b99e96fc925facf27b1261e151ea0de027d536f75a5713a751ae8",
+      "bytesPerFile": 188447,
+      "paths": [
+        "blog-web/design-qa-assets/ink-scenes/before-390-light-_friends-top.png",
+        "blog-web/design-qa-assets/page-backgrounds/after-390-light-_friends-top.png"
+      ],
+      "action": "保留",
+      "reason": "不同设计验收阶段的留档或正式资源与设计预览副本，不能仅凭内容相同删除"
+    },
+    {
+      "group": 21,
+      "sha256": "997ff3f3b04f8ac0c159e305d5ce8296b3d02361483c3362335172fc11c14ac8",
+      "bytesPerFile": 233304,
+      "paths": [
+        "blog-web/design-qa-assets/ink-scenes/before-390-light-_projects-top.png",
+        "blog-web/design-qa-assets/page-backgrounds/after-390-light-_projects-top.png"
+      ],
+      "action": "保留",
+      "reason": "不同设计验收阶段的留档或正式资源与设计预览副本，不能仅凭内容相同删除"
+    },
+    {
+      "group": 22,
+      "sha256": "45a924dafdf73c70c7347d167bf659d47033e65dbc4a646818ed41f6362112cc",
+      "bytesPerFile": 1899503,
+      "paths": [
+        "blog-web/design-qa-assets/ink-scenes/extended/after-1440-dark-_-featured.png",
+        "blog-web/design-qa-assets/ink-scenes/extended/before-1440-dark-_-featured.png",
+        "blog-web/design-qa-assets/page-backgrounds/extra/after-1440-light-_-featured.png",
+        "blog-web/design-qa-assets/page-backgrounds/extra/before-1440-light-_-featured.png"
+      ],
+      "action": "保留",
+      "reason": "不同设计验收阶段的留档或正式资源与设计预览副本，不能仅凭内容相同删除"
+    },
+    {
+      "group": 23,
+      "sha256": "6cf090690d47d1d93062d4ee6508178c1f129aab5372f0e2b4931185fd24bcfe",
+      "bytesPerFile": 3886866,
+      "paths": [
+        "blog-web/design-qa-assets/ink-scenes/extended/after-1440-dark-_-top.png",
+        "blog-web/design-qa-assets/ink-scenes/extended/before-1440-dark-_-top.png",
+        "blog-web/design-qa-assets/page-backgrounds/extra/after-1440-light-_-top.png",
+        "blog-web/design-qa-assets/page-backgrounds/extra/before-1440-light-_-top.png"
+      ],
+      "action": "保留",
+      "reason": "不同设计验收阶段的留档或正式资源与设计预览副本，不能仅凭内容相同删除"
+    },
+    {
+      "group": 24,
+      "sha256": "5c7eb0435df9e15a9399007f456c842d339c7874732062a199b40f8a6e277a90",
+      "bytesPerFile": 2408938,
+      "paths": [
+        "blog-web/design-qa-assets/ink-scenes/extended/after-1440-dark-_tags_vue-top.png",
+        "blog-web/design-qa-assets/ink-scenes/recheck/after-1440-dark-_tags_vue-top.png"
+      ],
+      "action": "保留",
+      "reason": "不同设计验收阶段的留档或正式资源与设计预览副本，不能仅凭内容相同删除"
+    },
+    {
+      "group": 25,
+      "sha256": "8b4f792658b3ef4068da2ac85cc8912a7ba5d6a155dff79b4bf71f0cc8e27494",
+      "bytesPerFile": 1060506,
+      "paths": [
+        "blog-web/design-qa-assets/ink-scenes/extended/after-390-dark-_-featured.png",
+        "blog-web/design-qa-assets/ink-scenes/extended/before-390-dark-_-featured.png",
+        "blog-web/design-qa-assets/page-backgrounds/extra/after-390-dark-_-featured.png",
+        "blog-web/design-qa-assets/page-backgrounds/extra/before-390-dark-_-featured.png"
+      ],
+      "action": "保留",
+      "reason": "不同设计验收阶段的留档或正式资源与设计预览副本，不能仅凭内容相同删除"
+    },
+    {
+      "group": 26,
+      "sha256": "f56e7b094acf436bdbfcb859ae6bac8533350fa5c9e68e2954ecf07e81b218fd",
+      "bytesPerFile": 1371911,
+      "paths": [
+        "blog-web/design-qa-assets/ink-scenes/extended/after-390-dark-_-top.png",
+        "blog-web/design-qa-assets/ink-scenes/extended/before-390-dark-_-top.png",
+        "blog-web/design-qa-assets/page-backgrounds/extra/after-390-dark-_-top.png",
+        "blog-web/design-qa-assets/page-backgrounds/extra/before-390-dark-_-top.png"
+      ],
+      "action": "保留",
+      "reason": "不同设计验收阶段的留档或正式资源与设计预览副本，不能仅凭内容相同删除"
+    },
+    {
+      "group": 27,
+      "sha256": "4496e441b39814c41cab1794d8f375e061494d743a0978bcd93e95f26801a891",
+      "bytesPerFile": 1498464,
+      "paths": [
+        "blog-web/design-qa-assets/ink-scenes/extended/before-1440-dark-_about-top.png",
+        "blog-web/design-qa-assets/ink-scenes/recheck/before-1440-dark-_about-top.png"
+      ],
+      "action": "保留",
+      "reason": "不同设计验收阶段的留档或正式资源与设计预览副本，不能仅凭内容相同删除"
+    },
+    {
+      "group": 28,
+      "sha256": "3b2149219702c8522bb2f6b720cf1c8c5d4d8ee48c4fb8ee689716170d16d0dc",
+      "bytesPerFile": 1739473,
+      "paths": [
+        "blog-web/design-qa-assets/ink-scenes/extended/before-1440-dark-_tags_vue-top.png",
+        "blog-web/design-qa-assets/ink-scenes/recheck/before-1440-dark-_tags_vue-top.png"
+      ],
+      "action": "保留",
+      "reason": "不同设计验收阶段的留档或正式资源与设计预览副本，不能仅凭内容相同删除"
+    },
+    {
+      "group": 29,
+      "sha256": "6bc08d9323023b2d36d0b4c8c4462b06fbad5add9a390dd6d8416a92b07ebe2c",
+      "bytesPerFile": 749541,
+      "paths": [
+        "blog-web/design-qa-assets/ink-scenes/extended/before-390-dark-_about-top.png",
+        "blog-web/design-qa-assets/ink-scenes/recheck/before-390-dark-_about-top.png"
+      ],
+      "action": "保留",
+      "reason": "不同设计验收阶段的留档或正式资源与设计预览副本，不能仅凭内容相同删除"
+    },
+    {
+      "group": 30,
+      "sha256": "617263340bcc30eccddf254395efc52cbc1fa14b6b0c460215fa0b76d8a35a9d",
+      "bytesPerFile": 365269,
+      "paths": [
+        "blog-web/design-qa-assets/ink-scenes/extended/before-390-dark-_admin_articles_new-top.png",
+        "blog-web/design-qa-assets/page-backgrounds/extra/after-390-dark-_admin_articles_new-top.png"
+      ],
+      "action": "保留",
+      "reason": "不同设计验收阶段的留档或正式资源与设计预览副本，不能仅凭内容相同删除"
+    },
+    {
+      "group": 31,
+      "sha256": "357500d9976cec7001899de29fd9e643ec050d2d6f2097f03513952c19952620",
+      "bytesPerFile": 408525,
+      "paths": [
+        "blog-web/design-qa-assets/ink-scenes/extended/before-390-dark-_admin_dashboard-top.png",
+        "blog-web/design-qa-assets/page-backgrounds/extra/after-390-dark-_admin_dashboard-top.png"
+      ],
+      "action": "保留",
+      "reason": "不同设计验收阶段的留档或正式资源与设计预览副本，不能仅凭内容相同删除"
+    },
+    {
+      "group": 32,
+      "sha256": "da21c2184b82362c792313e3768438348f7e72b3057b8acf60e67b1848cd4bce",
+      "bytesPerFile": 358418,
+      "paths": [
+        "blog-web/design-qa-assets/ink-scenes/extended/before-390-dark-_admin_login-top.png",
+        "blog-web/design-qa-assets/page-backgrounds/extra/after-390-dark-_admin_login-top.png"
+      ],
+      "action": "保留",
+      "reason": "不同设计验收阶段的留档或正式资源与设计预览副本，不能仅凭内容相同删除"
+    },
+    {
+      "group": 33,
+      "sha256": "a44948c89368812b4a000032bc7a368787480d47622748140a650d3478ea9f0d",
+      "bytesPerFile": 471221,
+      "paths": [
+        "blog-web/design-qa-assets/ink-scenes/extended/before-390-dark-_admin_themes-top.png",
+        "blog-web/design-qa-assets/page-backgrounds/extra/after-390-dark-_admin_themes-top.png"
+      ],
+      "action": "保留",
+      "reason": "不同设计验收阶段的留档或正式资源与设计预览副本，不能仅凭内容相同删除"
+    },
+    {
+      "group": 34,
+      "sha256": "bc4f167a1c1ca2c6b0a5395350a097cd26e8ada6d2dd4aa859716f19a20939dc",
+      "bytesPerFile": 1000495,
+      "paths": [
+        "blog-web/design-qa-assets/ink-scenes/extended/before-390-dark-_tags_vue-top.png",
+        "blog-web/design-qa-assets/ink-scenes/recheck/before-390-dark-_tags_vue-top.png"
+      ],
+      "action": "保留",
+      "reason": "不同设计验收阶段的留档或正式资源与设计预览副本，不能仅凭内容相同删除"
+    },
+    {
+      "group": 35,
+      "sha256": "251fcc631a9242118a8b98522c69b0ee9744f14b00fc9605fe310b9dc5abd46c",
+      "bytesPerFile": 710900,
+      "paths": [
+        "blog-web/design-qa-assets/page-backgrounds/before-1440-dark-_archives-top.png",
+        "blog-web/design-qa-assets/page-backgrounds/before-1440-light-_archives-top.png"
+      ],
+      "action": "保留",
+      "reason": "不同设计验收阶段的留档或正式资源与设计预览副本，不能仅凭内容相同删除"
+    },
+    {
+      "group": 36,
+      "sha256": "9e97b91ba5966567a303c5ec01b46d723ee57304b8b0ab739abebab814b214de",
+      "bytesPerFile": 650476,
+      "paths": [
+        "blog-web/design-qa-assets/page-backgrounds/before-1440-dark-_categories_dev-top.png",
+        "blog-web/design-qa-assets/page-backgrounds/before-1440-light-_categories_dev-top.png"
+      ],
+      "action": "保留",
+      "reason": "不同设计验收阶段的留档或正式资源与设计预览副本，不能仅凭内容相同删除"
+    },
+    {
+      "group": 37,
+      "sha256": "8ef7cefc8cb572c4a4054e5862a0394d1b018e0dec784b0b03022ba0732ef1d8",
+      "bytesPerFile": 547819,
+      "paths": [
+        "blog-web/design-qa-assets/page-backgrounds/before-1440-dark-_search-top.png",
+        "blog-web/design-qa-assets/page-backgrounds/before-1440-light-_search-top.png"
+      ],
+      "action": "保留",
+      "reason": "不同设计验收阶段的留档或正式资源与设计预览副本，不能仅凭内容相同删除"
+    },
+    {
+      "group": 38,
+      "sha256": "defd8dc16f80037612d4263a187754d45526dd7fa2e5d4d5460aa33d66911a2f",
+      "bytesPerFile": 645420,
+      "paths": [
+        "blog-web/design-qa-assets/page-backgrounds/before-1440-dark-_tags_vue-top.png",
+        "blog-web/design-qa-assets/page-backgrounds/before-1440-light-_tags_vue-top.png"
+      ],
+      "action": "保留",
+      "reason": "不同设计验收阶段的留档或正式资源与设计预览副本，不能仅凭内容相同删除"
+    },
+    {
+      "group": 39,
+      "sha256": "f720caf1ee222d1c80fe457a365b5dd8f8ae845aca12aaa7939c303477d850c6",
+      "bytesPerFile": 693817,
+      "paths": [
+        "blog-web/design-qa-assets/page-backgrounds/before-1440-dark-_tools-top.png",
+        "blog-web/design-qa-assets/page-backgrounds/before-1440-light-_tools-top.png"
+      ],
+      "action": "保留",
+      "reason": "不同设计验收阶段的留档或正式资源与设计预览副本，不能仅凭内容相同删除"
+    },
+    {
+      "group": 40,
+      "sha256": "1015aceabac1d15abb7e9f89f6bfea1e1460f4a4dc66d9a9da7016c7105bf9c2",
+      "bytesPerFile": 202567,
+      "paths": [
+        "blog-web/design-qa-assets/page-backgrounds/before-390-dark-_archives-top.png",
+        "blog-web/design-qa-assets/page-backgrounds/before-390-light-_archives-top.png"
+      ],
+      "action": "保留",
+      "reason": "不同设计验收阶段的留档或正式资源与设计预览副本，不能仅凭内容相同删除"
+    },
+    {
+      "group": 41,
+      "sha256": "903ed2c0983e2a8d690c5a1e37419bac4b53a1c043234fb5b11fa8b83db63bbe",
+      "bytesPerFile": 199573,
+      "paths": [
+        "blog-web/design-qa-assets/page-backgrounds/before-390-dark-_categories_dev-top.png",
+        "blog-web/design-qa-assets/page-backgrounds/before-390-light-_categories_dev-top.png"
+      ],
+      "action": "保留",
+      "reason": "不同设计验收阶段的留档或正式资源与设计预览副本，不能仅凭内容相同删除"
+    },
+    {
+      "group": 42,
+      "sha256": "ead97f415fe2eb38cee510f6179a9770d535e7a3c4c5702ef899bb09c88fc546",
+      "bytesPerFile": 145874,
+      "paths": [
+        "blog-web/design-qa-assets/page-backgrounds/before-390-dark-_guestbook-top.png",
+        "blog-web/design-qa-assets/page-backgrounds/before-390-light-_guestbook-top.png"
+      ],
+      "action": "保留",
+      "reason": "不同设计验收阶段的留档或正式资源与设计预览副本，不能仅凭内容相同删除"
+    },
+    {
+      "group": 43,
+      "sha256": "265cedd3b573d9747235c0264b4dd6d663e1a8923f66252d93d664cca4a189c7",
+      "bytesPerFile": 164768,
+      "paths": [
+        "blog-web/design-qa-assets/page-backgrounds/before-390-dark-_search-top.png",
+        "blog-web/design-qa-assets/page-backgrounds/before-390-light-_search-top.png"
+      ],
+      "action": "保留",
+      "reason": "不同设计验收阶段的留档或正式资源与设计预览副本，不能仅凭内容相同删除"
+    },
+    {
+      "group": 44,
+      "sha256": "0ad011649222502719dceec9dd8406157dbca7defee893f927429139b06e3a3f",
+      "bytesPerFile": 196472,
+      "paths": [
+        "blog-web/design-qa-assets/page-backgrounds/before-390-dark-_tags_vue-top.png",
+        "blog-web/design-qa-assets/page-backgrounds/before-390-light-_tags_vue-top.png"
+      ],
+      "action": "保留",
+      "reason": "不同设计验收阶段的留档或正式资源与设计预览副本，不能仅凭内容相同删除"
+    },
+    {
+      "group": 45,
+      "sha256": "fd22b04ea2e8e1538fa8fc585c0f41ae7c3ba13c4ad35c950fa1701768fbcbc2",
+      "bytesPerFile": 200888,
+      "paths": [
+        "blog-web/design-qa-assets/page-backgrounds/before-390-dark-_tools-top.png",
+        "blog-web/design-qa-assets/page-backgrounds/before-390-light-_tools-top.png"
+      ],
+      "action": "保留",
+      "reason": "不同设计验收阶段的留档或正式资源与设计预览副本，不能仅凭内容相同删除"
+    },
+    {
+      "group": 46,
+      "sha256": "18fe2f0a11676af396384ec38d4b1c41b9217c66c82036ce8990b2e2002dbb74",
+      "bytesPerFile": 671091,
+      "paths": [
+        "blog-web/design-qa-assets/page-backgrounds/contrast/contrast-before-dark-_archives.png",
+        "blog-web/design-qa-assets/page-backgrounds/contrast/contrast-before-light-_archives.png"
+      ],
+      "action": "保留",
+      "reason": "不同设计验收阶段的留档或正式资源与设计预览副本，不能仅凭内容相同删除"
+    },
+    {
+      "group": 47,
+      "sha256": "bb519856d00418e5c50d5886960dfeff62b1978193e4ca908fc8ede41e7f0cd4",
+      "bytesPerFile": 578149,
+      "paths": [
+        "blog-web/design-qa-assets/page-backgrounds/contrast/contrast-before-dark-_articles.png",
+        "blog-web/design-qa-assets/page-backgrounds/contrast/contrast-before-light-_articles.png"
+      ],
+      "action": "保留",
+      "reason": "不同设计验收阶段的留档或正式资源与设计预览副本，不能仅凭内容相同删除"
+    },
+    {
+      "group": 48,
+      "sha256": "9bdb91ebab71ea6806de266b74cd1ea1d0ec13a02a1050bf2f5fbb2938fda189",
+      "bytesPerFile": 423936,
+      "paths": [
+        "blog-web/design-qa-assets/page-backgrounds/contrast/contrast-before-dark-_articles_layout_1.png",
+        "blog-web/design-qa-assets/page-backgrounds/contrast/contrast-before-light-_articles_layout_1.png"
+      ],
+      "action": "保留",
+      "reason": "不同设计验收阶段的留档或正式资源与设计预览副本，不能仅凭内容相同删除"
+    },
+    {
+      "group": 49,
+      "sha256": "bd80c13debc8d5d0562c03e2447fc2a3627940035a851b8652147fb9c4e413fc",
+      "bytesPerFile": 612120,
+      "paths": [
+        "blog-web/design-qa-assets/page-backgrounds/contrast/contrast-before-dark-_categories_dev.png",
+        "blog-web/design-qa-assets/page-backgrounds/contrast/contrast-before-light-_categories_dev.png"
+      ],
+      "action": "保留",
+      "reason": "不同设计验收阶段的留档或正式资源与设计预览副本，不能仅凭内容相同删除"
+    },
+    {
+      "group": 50,
+      "sha256": "4e97cde47234617ff83f479a7030d14ba329dd0f329dc93ef406c3c059ad01f1",
+      "bytesPerFile": 779422,
+      "paths": [
+        "blog-web/design-qa-assets/page-backgrounds/contrast/contrast-before-dark-_friends.png",
+        "blog-web/design-qa-assets/page-backgrounds/contrast/contrast-before-light-_friends.png"
+      ],
+      "action": "保留",
+      "reason": "不同设计验收阶段的留档或正式资源与设计预览副本，不能仅凭内容相同删除"
+    },
+    {
+      "group": 51,
+      "sha256": "0c18b4894562223d1a8f2d66b2c093a5e66fcbbbbfcec1374b99ec2cfc2df9d4",
+      "bytesPerFile": 562068,
+      "paths": [
+        "blog-web/design-qa-assets/page-backgrounds/contrast/contrast-before-dark-_guestbook.png",
+        "blog-web/design-qa-assets/page-backgrounds/contrast/contrast-before-light-_guestbook.png"
+      ],
+      "action": "保留",
+      "reason": "不同设计验收阶段的留档或正式资源与设计预览副本，不能仅凭内容相同删除"
+    },
+    {
+      "group": 52,
+      "sha256": "e0159e1879385558ac3dd2972327fbe585bcfaceabe9cba8a5c707522af6f1ce",
+      "bytesPerFile": 928583,
+      "paths": [
+        "blog-web/design-qa-assets/page-backgrounds/contrast/contrast-before-dark-_projects.png",
+        "blog-web/design-qa-assets/page-backgrounds/contrast/contrast-before-light-_projects.png"
+      ],
+      "action": "保留",
+      "reason": "不同设计验收阶段的留档或正式资源与设计预览副本，不能仅凭内容相同删除"
+    },
+    {
+      "group": 53,
+      "sha256": "ab56626da0eb530f1f87cdeab21ac6b0ed5008e515e51d26629b027781ec3999",
+      "bytesPerFile": 505720,
+      "paths": [
+        "blog-web/design-qa-assets/page-backgrounds/contrast/contrast-before-dark-_search.png",
+        "blog-web/design-qa-assets/page-backgrounds/contrast/contrast-before-light-_search.png"
+      ],
+      "action": "保留",
+      "reason": "不同设计验收阶段的留档或正式资源与设计预览副本，不能仅凭内容相同删除"
+    },
+    {
+      "group": 54,
+      "sha256": "d6cf28d258dd331c2d4ca7a4afe08e8fb840084ae0c83322d2b6a36c76b081a6",
+      "bytesPerFile": 610702,
+      "paths": [
+        "blog-web/design-qa-assets/page-backgrounds/contrast/contrast-before-dark-_tags_vue.png",
+        "blog-web/design-qa-assets/page-backgrounds/contrast/contrast-before-light-_tags_vue.png"
+      ],
+      "action": "保留",
+      "reason": "不同设计验收阶段的留档或正式资源与设计预览副本，不能仅凭内容相同删除"
+    },
+    {
+      "group": 55,
+      "sha256": "61f57a1094721b112d4b6d2ab50e1dd6ae20c225370cb9538f6a3935747793a0",
+      "bytesPerFile": 657658,
+      "paths": [
+        "blog-web/design-qa-assets/page-backgrounds/contrast/contrast-before-dark-_tools.png",
+        "blog-web/design-qa-assets/page-backgrounds/contrast/contrast-before-light-_tools.png"
+      ],
+      "action": "保留",
+      "reason": "不同设计验收阶段的留档或正式资源与设计预览副本，不能仅凭内容相同删除"
+    },
+    {
+      "group": 56,
+      "sha256": "15bd8660fd86ff66930e48418dcd6b86ecb4799783ff44a98cce0b66036ea1b5",
+      "bytesPerFile": 1294138,
+      "paths": [
+        "blog-web/design-qa-assets/wuxia-font-source/hero-lettering-preview-v1.png",
+        "blog-web/public/images/wuxia-hero-lettering-v1.png"
+      ],
+      "action": "保留",
+      "reason": "不同设计验收阶段的留档或正式资源与设计预览副本，不能仅凭内容相同删除"
+    },
+    {
+      "group": 57,
+      "sha256": "9b18cbf0d7e769b5302daf522b94a08b221a14c5b814b546a9c97da23ddf03f3",
+      "bytesPerFile": 931990,
+      "paths": [
+        "blog-web/design-qa-assets/wuxia-pages/after-1440-_.png",
+        "blog-web/design-qa-assets/wuxia-pages/before-1440-_.png"
+      ],
+      "action": "保留",
+      "reason": "不同设计验收阶段的留档或正式资源与设计预览副本，不能仅凭内容相同删除"
+    },
+    {
+      "group": 58,
+      "sha256": "18662aa5209fd07d17c1ff8bc80e1252caa93174c59c0375e93c614a4b8a09b5",
+      "bytesPerFile": 270036,
+      "paths": [
+        "blog-web/design-qa-assets/wuxia-pages/after-1440-_admin_dashboard.png",
+        "blog-web/design-qa-assets/wuxia-pages/layout-restored/after-1440-_admin_dashboard.png"
+      ],
+      "action": "保留",
+      "reason": "不同设计验收阶段的留档或正式资源与设计预览副本，不能仅凭内容相同删除"
+    },
+    {
+      "group": 59,
+      "sha256": "ac55755c912c4b0d6e3b81eb305212c0ad515a9ffb661901f819d4215ab40df4",
+      "bytesPerFile": 784081,
+      "paths": [
+        "blog-web/design-qa-assets/wuxia-pages/after-1440-_articles.png",
+        "blog-web/design-qa-assets/wuxia-pages/layout-restored/after-1440-_articles.png"
+      ],
+      "action": "保留",
+      "reason": "不同设计验收阶段的留档或正式资源与设计预览副本，不能仅凭内容相同删除"
+    },
+    {
+      "group": 60,
+      "sha256": "9542a34833a70f14eece632e06fbe3ae896f9e3c46cdf29ec933c03ff4e52e65",
+      "bytesPerFile": 768485,
+      "paths": [
+        "blog-web/design-qa-assets/wuxia-pages/after-1440-_guestbook.png",
+        "blog-web/design-qa-assets/wuxia-pages/layout-restored/after-1440-_guestbook.png"
+      ],
+      "action": "保留",
+      "reason": "不同设计验收阶段的留档或正式资源与设计预览副本，不能仅凭内容相同删除"
+    },
+    {
+      "group": 61,
+      "sha256": "3dc129f586cc9b9996f7e17381b866864a8b8f57ecc453faf70c1080d196db21",
+      "bytesPerFile": 713978,
+      "paths": [
+        "blog-web/design-qa-assets/wuxia-pages/after-1440-_missing_page.png",
+        "blog-web/design-qa-assets/wuxia-pages/layout-restored/after-1440-_missing_page.png"
+      ],
+      "action": "保留",
+      "reason": "不同设计验收阶段的留档或正式资源与设计预览副本，不能仅凭内容相同删除"
+    },
+    {
+      "group": 62,
+      "sha256": "f6771ec35721675ccf65b99875cb67e1cae61f7fb157b1bc41c0342aea4e33a7",
+      "bytesPerFile": 1119526,
+      "paths": [
+        "blog-web/design-qa-assets/wuxia-pages/after-1440-_projects.png",
+        "blog-web/design-qa-assets/wuxia-pages/layout-restored/after-1440-_projects.png"
+      ],
+      "action": "保留",
+      "reason": "不同设计验收阶段的留档或正式资源与设计预览副本，不能仅凭内容相同删除"
+    },
+    {
+      "group": 63,
+      "sha256": "585b75f335a0645c56494a617d94c6653fd90071d40ca9fdb519555b41341e7b",
+      "bytesPerFile": 901106,
+      "paths": [
+        "blog-web/design-qa-assets/wuxia-pages/after-1440-_tools.png",
+        "blog-web/design-qa-assets/wuxia-pages/layout-restored/after-1440-_tools.png"
+      ],
+      "action": "保留",
+      "reason": "不同设计验收阶段的留档或正式资源与设计预览副本，不能仅凭内容相同删除"
+    },
+    {
+      "group": 64,
+      "sha256": "9db40ba56011249a51c62b6b157e3b1822f2de3e2a6d117d4904918ae5f100c5",
+      "bytesPerFile": 220226,
+      "paths": [
+        "blog-web/design-qa-assets/wuxia-pages/after-390-_.png",
+        "blog-web/design-qa-assets/wuxia-pages/before-390-_.png"
+      ],
+      "action": "保留",
+      "reason": "不同设计验收阶段的留档或正式资源与设计预览副本，不能仅凭内容相同删除"
+    },
+    {
+      "group": 65,
+      "sha256": "22e277dac9538eba5cba1e15d8dd55b28ca9a2dc501d6a74af2259aa57bd4da6",
+      "bytesPerFile": 220322,
+      "paths": [
+        "blog-web/design-qa-assets/wuxia-pages/after-390-_articles.png",
+        "blog-web/design-qa-assets/wuxia-pages/layout-restored/after-390-_articles.png"
+      ],
+      "action": "保留",
+      "reason": "不同设计验收阶段的留档或正式资源与设计预览副本，不能仅凭内容相同删除"
+    },
+    {
+      "group": 66,
+      "sha256": "018ae74e5624cd87a870b8663018a02e940d1c4ca3f1902002e2e596f53d623c",
+      "bytesPerFile": 145624,
+      "paths": [
+        "blog-web/design-qa-assets/wuxia-pages/after-390-_guestbook.png",
+        "blog-web/design-qa-assets/wuxia-pages/final/after-390-_guestbook.png"
+      ],
+      "action": "保留",
+      "reason": "不同设计验收阶段的留档或正式资源与设计预览副本，不能仅凭内容相同删除"
+    },
+    {
+      "group": 67,
+      "sha256": "b943c0d59d16099e7b1074981ef7fbcb38c232b4d59cbdf001fea453e6a3e459",
+      "bytesPerFile": 197063,
+      "paths": [
+        "blog-web/design-qa-assets/wuxia-pages/after-390-_missing_page.png",
+        "blog-web/design-qa-assets/wuxia-pages/layout-restored/after-390-_missing_page.png"
+      ],
+      "action": "保留",
+      "reason": "不同设计验收阶段的留档或正式资源与设计预览副本，不能仅凭内容相同删除"
+    },
+    {
+      "group": 68,
+      "sha256": "d43e79c6535974cfa045c4b2106a0e8837335ace61b6e601ae8e06b01541703e",
+      "bytesPerFile": 204206,
+      "paths": [
+        "blog-web/design-qa-assets/wuxia-pages/after-390-_tools.png",
+        "blog-web/design-qa-assets/wuxia-pages/final/after-390-_tools.png"
+      ],
+      "action": "保留",
+      "reason": "不同设计验收阶段的留档或正式资源与设计预览副本，不能仅凭内容相同删除"
+    },
+    {
+      "group": 69,
+      "sha256": "c32fae94fd8826973b5de04c8854eed8019e68a03052975277339119221c7dd1",
+      "bytesPerFile": 424140,
+      "paths": [
+        "blog-web/design-qa-assets/wuxia-pages/before-1440-_admin_login.png",
+        "blog-web/design-qa-assets/wuxia-pages/final/before-1440-_admin_login.png"
+      ],
+      "action": "保留",
+      "reason": "不同设计验收阶段的留档或正式资源与设计预览副本，不能仅凭内容相同删除"
+    },
+    {
+      "group": 70,
+      "sha256": "d32f85cc7a49e1e2e8952e2148c78aeaad1f9a89489e0bbb13afb17f125ef1b8",
+      "bytesPerFile": 122623,
+      "paths": [
+        "blog-web/design-qa-assets/wuxia-pages/before-390-_admin_login.png",
+        "blog-web/design-qa-assets/wuxia-pages/final/before-390-_admin_login.png"
+      ],
+      "action": "保留",
+      "reason": "不同设计验收阶段的留档或正式资源与设计预览副本，不能仅凭内容相同删除"
+    }
+  ]
+}

@@ -1,9 +1,8 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import { wuxiaCopy } from '@/utils/wuxiaCopy'
 
 const SITE_NAME = '个人博客'
 
-// 各路由对应的页标题（无对应则用 SITE_NAME）
+// 浏览器标签名与导航名称保持一致，不参与主题文案替换（无对应则用 SITE_NAME）。
 const TITLE_MAP = {
   'home': '首页',
   'articles': '文章',
@@ -16,8 +15,8 @@ const TITLE_MAP = {
   'archives': '归档',
   'search': '搜索',
   'page': '页面',
-  'guestbook': '留言板',
-  'about': '关于我',
+  'guestbook': '留言',
+  'about': '关于',
   'admin-login': '登录',
   'admin-dashboard': '仪表盘',
   'admin-articles': '文章管理',
@@ -121,15 +120,12 @@ const updatePageTitle = (to) => {
   if (typeof custom === 'string' && custom) {
     document.title = custom
   } else if (pageName) {
-    const themed = to.path !== '/' && !/^\/admin(?:\/|$)/i.test(to.path)
-      && document.documentElement.dataset.theme === 'ink'
-    document.title = `${themed ? (wuxiaCopy[pageName] || pageName) : pageName} · ${SITE_NAME}`
+    document.title = `${pageName} · ${SITE_NAME}`
   } else {
     document.title = SITE_NAME
   }
 }
 router.afterEach(updatePageTitle)
-window.addEventListener('blog:theme-change', () => updatePageTitle(router.currentRoute.value))
 
 // 防止 Vue Router 4 默认抛 NavigationDuplicated 阻断流程
 const originalPush = router.push

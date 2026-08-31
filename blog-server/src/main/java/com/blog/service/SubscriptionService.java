@@ -29,7 +29,7 @@ import org.slf4j.LoggerFactory;
  * <p>设计：</p>
  * <ul>
  *   <li>双重确认(double opt-in)：提交 → 落库待确认 + 发确认邮件 → 点击链接置已确认</li>
- *   <li>若 SMTP 未启用(blog.mail.enabled=false)，无法发确认邮件，则提交即直接置已确认，保证功能始终可用</li>
+ *   <li>SMTP 未启用时拒绝新订阅，避免未经确认的邮箱进入推送名单</li>
  *   <li>同邮箱重复订阅：已确认 → 提示无需重复；待确认 → 重发确认邮件（或离线时直接确认）</li>
  *   <li>公开接口必须限频，防批量灌水/滥用他人邮箱</li>
  * </ul>
@@ -73,13 +73,15 @@ public class SubscriptionService {
 
     public Map<String, Object> subscribe(String rawEmail, String source, HttpServletRequest req) {
         String email = rawEmail == null ? "" : rawEmail.trim().toLowerCase();
-        if (email.isEmpty() || !EMAIL.matcher(email).matches()) {
+        if (email.isEmpty() || email.length() > 100 || !EMAIL.matcher(email).matches()) {
             throw new BizException("请输入有效的邮箱地址");
         }
 
         // 公开接口限频：同 IP 60 秒内最多 5 次
         rateLimiter.acquireOrThrow("subscribe:ip:" + ipResolver.resolve(req), 5, 60);
 
+        if (!mailEnabled || !mailService.isEnabled()) throw new BizException(503, "订阅邮件服务暂不可用");
+        confirmationBase();
         Map<String, Object> result = new HashMap<>();
 
         // 关键修复：用“绕过逻辑删除”的原始查询做预检。
@@ -94,16 +96,17 @@ public class SubscriptionService {
         // 新订阅
         EmailSubscription sub = new EmailSubscription();
         sub.setEmail(email);
-        sub.setSource(source);
-        sub.setStatus(mailEnabled ? STATUS_PENDING : STATUS_CONFIRMED);
+        sub.setSource("web");
+        sub.setStatus(STATUS_PENDING);
         sub.setToken(UUID.randomUUID().toString().replace("-", ""));
         sub.setCreateTime(LocalDateTime.now());
-        if (!mailEnabled) sub.setConfirmTime(LocalDateTime.now());
+        sub.setConfirmationToken(UUID.randomUUID().toString().replace("-", ""));
+        sub.setConfirmationExpiresAt(LocalDateTime.now().plusHours(24));
         try {
             mapper.insert(sub);
         } catch (DuplicateKeyException e) {
             // 并发竞态：两个相同邮箱请求同时通过上面的预检，其中一个 INSERT 撞唯一索引 uk_email。
-            // 当作“已存在”处理，重发确认信 / 直接确认，避免 500。
+            // 当作“已存在”处理，仍需有效确认凭据，避免 500。
             EmailSubscription race = mapper.selectRawByEmail(email);
             if (race != null) {
                 handleExisting(email, race, source, req, result);
@@ -112,27 +115,18 @@ public class SubscriptionService {
             throw e; // 极端兜底：理论上不会到这里
         }
 
-        if (mailEnabled) {
-            boolean sent = sendConfirmEmail(sub, req);
-            result.put("subscribed", true);
-            result.put("pending", true);
-            result.put("emailSent", sent);
-            result.put("message", sent
-                    ? "订阅请求已提交，请查收邮箱中的确认链接以完成订阅"
-                    : "确认邮件发送失败，请稍后重试或联系管理员");
-        } else {
-            // 离线（SMTP 未启用）：直接确认，无需发信。
-            // 不设 emailSent（undefined），前端 data.emailSent !== false → 视为成功，
-            // 不会误报"确认邮件发送失败"（离线模式本就不需要确认邮件）。
-            result.put("subscribed", true);
-            result.put("message", "订阅成功");
-        }
+        boolean sent = sendConfirmEmail(sub, req);
+        result.put("subscribed", true);
+        result.put("pending", true);
+        result.put("emailSent", sent);
+        result.put("message", sent ? "请查收邮箱中的确认链接以完成订阅" : "确认邮件发送失败，请稍后重试");
+
         return result;
     }
 
     /**
      * 处理“邮箱已存在”分支：已确认且未删除 → 提示无需重复；
-     * 待确认 / 曾被退订删除 → 重新激活并重发确认信（或离线直接确认）。
+     * 待确认 / 曾被退订删除 → 生成新的限时确认凭据；不直接激活。
      */
     private void handleExisting(String email, EmailSubscription existing, String source,
                                HttpServletRequest req, Map<String, Object> result) {
@@ -143,42 +137,28 @@ public class SubscriptionService {
             result.put("message", "该邮箱已订阅，无需重复订阅");
             return;
         }
-        // 待确认、或曾被退订/删除：重新生成令牌并激活，重发确认邮件（或离线直接确认）
-        if (mailEnabled) {
-            String token = UUID.randomUUID().toString().replace("-", "");
-            mapper.updateRawByEmail(email, STATUS_PENDING, token, source, LocalDateTime.now(), null);
-            EmailSubscription toSend = mapper.selectRawByEmail(email);
-            boolean sent = toSend != null && sendConfirmEmail(toSend, req);
-            result.put("subscribed", true);
-            result.put("pending", true);
-            result.put("emailSent", sent);
-            result.put("message", sent
-                    ? "确认邮件已重新发送，请查收邮箱完成订阅"
-                    : "确认邮件发送失败，请稍后重试或联系管理员");
-            return;
-        }
-        // 离线（SMTP 未启用）：直接置已确认
-        mapper.updateRawByEmail(email, STATUS_CONFIRMED, existing.getToken(), source,
-                existing.getCreateTime(), LocalDateTime.now());
+        int changed = mapper.resetPending(email, UUID.randomUUID().toString().replace("-", ""),
+                UUID.randomUUID().toString().replace("-", ""), LocalDateTime.now().plusHours(24));
+        EmailSubscription toSend = mapper.selectRawByEmail(email);
+        boolean sent = changed == 1 && toSend != null && sendConfirmEmail(toSend, req);
         result.put("subscribed", true);
-        result.put("message", "订阅成功");
+        result.put("pending", changed == 1);
+        result.put("emailSent", sent);
+        result.put("message", changed == 0 ? "该邮箱已确认订阅" : sent ? "确认邮件已发送，请查收邮箱" : "确认邮件发送失败，请稍后重试");
+    }
+
+    private String confirmationBase() {
+        String base = confirmBaseUrl != null && !confirmBaseUrl.isBlank() ? confirmBaseUrl : siteBaseUrl;
+        try {
+            java.net.URI uri = java.net.URI.create(base == null ? "" : base);
+            if (!java.util.Set.of("http", "https").contains(uri.getScheme()) || uri.getHost() == null
+                    || uri.getUserInfo() != null || uri.getQuery() != null || uri.getFragment() != null) throw new IllegalArgumentException();
+            return base.replaceAll("/+$", "");
+        } catch (IllegalArgumentException ex) { throw new BizException(503, "订阅服务尚未配置站点地址"); }
     }
 
     private boolean sendConfirmEmail(EmailSubscription sub, HttpServletRequest req) {
-        // 确认链接基础地址：优先用显式配置的 confirm-base-url；其次用服务端固定 site-base-url；
-        // 二者都未配置时才退回请求 Host 头（可被客户端伪造，仅作兜底并告警，强烈建议配置前两项之一）。
-        String base;
-        if (confirmBaseUrl != null && !confirmBaseUrl.isBlank()) {
-            base = confirmBaseUrl;
-        } else if (siteBaseUrl != null && !siteBaseUrl.isBlank()) {
-            base = siteBaseUrl;
-        } else {
-            log.warn("[Subscription] blog.subscribe.confirm-base-url / blog.site.base-url 均未配置，"
-                    + "确认链接退回使用请求 Host 头（可被伪造，存在钓鱼风险），请尽快在配置中设置站点根地址");
-            base = req.getScheme() + "://" + req.getHeader("Host");
-        }
-        base = base.replaceAll("/+$", "");
-        String link = base + "/api/v1/subscribe/confirm?token=" + sub.getToken();
+        String link = confirmationBase() + "/api/v1/subscribe/confirm?token=" + sub.getConfirmationToken();
 
         String subject = "【" + escapeHtml(siteName) + "】请确认你的邮箱订阅";
         String text = "感谢订阅 " + siteName + "！\n请点击下面的链接确认订阅：\n" + link
@@ -205,19 +185,12 @@ public class SubscriptionService {
         if (token == null || token.isBlank()) {
             return confirmHtml(false, "无效的确认链接");
         }
-        LambdaQueryWrapper<EmailSubscription> q = new LambdaQueryWrapper<>();
-        q.eq(EmailSubscription::getToken, token);
-        EmailSubscription sub = mapper.selectOne(q);
-        if (sub == null) {
-            return confirmHtml(false, "无效的确认链接或链接已失效");
-        }
-        if (sub.getStatus() == STATUS_CONFIRMED) {
-            return confirmHtml(true, "该邮箱已确认订阅，无需重复操作");
-        }
-        sub.setStatus(STATUS_CONFIRMED);
-        sub.setConfirmTime(LocalDateTime.now());
-        mapper.updateById(sub);
-        return confirmHtml(true, "订阅确认成功，感谢你的关注！");
+        int changed = mapper.update(null, new com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper<EmailSubscription>()
+                .eq(EmailSubscription::getConfirmationToken, token).eq(EmailSubscription::getStatus, STATUS_PENDING)
+                .gt(EmailSubscription::getConfirmationExpiresAt, LocalDateTime.now())
+                .set(EmailSubscription::getStatus, STATUS_CONFIRMED).set(EmailSubscription::getConfirmTime, LocalDateTime.now())
+                .set(EmailSubscription::getConfirmationToken, null).set(EmailSubscription::getConfirmationExpiresAt, null));
+        return confirmHtml(changed == 1, changed == 1 ? "订阅确认成功，感谢你的关注！" : "确认链接无效、已使用或已过期，请重新订阅");
     }
 
     private String confirmHtml(boolean ok, String msg) {
@@ -274,7 +247,7 @@ public class SubscriptionService {
     /** 后台新增订阅：管理员添加视为可信，直接置已确认（不发送确认邮件） */
     public EmailSubscription adminCreate(String rawEmail) {
         String email = rawEmail == null ? "" : rawEmail.trim().toLowerCase();
-        if (email.isEmpty() || !EMAIL.matcher(email).matches()) {
+        if (email.isEmpty() || email.length() > 100 || !EMAIL.matcher(email).matches()) {
             throw new BizException("请输入有效的邮箱地址");
         }
         // 用原始查询预检，避免已删除(deleted=1)记录对 selectOne 不可见导致下方 INSERT 撞唯一索引
@@ -328,9 +301,9 @@ public class SubscriptionService {
     public void adminUnsubscribe(Long id) {
         EmailSubscription sub = mapper.selectById(id);
         if (sub == null) throw new BizException("订阅记录不存在");
-        sub.setStatus(STATUS_UNSUBSCRIBED);
-        sub.setDeleted(0);
-        mapper.updateById(sub);
+        mapper.update(null, new com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper<EmailSubscription>()
+                .eq(EmailSubscription::getId, sub.getId()).set(EmailSubscription::getStatus, STATUS_UNSUBSCRIBED)
+                .set(EmailSubscription::getConfirmationToken, null).set(EmailSubscription::getConfirmationExpiresAt, null));
     }
 
     /** 后台手动确认订阅 */
@@ -357,9 +330,9 @@ public class SubscriptionService {
             return unsubHtml(true, "你已退订，不会再收到 " + siteName + " 的更新邮件。");
         }
         // 退订：保留记录，仅标记为已退订(status=2)，不再推送；区别于后台“删除”(真删除)
-        sub.setStatus(STATUS_UNSUBSCRIBED);
-        sub.setDeleted(0);
-        mapper.updateById(sub);
+        mapper.update(null, new com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper<EmailSubscription>()
+                .eq(EmailSubscription::getId, sub.getId()).set(EmailSubscription::getStatus, STATUS_UNSUBSCRIBED)
+                .set(EmailSubscription::getConfirmationToken, null).set(EmailSubscription::getConfirmationExpiresAt, null));
         return unsubHtml(true, "已成功退订，你不会再收到 " + siteName + " 的更新邮件。");
     }
 
