@@ -9,46 +9,49 @@
       <router-link to="/" class="aside-brand">
         <img v-if="siteLogo" :src="siteLogo" class="mark mark-img" alt="" aria-hidden="true" />
         <span v-else class="mark">·</span>
-        <span v-if="!collapsed" class="text">Admin</span>
+        <span v-if="!collapsed" class="text">{{ wx('Admin') }}</span>
       </router-link>
       <nav class="aside-nav" @click="drawerOpen = false">
         <router-link to="/admin/dashboard" class="nav-item">
-          <el-icon><DataLine /></el-icon><span v-if="!collapsed">仪表盘</span>
+          <el-icon><DataLine /></el-icon><span v-if="!collapsed">{{ wx('仪表盘') }}</span>
         </router-link>
         <router-link to="/admin/articles" class="nav-item">
-          <el-icon><Document /></el-icon><span v-if="!collapsed">文章管理</span>
+          <el-icon><Document /></el-icon><span v-if="!collapsed">{{ wx('文章管理') }}</span>
         </router-link>
         <router-link to="/admin/archives" class="nav-item">
-          <el-icon><Clock /></el-icon><span v-if="!collapsed">归档管理</span>
+          <el-icon><Clock /></el-icon><span v-if="!collapsed">{{ wx('归档管理') }}</span>
         </router-link>
         <router-link to="/admin/comments" class="nav-item">
-          <el-icon><ChatDotRound /></el-icon><span v-if="!collapsed">评论管理</span>
+          <el-icon><ChatDotRound /></el-icon><span v-if="!collapsed">{{ wx('评论管理') }}</span>
         </router-link>
         <router-link to="/admin/guestbook" class="nav-item">
-          <el-icon><ChatLineSquare /></el-icon><span v-if="!collapsed">留言管理</span>
+          <el-icon><ChatLineSquare /></el-icon><span v-if="!collapsed">{{ wx('留言管理') }}</span>
         </router-link>
         <router-link to="/admin/projects" class="nav-item">
-          <el-icon><Box /></el-icon><span v-if="!collapsed">项目管理</span>
+          <el-icon><Box /></el-icon><span v-if="!collapsed">{{ wx('项目管理') }}</span>
         </router-link>
         <router-link to="/admin/tools" class="nav-item">
-          <el-icon><Tools /></el-icon><span v-if="!collapsed">工具管理</span>
+          <el-icon><Tools /></el-icon><span v-if="!collapsed">{{ wx('工具管理') }}</span>
         </router-link>
         <router-link to="/admin/friend-links" class="nav-item">
-          <el-icon><Link /></el-icon><span v-if="!collapsed">友链管理</span>
+          <el-icon><Link /></el-icon><span v-if="!collapsed">{{ wx('友链管理') }}</span>
         </router-link>
         <router-link to="/admin/subscriptions" class="nav-item">
-          <el-icon><Bell /></el-icon><span v-if="!collapsed">订阅管理</span>
+          <el-icon><Bell /></el-icon><span v-if="!collapsed">{{ wx('订阅管理') }}</span>
         </router-link>
         <router-link to="/admin/stats" class="nav-item">
-          <el-icon><DataAnalysis /></el-icon><span v-if="!collapsed">访问统计</span>
+          <el-icon><DataAnalysis /></el-icon><span v-if="!collapsed">{{ wx('访问统计') }}</span>
         </router-link>
         <div class="nav-sep" />
+        <router-link to="/admin/themes" class="nav-item" :aria-label="wx('主题管理')">
+          <el-icon aria-hidden="true"><Brush /></el-icon><span v-if="!collapsed">{{ wx('主题管理') }}</span>
+        </router-link>
         <router-link to="/admin/profile" class="nav-item">
-          <el-icon><User /></el-icon><span v-if="!collapsed">个人中心</span>
+          <el-icon><User /></el-icon><span v-if="!collapsed">{{ wx('个人中心') }}</span>
         </router-link>
       </nav>
       <div class="aside-foot" v-if="!collapsed">
-        <a href="/" target="_blank"><el-icon><View /></el-icon> 查看前台</a>
+        <a href="/" target="_blank"><el-icon><View /></el-icon> {{ wx('查看前台') }}</a>
       </div>
     </aside>
 
@@ -66,15 +69,15 @@
         <div class="topbar-right">
           <el-dropdown @command="onCmd">
             <span class="user-trigger">
-              <el-avatar :size="32" :src="userStore.userInfo?.avatar" style="background: var(--c-botany-500); color: #fff;">
+              <el-avatar :size="32" :src="userStore.userInfo?.avatar" style="background: var(--c-botany-500); color: var(--theme-on-primary);">
                 {{ userInitial }}
               </el-avatar>
-              <span v-if="!isMobile" class="user-name">{{ userStore.userInfo?.username || 'Admin' }}</span>
+              <span v-if="!isMobile" class="user-name">{{ userStore.userInfo?.username || wx('Admin') }}</span>
               <el-icon v-if="!isMobile"><ArrowDown /></el-icon>
             </span>
             <template #dropdown>
               <el-dropdown-menu>
-                <el-dropdown-item command="home">返回前台</el-dropdown-item>
+                <el-dropdown-item command="home">{{ wx('返回前台') }}</el-dropdown-item>
                 <el-dropdown-item command="logout" divided>退出登录</el-dropdown-item>
               </el-dropdown-menu>
             </template>
@@ -89,11 +92,14 @@
 </template>
 
 <script setup>
+import { useWuxiaCopy } from '@/composables/useWuxiaCopy'
+const { wx } = useWuxiaCopy()
+
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
   Expand, Fold, DataLine, DataAnalysis, Document,
-  ChatDotRound, ChatLineSquare, Files, View, ArrowDown, Box, Link, User, Clock, Tools, Bell,
+  ChatDotRound, ChatLineSquare, Files, View, ArrowDown, Box, Link, User, Clock, Tools, Bell, Brush,
 } from '@element-plus/icons-vue'
 import { useUserStore } from '@/stores/user'
 import { useSiteStore } from '@/stores/site'
@@ -138,9 +144,10 @@ const titles = {
   'admin-friend-links': '友链管理',
   'admin-subscriptions': '订阅管理',
   'admin-stats': '访问统计',
+  'admin-themes': '主题管理',
   'admin-profile': '个人中心'
 }
-const pageTitle = computed(() => titles[route.name] || '后台')
+const pageTitle = computed(() => wx(titles[route.name] || '后台'))
 
 const onCmd = (cmd) => {
   if (cmd === 'logout') {
@@ -175,12 +182,12 @@ onUnmounted(() => {
   height: 100vh;
   height: 100dvh;
   overflow: hidden;
-  background: linear-gradient(180deg, #f0f9ff 0%, #f8fafc 100%);
+  background: linear-gradient(180deg, var(--c-bg) 0%, var(--c-paper-soft) 100%);
 }
 .admin-aside {
   width: 220px;
   height: 100%;
-  background: #fff;
+  background: var(--c-paper);
   border-right: 1px solid var(--c-line);
   display: flex;
   flex-direction: column;
@@ -203,7 +210,7 @@ onUnmounted(() => {
   clip-path: circle(50% at 50% 50%);
   display: grid; place-items: center;
   background: linear-gradient(135deg, var(--c-botany-500), var(--c-autumn-500));
-  color: #fff;
+  color: var(--theme-on-primary);
   font-family: var(--font-serif);
   font-size: 18px;
   flex-shrink: 0;
@@ -239,7 +246,7 @@ onUnmounted(() => {
 .nav-item:hover { background: var(--c-botany-50); color: var(--c-botany-700); }
 .nav-item.router-link-active {
   background: var(--c-botany-500);
-  color: #fff;
+  color: var(--theme-on-primary);
 }
 .nav-item .el-icon { font-size: 16px; flex-shrink: 0; }
 
@@ -263,7 +270,7 @@ onUnmounted(() => {
 
 .admin-main { flex: 1; display: flex; flex-direction: column; min-width: 0; height: 100%; }
 .admin-topbar {
-  background: #fff;
+  background: var(--c-paper);
   height: 56px;
   border-bottom: 1px solid var(--c-line);
   display: flex;
@@ -306,7 +313,7 @@ onUnmounted(() => {
 }
 .aside-mask {
   position: fixed; inset: 0;
-  background: rgba(15, 23, 42, 0.45);
+  background: var(--theme-overlay);
   z-index: 99;
 }
 
@@ -319,7 +326,7 @@ onUnmounted(() => {
     top: 0; left: 0; bottom: 0;
     width: 240px;
     z-index: 100;
-    box-shadow: 4px 0 24px rgba(15, 23, 42, 0.15);
+    box-shadow: 4px 0 24px rgba(var(--theme-ink-rgb), 0.15);
     transform: translateX(-100%);
     transition: transform 0.3s cubic-bezier(.4,0,.2,1);
   }

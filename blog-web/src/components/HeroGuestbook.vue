@@ -3,18 +3,22 @@
     <GodRays :origin-y="70" />
     <div class="container hg-inner">
       <div class="hg-text">
-        <h1 class="hg-title">{{ title }}</h1>
+        <h1 class="hg-title"><WuxiaHeadingLettering :text="title" /></h1>
         <p class="hg-sub" v-if="subtitle">{{ subtitle }}</p>
       </div>
       <button class="hg-publish" @click="$emit('publish')">
         <el-icon><EditPen /></el-icon>
-        <span>发表留言</span>
+        <span>{{ wx('发表留言') }}</span>
       </button>
     </div>
   </div>
 </template>
 
 <script setup>
+import WuxiaHeadingLettering from '@/components/WuxiaHeadingLettering.vue'
+import { useWuxiaCopy } from '@/composables/useWuxiaCopy'
+const { wx } = useWuxiaCopy()
+
 import { EditPen } from '@element-plus/icons-vue'
 import GodRays from '@/components/effects/GodRays.vue'
 defineProps({
@@ -30,8 +34,8 @@ defineEmits(['publish'])
   /* 不裁切——装饰元素自然向外 bleed */
   /* 不铺不透明底色——让全局天空透上来 */
   background:
-    radial-gradient(ellipse at 18% 50%, rgba(186, 230, 253, 0.12) 0%, transparent 55%),
-    radial-gradient(ellipse at 82% 50%, rgba(125, 211, 252, 0.08) 0%, transparent 55%);
+    radial-gradient(ellipse at 18% 50%, rgba(var(--theme-primary-soft-rgb), 0.12) 0%, transparent 55%),
+    radial-gradient(ellipse at 82% 50%, rgba(var(--theme-primary-light-rgb), 0.08) 0%, transparent 55%);
   padding: 38px 0 60px;
   margin-bottom: 0;
 }
@@ -52,7 +56,7 @@ defineEmits(['publish'])
   font-size: 36px;
   font-weight: 700;
   margin: 0 0 6px;
-  background: linear-gradient(135deg, #0284c7 0%, #0ea5e9 50%, #38bdf8 100%);
+  background: linear-gradient(135deg, var(--c-botany-800) 0%, var(--c-botany-700) 50%, var(--c-botany-500) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -72,12 +76,12 @@ defineEmits(['publish'])
   padding: 11px 26px;
   border: none;
   border-radius: 999px;
-  background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
-  color: #fff;
+  background: linear-gradient(135deg, var(--c-botany-700) 0%, var(--c-botany-800) 100%);
+  color: var(--theme-on-primary);
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
-  box-shadow: 0 6px 18px rgba(14, 165, 233, 0.32);
+  box-shadow: 0 6px 18px rgba(var(--theme-primary-strong-rgb), 0.32);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
   flex-shrink: 0;
   letter-spacing: 0.05em;
@@ -88,7 +92,7 @@ defineEmits(['publish'])
 }
 .hg-publish:hover {
   transform: translateY(calc(-50% - 2px));
-  box-shadow: 0 10px 24px rgba(14, 165, 233, 0.4);
+  box-shadow: 0 10px 24px rgba(var(--theme-primary-strong-rgb), 0.4);
 }
 .hg-publish:active { transform: translateY(-50%); }
 .hg-publish .el-icon { font-size: 14px; }

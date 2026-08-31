@@ -30,7 +30,7 @@
     <!-- 右上图标：图片 URL 优先渲染，否则蓝线稿文档图标兜底 -->
     <img v-if="isIconUrl(tool.icon)" :src="tool.icon" class="card-icon card-icon-img" alt="" aria-hidden="true" loading="lazy" decoding="async" />
     <svg v-else class="card-icon" width="60" height="60" viewBox="0 0 60 60"
-      fill="none" stroke="#38bdf8" stroke-width="2" stroke-linejoin="round"
+      fill="none" stroke="var(--c-botany-500)" stroke-width="2" stroke-linejoin="round"
       aria-hidden="true">
       <rect x="14" y="8" width="32" height="44" rx="3" />
       <line x1="20" y1="18" x2="40" y2="18" />
@@ -44,22 +44,25 @@
         {{ catLabel(tool.category) }}
       </span>
       <template v-if="tool.status === 1">
-        <span class="use-btn ef-neon" @click.stop="emit('use', tool)">开始使用</span>
+        <span class="use-btn ef-neon" @click.stop="emit('use', tool)">{{ wx('开始使用') }}</span>
       </template>
       <template v-else-if="tool.status === 2">
-        <span class="use-btn muted">维护中</span>
+        <span class="use-btn muted">{{ wx('维护中') }}</span>
       </template>
       <template v-else-if="tool.status === 3">
-        <span class="use-btn upcoming">即将上线</span>
+        <span class="use-btn upcoming">{{ wx('即将上线') }}</span>
       </template>
       <template v-else>
-        <span class="use-btn muted">已下线</span>
+        <span class="use-btn muted">{{ wx('已下线') }}</span>
       </template>
     </div>
   </article>
 </template>
 
 <script setup>
+import { useWuxiaCopy } from '@/composables/useWuxiaCopy'
+const { wx } = useWuxiaCopy()
+
 import { computed } from 'vue'
 
 const props = defineProps({
@@ -92,8 +95,8 @@ const onGlowMove = (e) => {
 <style scoped lang="scss">
 .tool-card {
   position: relative;
-  background: #fff;
-  border: 1px solid rgba(186, 230, 253, 0.6);
+  background: var(--c-paper);
+  border: 1px solid rgba(var(--theme-primary-soft-rgb), 0.6);
   border-radius: 14px;
   padding: 22px 18px 18px;
   display: grid;
@@ -105,27 +108,27 @@ const onGlowMove = (e) => {
     "desc  desc"
     "foot  foot";
   gap: 10px 14px;
-  box-shadow: 0 4px 16px rgba(56, 189, 248, 0.08);
+  box-shadow: 0 4px 16px rgba(var(--theme-primary-rgb), 0.08);
   transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
   cursor: pointer;
   overflow: hidden;
 
   &:hover {
-    box-shadow: 0 10px 28px rgba(56, 189, 248, 0.18);
-    border-color: rgba(56, 189, 248, 0.4);
+    box-shadow: 0 10px 28px rgba(var(--theme-primary-rgb), 0.18);
+    border-color: rgba(var(--theme-primary-rgb), 0.4);
   }
 
   &.is-maintain {
-    background: #f8fafc;
+    background: var(--c-ink-50);
     border-style: dashed;
-    border-color: #cbd5e1;
+    border-color: var(--c-ink-200);
     opacity: 0.7;
-    .card-title { color: #64748b; }
+    .card-title { color: var(--c-ink-400); }
   }
   &.is-upcoming {
-    background: #fff;
+    background: var(--c-paper);
     border-style: dashed;
-    border-color: rgba(56, 189, 248, 0.4);
+    border-color: rgba(var(--theme-primary-rgb), 0.4);
   }
   &.is-offline { opacity: 0.5; }
 }
@@ -140,8 +143,8 @@ const onGlowMove = (e) => {
   transform: translate(-50%, -50%);
   background: radial-gradient(
     circle,
-    rgba(251, 191, 36, 0.14) 0%,
-    rgba(56, 189, 248, 0.10) 30%,
+    rgba(var(--theme-accent-rgb), 0.14) 0%,
+    rgba(var(--theme-primary-rgb), 0.10) 30%,
     transparent 65%
   );
   pointer-events: none;
@@ -160,8 +163,8 @@ const onGlowMove = (e) => {
   display: inline-block;
   padding: 3px 10px;
   font-size: 12px;
-  background: #f1f5f9;
-  color: #64748b;
+  background: var(--c-ink-100);
+  color: var(--c-ink-400);
   border-radius: 6px;
   align-self: flex-start;
 }
@@ -169,25 +172,25 @@ const onGlowMove = (e) => {
 .add-btn {
   grid-area: add;
   width: 22px; height: 22px;
-  border: 1px solid #e2e8f0;
-  background: #fff;
+  border: 1px solid var(--c-line);
+  background: var(--c-paper);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  color: #94a3b8;
+  color: var(--c-ink-300);
   transition: all 0.2s ease;
   .el-icon { font-size: 12px; }
   &:hover {
-    color: #0ea5e9;
-    border-color: #0ea5e9;
+    color: var(--c-botany-700);
+    border-color: var(--c-botany-700);
     transform: scale(1.05);
   }
   &.active {
-    color: #fbbf24;
-    border-color: #fbbf24;
-    background: rgba(251, 191, 36, 0.08);
+    color: var(--c-autumn-500);
+    border-color: var(--c-autumn-500);
+    background: rgba(var(--theme-accent-rgb), 0.08);
   }
 }
 
@@ -196,7 +199,7 @@ const onGlowMove = (e) => {
   font-family: var(--font-serif);
   font-size: 17px;
   font-weight: 600;
-  color: #0c4a6e;
+  color: var(--c-botany-950);
   margin: 0;
   line-height: 1.3;
   padding-right: 50px;
@@ -205,7 +208,7 @@ const onGlowMove = (e) => {
 .card-desc {
   grid-area: desc;
   font-size: 12px;
-  color: #64748b;
+  color: var(--c-ink-400);
   line-height: 1.6;
   margin: 0;
   display: -webkit-box;
@@ -224,7 +227,7 @@ const onGlowMove = (e) => {
 .card-icon-img {
   object-fit: contain;
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.55);
+  background: rgba(var(--theme-paper-rgb), 0.55);
   padding: 4px;
 }
 
@@ -236,47 +239,47 @@ const onGlowMove = (e) => {
   gap: 8px;
   margin-top: 4px;
   padding-top: 12px;
-  border-top: 1px dashed rgba(186, 230, 253, 0.6);
+  border-top: 1px dashed rgba(var(--theme-primary-soft-rgb), 0.6);
 }
 .cat-pill {
   display: inline-block;
   padding: 5px 14px;
   font-size: 12px;
   border-radius: 999px;
-  background: linear-gradient(135deg, #38bdf8, #0ea5e9);
-  color: #fff;
-  &.muted { background: #f1f5f9; color: #94a3b8; }
+  background: linear-gradient(135deg, var(--c-botany-500), var(--c-botany-700));
+  color: var(--theme-on-primary);
+  &.muted { background: var(--c-ink-100); color: var(--c-ink-300); }
 }
 .use-btn {
   display: inline-block;
   padding: 6px 18px;
   font-size: 12px;
   border-radius: 999px;
-  background: #fff;
-  border: 1px solid rgba(56, 189, 248, 0.5);
-  color: #0ea5e9;
+  background: var(--c-paper);
+  border: 1px solid rgba(var(--theme-primary-rgb), 0.5);
+  color: var(--c-botany-700);
   cursor: pointer;
   transition: all 0.2s ease;
   &:hover {
-    background: linear-gradient(135deg, #38bdf8, #0ea5e9);
-    color: #fff;
+    background: linear-gradient(135deg, var(--c-botany-500), var(--c-botany-700));
+    color: var(--theme-on-primary);
     border-color: transparent;
-    box-shadow: 0 4px 12px rgba(56, 189, 248, 0.3);
+    box-shadow: 0 4px 12px rgba(var(--theme-primary-rgb), 0.3);
   }
   &.muted {
-    border-color: #cbd5e1;
-    color: #94a3b8;
+    border-color: var(--c-ink-200);
+    color: var(--c-ink-300);
     cursor: not-allowed;
-    &:hover { background: #fff; color: #94a3b8; box-shadow: none; }
+    &:hover { background: var(--c-paper); color: var(--c-ink-300); box-shadow: none; }
   }
   &.upcoming {
-    background: rgba(56, 189, 248, 0.1);
-    border-color: rgba(56, 189, 248, 0.3);
-    color: #0284c7;
+    background: rgba(var(--theme-primary-rgb), 0.1);
+    border-color: rgba(var(--theme-primary-rgb), 0.3);
+    color: var(--c-botany-800);
     cursor: default;
     &:hover {
-      background: rgba(56, 189, 248, 0.18);
-      color: #0369a1;
+      background: rgba(var(--theme-primary-rgb), 0.18);
+      color: var(--c-botany-900);
       box-shadow: none;
     }
   }

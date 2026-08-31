@@ -14,8 +14,8 @@
       <div class="container">
         <div class="section-head reveal">
           <div>
-            <span class="section-eyebrow">featured</span>
-            <h2 class="section-title">精选文章</h2>
+            <span class="section-eyebrow">{{ isWuxia ? '江湖手札' : 'featured' }}</span>
+            <h2 class="section-title"><WuxiaHeadingLettering text="精选文章" /></h2>
             <p class="section-sub">这一阵子最想推荐的几篇</p>
           </div>
           <router-link to="/articles" class="more-link">查看全部 →</router-link>
@@ -31,8 +31,8 @@
       <div class="container">
         <div class="section-head reveal">
           <div>
-            <span class="section-eyebrow">latest</span>
-            <h2 class="section-title">最新文章</h2>
+            <span class="section-eyebrow">{{ isWuxia ? '新卷初开' : 'latest' }}</span>
+            <h2 class="section-title"><WuxiaHeadingLettering text="最新文章" /></h2>
             <p class="section-sub">最近写的几篇</p>
           </div>
           <router-link to="/articles" class="more-link">查看全部 →</router-link>
@@ -48,8 +48,8 @@
       <div class="container">
         <GradientBorderCard variant="mix" class="tag-cloud-card reveal">
           <div class="tc-head">
-            <span class="section-eyebrow">tags</span>
-            <h2 class="section-title">常常会写到的话题</h2>
+            <span class="section-eyebrow">{{ isWuxia ? '门派百家' : 'tags' }}</span>
+            <h2 class="section-title"><WuxiaHeadingLettering text="常常会写到的话题" /></h2>
           </div>
           <div class="tc-list" v-if="tags.length">
             <router-link
@@ -65,11 +65,11 @@
           </div>
           <div class="tc-list" v-else>
             <span class="tc-chip is-big"># Vue 3</span>
-            <span class="tc-chip"># 草木</span>
+            <span class="tc-chip"># {{ isWuxia ? '江湖' : '草木' }}</span>
             <span class="tc-chip is-med"># Java</span>
             <span class="tc-chip"># 设计</span>
-            <span class="tc-chip"># 茶事</span>
-            <span class="tc-chip"># 立秋</span>
+            <span class="tc-chip"># {{ isWuxia ? '剑谱' : '茶事' }}</span>
+            <span class="tc-chip"># {{ isWuxia ? '山行' : '立秋' }}</span>
           </div>
         </GradientBorderCard>
       </div>
@@ -79,13 +79,13 @@
     <section class="section">
       <div class="container cta-grid">
         <router-link to="/about" class="cta-card reveal">
-          <span class="section-eyebrow">about</span>
+          <span class="section-eyebrow">{{ isWuxia ? '行者小传' : 'about' }}</span>
           <div class="cta-title">关于我 · {{ authorName }}</div>
-          <p class="cta-desc">前端工程师，写代码也写散文。常在山里，偶尔进城。</p>
+          <p class="cta-desc">{{ isWuxia ? '以代码为剑，以文字会友。山高路远，江湖再见。' : '前端工程师，写代码也写散文。常在山里，偶尔进城。' }}</p>
           <div class="cta-more">了解更多 →</div>
         </router-link>
         <router-link to="/guestbook" class="cta-card cta-sun reveal">
-          <span class="section-eyebrow">guestbook</span>
+          <span class="section-eyebrow">{{ isWuxia ? '客栈留书' : 'guestbook' }}</span>
           <div class="cta-title">留言板</div>
           <p class="cta-desc">来过就留个脚印吧。每一则留言都会被认真地读。</p>
           <div class="cta-more">去留言 →</div>
@@ -96,9 +96,11 @@
 </template>
 
 <script setup>
+import WuxiaHeadingLettering from '@/components/WuxiaHeadingLettering.vue'
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useSiteStore } from '@/stores/site'
+import { useThemeStore } from '@/stores/theme'
 import { useAuthor } from '@/composables/useAuthor'
 import SkyHero from '@/components/SkyHero.vue'
 import PostCardSky from '@/components/PostCardSky.vue'
@@ -107,6 +109,8 @@ import { home, tagsAll } from '@/api/front'
 
 const router = useRouter()
 const siteStore = useSiteStore()
+const themeStore = useThemeStore()
+const isWuxia = computed(() => themeStore.activeThemeId === 'ink')
 const { authorName } = useAuthor()
 
 const homeData = ref(null)
@@ -116,7 +120,8 @@ const tags = ref([])
 
 const heroTitle = computed(() => {
   const name = siteStore.info?.siteName || 'MyBlog'
-  const motto = siteStore.info?.motto || '春山可望'
+  // Theme copy is presentational; the administrator's motto remains untouched in the header/config.
+  const motto = isWuxia.value ? '仗剑天涯' : (siteStore.info?.motto || '春山可望')
   return { main: name, accent: motto }
 })
 
@@ -174,7 +179,7 @@ onMounted(async () => {
   font-size: 12px;
   letter-spacing: 0.22em;
   text-transform: uppercase;
-  color: #06b6d4;
+  color: var(--c-cyan-700);
   font-weight: 600;
   margin-bottom: 8px;
 }
@@ -183,7 +188,7 @@ onMounted(async () => {
   font-size: 30px;
   font-weight: 600;
   margin: 0 0 6px;
-  color: var(--c-ink, #1e293b);
+  color: var(--c-ink, var(--c-ink-800));
   position: relative;
   display: inline-block;
 }
@@ -193,7 +198,7 @@ onMounted(async () => {
   width: 50px;
   height: 3px;
   margin-top: 8px;
-  background: linear-gradient(90deg, #38bdf8, #fbbf24, #38bdf8);
+  background: linear-gradient(90deg, var(--c-botany-500), var(--c-autumn-500), var(--c-botany-500));
   background-size: 200% 100%;
   border-radius: 2px;
   animation: shimmer-bar 3s ease-in-out infinite;
@@ -210,12 +215,12 @@ onMounted(async () => {
   .section-title::after { animation: none; }
 }
 .section-sub {
-  color: var(--c-ink-soft, #64748b);
+  color: var(--c-ink-soft, var(--c-ink-400));
   font-size: 14px;
   margin: 0;
 }
 .more-link {
-  color: #0ea5e9;
+  color: var(--c-botany-700);
   font-size: 14px;
   font-weight: 500;
   transition: gap 0.2s ease;
@@ -223,7 +228,7 @@ onMounted(async () => {
   align-items: center;
   gap: 4px;
 }
-.more-link:hover { color: #0369a1; gap: 8px; }
+.more-link:hover { color: var(--c-botany-900); gap: 8px; }
 
 // 文章网格
 .post-grid {
@@ -248,18 +253,18 @@ onMounted(async () => {
   align-items: center;
   gap: 6px;
   padding: 6px 14px;
-  background: #f0f9ff;
-  color: #0369a1;
-  border: 1px solid #e0f2fe;
+  background: var(--c-botany-50);
+  color: var(--c-botany-900);
+  border: 1px solid var(--c-botany-100);
   border-radius: 999px;
   font-size: 13px;
   cursor: pointer;
   transition: transform 0.25s ease, background 0.25s ease;
 }
 .tc-chip:hover {
-  background: #38bdf8;
-  color: #fff;
-  border-color: #38bdf8;
+  background: var(--c-botany-500);
+  color: var(--theme-on-primary);
+  border-color: var(--c-botany-500);
   transform: translateY(-2px);
 }
 .tc-chip.is-med {
@@ -269,16 +274,16 @@ onMounted(async () => {
 .tc-chip.is-big {
   padding: 10px 22px;
   font-size: 16px;
-  background: #38bdf8;
-  color: #fff;
-  border-color: #38bdf8;
-  box-shadow: 0 4px 12px rgba(56, 189, 248, 0.3);
+  background: var(--c-botany-500);
+  color: var(--theme-on-primary);
+  border-color: var(--c-botany-500);
+  box-shadow: 0 4px 12px rgba(var(--theme-primary-rgb), 0.3);
 }
-.tc-chip.is-big:hover { background: #0369a1; border-color: #0369a1; }
+.tc-chip.is-big:hover { background: var(--c-botany-900); border-color: var(--c-botany-900); }
 .tc-count {
   font-size: 12px;
   padding: 1px 6px;
-  background: rgba(255, 255, 255, 0.3);
+  background: rgba(var(--theme-paper-rgb), 0.3);
   border-radius: 999px;
 }
 
@@ -291,41 +296,41 @@ onMounted(async () => {
 .cta-card {
   display: block;
   padding: 36px;
-  background: #fff;
+  background: var(--c-paper);
   border-radius: 18px;
-  border: 1px solid #e0f2fe;
+  border: 1px solid var(--c-botany-100);
   transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1),
               box-shadow 0.35s ease;
 }
 .cta-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 16px 40px rgba(14, 165, 233, 0.1);
-  border-color: #7dd3fc;
+  box-shadow: 0 16px 40px rgba(var(--theme-primary-strong-rgb), 0.1);
+  border-color: var(--c-botany-300);
 }
 .cta-sun {
-  background: linear-gradient(135deg, #fffbeb 0%, #fff 100%);
-  border-color: #fde68a;
+  background: linear-gradient(135deg, var(--c-autumn-50) 0%, var(--c-white) 100%);
+  border-color: var(--c-autumn-200);
 }
-.cta-sun:hover { border-color: #fbbf24; }
+.cta-sun:hover { border-color: var(--c-autumn-500); }
 .cta-title {
   font-family: var(--font-serif);
   font-size: 24px;
   font-weight: 600;
   margin: 4px 0 8px;
-  color: var(--c-ink, #1e293b);
+  color: var(--c-ink, var(--c-ink-800));
 }
 .cta-desc {
   font-size: 14px;
   line-height: 1.8;
-  color: var(--c-ink-soft, #64748b);
+  color: var(--c-ink-soft, var(--c-ink-400));
   margin: 0 0 16px;
 }
 .cta-more {
   font-size: 13px;
-  color: #0ea5e9;
+  color: var(--c-botany-700);
   font-weight: 500;
 }
-.cta-sun .cta-more { color: #f59e0b; }
+.cta-sun .cta-more { color: var(--c-autumn-700); }
 
 // reveal
 .reveal {

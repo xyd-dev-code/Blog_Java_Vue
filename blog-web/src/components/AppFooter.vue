@@ -9,11 +9,11 @@
       <div class="footer-col">
         <h4>导航</h4>
         <router-link to="/">首页</router-link>
-        <router-link to="/articles">文章</router-link>
-        <router-link to="/projects">项目</router-link>
-        <router-link to="/friends">友链</router-link>
-        <router-link to="/guestbook">留言</router-link>
-        <router-link to="/about">关于</router-link>
+        <router-link to="/articles">{{ wx('文章') }}</router-link>
+        <router-link to="/projects">{{ wx('项目') }}</router-link>
+        <router-link to="/friends">{{ wx('友链') }}</router-link>
+        <router-link to="/guestbook">{{ wx('留言') }}</router-link>
+        <router-link to="/about">{{ wx('关于') }}</router-link>
       </div>
       <div class="footer-col">
         <h4>关注</h4>
@@ -24,7 +24,7 @@
             v-model.trim="subEmail"
             type="email"
             inputmode="email"
-            placeholder="输入邮箱订阅更新"
+            :placeholder="wx('输入邮箱订阅更新', '留下邮箱接收传书')"
             :disabled="subLoading"
             aria-label="邮箱订阅"
           />
@@ -53,8 +53,8 @@
         </el-dialog>
       </div>
       <div class="footer-col">
-        <h4>友链</h4>
-        <a v-if="friendLinks.length === 0" href="javascript:;" class="f-empty">暂无友链,去申请 →</a>
+        <h4>{{ wx('友链') }}</h4>
+        <a v-if="friendLinks.length === 0" href="javascript:;" class="f-empty">{{ wx('暂无友链,去申请 →', '暂无同道,递拜帖 →') }}</a>
         <template v-else>
           <a
             v-for="link in friendLinksTop6"
@@ -81,10 +81,12 @@ import { computed, onMounted, ref } from 'vue'
 import { useSiteStore } from '@/stores/site'
 import { friendLinks as fetchFriendLinks, subscribeEmail } from '@/api/front'
 import { ElMessage } from 'element-plus'
+import { useWuxiaCopy } from '@/composables/useWuxiaCopy'
 
+const { wx } = useWuxiaCopy()
 const siteStore = useSiteStore()
 const siteName = computed(() => siteStore.info?.siteName || 'MyBlog')
-const siteMotto = computed(() => siteStore.info?.motto || '草木蔓发，春山可望')
+const siteMotto = computed(() => siteStore.info?.motto || wx('草木蔓发，春山可望'))
 const siteDesc = computed(() => siteStore.info?.description || '')
 const siteBeian = computed(() => siteStore.info?.beian || '')
 const githubUrl = computed(() => siteStore.info?.github || '')
@@ -149,8 +151,8 @@ async function onSubscribe() {
 
 <style scoped lang="scss">
 .app-footer {
-  background: linear-gradient(135deg, #0c4a6e 0%, #075985 100%);
-  color: #e0f2fe;
+  background: var(--theme-footer-background);
+  color: var(--c-botany-100);
   margin-top: 80px;
   position: relative;
   overflow: hidden;
@@ -160,7 +162,7 @@ async function onSubscribe() {
   position: absolute;
   top: 0; left: 0; right: 0;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+  background: linear-gradient(90deg, transparent, rgba(var(--theme-paper-rgb), 0.3), transparent);
 }
 .footer-inner {
   display: grid;
@@ -170,14 +172,14 @@ async function onSubscribe() {
 }
 .footer-col h4 {
   font-family: var(--font-serif);
-  color: #fff;
+  color: var(--theme-on-primary);
   font-size: 16px;
   margin: 0 0 18px;
 }
 .footer-col a {
   display: block;
   margin: 8px 0;
-  color: #93c5fd;
+  color: var(--c-footer-link);
   font-size: 14px;
   transition: color 0.2s;
 }
@@ -194,18 +196,18 @@ async function onSubscribe() {
   min-width: 0;
   height: 34px;
   padding: 0 10px;
-  border: 1px solid rgba(147, 197, 253, 0.4);
+  border: 1px solid rgba(var(--theme-footer-link-rgb), 0.4);
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.08);
-  color: #e0f2fe;
+  background: rgba(var(--theme-paper-rgb), 0.08);
+  color: var(--c-botany-100);
   font-size: 13px;
   outline: none;
   transition: border-color 0.2s, background 0.2s;
 }
-.f-sub input::placeholder { color: #7dd3fc; opacity: 0.7; }
+.f-sub input::placeholder { color: var(--c-botany-300); opacity: 0.7; }
 .f-sub input:focus {
   border-color: var(--c-autumn-300);
-  background: rgba(255, 255, 255, 0.14);
+  background: rgba(var(--theme-paper-rgb), 0.14);
 }
 .f-sub button {
   flex: 0 0 auto;
@@ -214,7 +216,7 @@ async function onSubscribe() {
   border: none;
   border-radius: 8px;
   background: var(--c-autumn-300);
-  color: #0c4a6e;
+  color: var(--theme-on-accent);
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
@@ -225,26 +227,26 @@ async function onSubscribe() {
 .f-sub-msg {
   margin: 2px 0 0;
   font-size: 12px;
-  color: #fca5a5;
+  color: var(--c-error-light);
   line-height: 1.5;
 }
-.f-sub-msg.ok { color: #86efac; }
+.f-sub-msg.ok { color: var(--c-success-light); }
 
 .f-brand {
   font-family: var(--font-serif);
-  color: #fff;
+  color: var(--theme-on-primary);
   font-size: 24px;
   font-weight: 600;
   margin-bottom: 8px;
 }
 .f-motto { color: var(--c-autumn-300); font-size: 14px; margin: 0 0 14px; }
-.f-desc { color: #bae6fd; font-size: 13px; line-height: 1.7; margin: 0; }
+.f-desc { color: var(--c-botany-200); font-size: 13px; line-height: 1.7; margin: 0; }
 
 .footer-bottom {
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-top: 1px solid rgba(var(--theme-paper-rgb), 0.08);
   padding: 22px 0;
   font-size: 13px;
-  color: #7dd3fc;
+  color: var(--c-botany-300);
 }
 .footer-bottom .container {
   display: flex;
@@ -278,7 +280,7 @@ async function onSubscribe() {
     font-family: var(--font-serif);
     font-size: 18px;
     font-weight: 600;
-    color: #0f172a;
+  color: var(--c-ink-900);
   }
   .sub-dlg-body {
     text-align: center;
@@ -289,8 +291,8 @@ async function onSubscribe() {
     height: 52px;
     margin: 4px auto 16px;
     border-radius: 50%;
-    background: rgba(56, 189, 248, 0.14);
-    color: #38bdf8;
+    background: rgba(var(--theme-primary-rgb), 0.14);
+    color: var(--c-botany-500);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -301,7 +303,7 @@ async function onSubscribe() {
     margin: 0;
     font-size: 15px;
     line-height: 1.7;
-    color: #334155;
+    color: var(--c-ink-700);
   }
   .el-dialog__footer {
     text-align: center;

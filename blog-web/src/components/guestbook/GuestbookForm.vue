@@ -14,7 +14,7 @@
     <div class="form-row">
       <div class="form-col">
         <label class="form-label">昵称 <span class="required">*</span></label>
-        <el-input v-model="form.nickname" placeholder="你的昵称" maxlength="20" class="gb-input" />
+        <el-input v-model="form.nickname" :placeholder="wx('你的昵称')" maxlength="20" class="gb-input" />
       </div>
       <div class="form-col">
         <label class="form-label">邮箱 <span class="required">*</span> <span class="label-hint">（不会公开）</span></label>
@@ -114,6 +114,9 @@
 </template>
 
 <script setup>
+import { useWuxiaCopy } from '@/composables/useWuxiaCopy'
+const { wx } = useWuxiaCopy()
+
 import { ref, reactive, computed, onMounted, onBeforeUnmount, watch, nextTick } from 'vue'
 import { Close, Plus, PictureFilled, Loading } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
@@ -145,7 +148,7 @@ const isReply = computed(() => !!props.replyTo)
 const replyAvatar = computed(() => props.replyTo?.avatar || '')
 const replyInitial = computed(() => (props.replyTo?.nickname || '?').trim().charAt(0).toUpperCase())
 // 提交按钮文案随场景变化
-const submitText = computed(() => isReply.value ? '提交回复' : '提交留言')
+const submitText = computed(() => wx(isReply.value ? '提交回复' : '提交留言'))
 
 const emojis = ['😀','😁','😂','🤣','😊','😍','😘','🤔','😎','😭','😡','👍','👎','👏','🙏','💪','🎉','❤️','🔥','⭐','🌟','✨','🌈','☀️','🌸','🍃','🍀','🌿','🐱','🐶','🚀','💡','📚','☕','🍰','🎁','💯','✅','❓','💬','🌊','🍻','👀','🤝','✍️','🏔️','🌙','⚡','🍃','🎈','🧡','💙','💚','💜','🤍','😴','🥳','😇','🤩','😉','🙌','💗','🌻']
 
@@ -274,7 +277,7 @@ const refreshCaptcha = async () => {
 
 // ───────── 提交（校验 + 提交流程保持不变） ─────────
 const submit = async () => {
-  if (!form.nickname.trim()) return ElMessage.warning('请填写昵称')
+  if (!form.nickname.trim()) return ElMessage.warning(wx('请填写昵称'))
   if (!form.email.trim()) return ElMessage.warning('请填写邮箱')
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) return ElMessage.warning('邮箱格式不正确')
   if (!form.content.trim()) return ElMessage.warning('请填写留言内容')
@@ -295,7 +298,7 @@ const submit = async () => {
       captchaAnswer: captcha.enabled ? form.captchaAnswer.trim() : ''
     })
     const saved = resp?.data || resp
-    ElMessage.success(isReply.value ? '回复成功，等待审核' : '留言成功，等待审核')
+    ElMessage.success(isReply.value ? wx('回复成功，等待审核', '回书已送达，等待审核') : wx('留言成功，等待审核', '留书已送达，等待审核'))
     // 重置（下次打开弹窗时 watch(visible) 会再次清空，这里顺手清一遍）
     form.content = ''
     form.captchaAnswer = ''
@@ -359,7 +362,7 @@ onBeforeUnmount(() => revokeLocal())
 .gb-avatar-wrap { position: relative; flex-shrink: 0; }
 .gb-avatar-mask {
   position: absolute; inset: 0; border-radius: 50%;
-  background: rgba(255, 255, 255, 0.7);
+  background: rgba(var(--theme-paper-rgb), 0.7);
   display: flex; align-items: center; justify-content: center;
   font-size: 18px; color: var(--c-botany-500);
 }

@@ -3,8 +3,8 @@
     <el-card>
       <template #header>
         <div class="header-bar">
-          <span>分类管理</span>
-          <el-button type="primary" @click="openForm()"><el-icon><Plus /></el-icon> 新建分类</el-button>
+          <span>{{ wx('分类管理') }}</span>
+          <el-button type="primary" @click="openForm()"><el-icon><Plus /></el-icon> {{ wx('新建分类') }}</el-button>
         </div>
       </template>
       <div class="toolbar">
@@ -45,7 +45,7 @@
       />
     </el-card>
 
-    <el-dialog v-model="dlg" :title="form.id ? '编辑分类' : '新建分类'" width="min(480px, 92vw)">
+    <el-dialog v-model="dlg" :title="form.id ? wx('编辑分类') : wx('新建分类')" width="min(480px, 92vw)">
       <el-form :model="form" label-width="80px">
         <el-form-item label="名称" required>
           <el-input v-model="form.name" />
@@ -72,10 +72,14 @@
 </template>
 
 <script setup>
+import { useWuxiaCopy } from '@/composables/useWuxiaCopy'
+const { wx } = useWuxiaCopy()
+
 import { ref, reactive, onMounted } from 'vue'
 import { Plus } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { adminCategories, adminCreateCategory, adminUpdateCategory, adminDeleteCategory } from '@/api/admin'
+import { DEFAULT_CONTENT_ACCENT } from '@/themes/registry'
 
 const list = ref([])
 const loading = ref(false)
@@ -85,7 +89,7 @@ const total = ref(0)
 const currentPage = ref(1)
 const pageSize = ref(10)
 const filters = reactive({ keyword: '' })
-const form = reactive({ id: null, name: '', slug: '', description: '', color: '#38bdf8', sortOrder: 0 })
+const form = reactive({ id: null, name: '', slug: '', description: '', color: DEFAULT_CONTENT_ACCENT, sortOrder: 0 })
 
 const reload = async () => {
   loading.value = true
@@ -105,7 +109,7 @@ const reload = async () => {
 
 const openForm = (row) => {
   if (row) Object.assign(form, row)
-  else Object.assign(form, { id: null, name: '', slug: '', description: '', color: '#38bdf8', sortOrder: 0 })
+  else Object.assign(form, { id: null, name: '', slug: '', description: '', color: DEFAULT_CONTENT_ACCENT, sortOrder: 0 })
   dlg.value = true
 }
 

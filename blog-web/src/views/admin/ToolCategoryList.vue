@@ -3,10 +3,10 @@
     <el-card>
       <template #header>
         <div class="header-bar">
-          <span>工具分类管理</span>
+          <span>{{ wx('工具分类管理') }}</span>
           <div class="header-actions">
             <el-button plain @click="openLogs"><el-icon><Tickets /></el-icon> 操作日志</el-button>
-            <el-button type="primary" @click="openForm()"><el-icon><Plus /></el-icon> 新建分类</el-button>
+            <el-button type="primary" @click="openForm()"><el-icon><Plus /></el-icon> {{ wx('新建分类') }}</el-button>
           </div>
         </div>
       </template>
@@ -84,7 +84,7 @@
 
     </el-card>
 
-    <el-dialog v-model="dlg" :title="form.id ? '编辑分类' : '新建分类'" width="min(480px, 92vw)" destroy-on-close @close="resetForm">
+    <el-dialog v-model="dlg" :title="form.id ? wx('编辑分类') : wx('新建分类')" width="min(480px, 92vw)" destroy-on-close @close="resetForm">
       <el-form :model="form" :rules="rules" ref="formRef" label-width="90px">
         <el-form-item label="显示名称" prop="name">
           <el-input v-model="form.name" maxlength="50" placeholder="如 开发工具、AI 工具" />
@@ -105,7 +105,7 @@
     <!-- 操作日志抽屉 -->
     <el-drawer v-model="logVisible" title="操作日志 · 工具分类" size="420px" direction="rtl">
       <div v-loading="logLoading" class="log-list">
-        <el-empty v-if="!logLoading && logs.length === 0" description="暂无操作记录" />
+        <el-empty v-if="!logLoading && logs.length === 0" :description="wx('暂无操作记录')" />
         <div v-for="log in logs" :key="log.id" class="log-item">
           <div class="log-head">
             <el-tag size="small" :type="actionType(log.action)" effect="light">
@@ -123,6 +123,9 @@
 </template>
 
 <script setup>
+import { useWuxiaCopy } from '@/composables/useWuxiaCopy'
+const { wx } = useWuxiaCopy()
+
 import { ref, reactive, computed, onMounted } from 'vue'
 import { Plus, Tickets } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
@@ -301,21 +304,21 @@ onMounted(reload)
   font-size: 12px;
   color: var(--c-botany-700);
   background: var(--c-botany-50);
-  border: 1px solid var(--c-botany-100, rgba(56, 189, 248, 0.25));
+  border: 1px solid var(--c-botany-100, rgba(var(--theme-primary-rgb), 0.25));
   padding: 1px 6px;
   border-radius: 4px;
 }
 .log-list { display: flex; flex-direction: column; gap: 12px; }
 .log-item {
   padding: 12px 14px;
-  border: 1px solid var(--c-line-soft, #e2e8f0);
+  border: 1px solid var(--c-line-soft, var(--c-line));
   border-radius: 10px;
-  background: var(--c-paper, #fff);
+  background: var(--c-paper, var(--c-white));
 }
 .log-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
-.log-time { font-size: 12px; color: var(--c-ink-soft, #94a3b8); font-family: 'Consolas', 'Monaco', monospace; }
-.log-target { font-weight: 600; color: var(--c-ink, #1e293b); font-size: 14px; margin-bottom: 2px; }
-.log-detail { font-size: 13px; color: var(--c-ink-soft, #64748b); line-height: 1.6; }
-.log-meta { font-size: 12px; color: var(--c-ink-soft, #94a3b8); margin-top: 6px; }
+.log-time { font-size: 12px; color: var(--c-ink-soft, var(--c-ink-300)); font-family: 'Consolas', 'Monaco', monospace; }
+.log-target { font-weight: 600; color: var(--c-ink, var(--c-ink-800)); font-size: 14px; margin-bottom: 2px; }
+.log-detail { font-size: 13px; color: var(--c-ink-soft, var(--c-ink-400)); line-height: 1.6; }
+.log-meta { font-size: 12px; color: var(--c-ink-soft, var(--c-ink-300)); margin-top: 6px; }
 @media (max-width: 480px) { :deep(.el-dialog) { width: 92vw !important; } }
 </style>

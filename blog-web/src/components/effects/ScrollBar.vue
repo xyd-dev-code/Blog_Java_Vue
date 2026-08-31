@@ -35,7 +35,7 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onScroll))
 .scroll-progress {
   position: fixed; top: 0; left: 0; z-index: 10001;
   height: 3px;
-  background: linear-gradient(90deg, #38bdf8, #0ea5e9, #22d3ee);
+  background: linear-gradient(90deg, var(--c-botany-500), var(--c-botany-700), var(--c-cyan-500));
   border-radius: 0 2px 2px 0;
   transition: width 0.15s linear;
   pointer-events: none;

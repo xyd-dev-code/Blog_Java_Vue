@@ -63,15 +63,19 @@
         <span>Demo</span>
       </a>
       <button class="btn btn-more" @click.stop="$emit('detail', project)">
-        <span>查看详情</span>
+        <span>{{ wx('查看详情') }}</span>
       </button>
     </div>
   </article>
 </template>
 
 <script setup>
+import { useWuxiaCopy } from '@/composables/useWuxiaCopy'
+const { wx } = useWuxiaCopy()
+
 import { computed } from 'vue'
 import SunnyDecor from '@/components/SunnyDecor.vue'
+import { toThemeColor } from '@/utils/theme'
 
 const props = defineProps({
   project: { type: Object, required: true }
@@ -79,7 +83,7 @@ const props = defineProps({
 defineEmits(['detail'])
 
 const isLink = (u) => !!u && u.trim() !== '' && u.trim() !== '#'
-const cardVar = computed(() => ({ '--card-color': (props.project.color || '#38bdf8') }))
+const cardVar = computed(() => ({ '--card-color': toThemeColor(props.project.color) }))
 
 // 占位插画变体：6 种中性灰按 id 轮询
 const illusVariant = computed(() => {
@@ -102,12 +106,12 @@ const onGlowMove = (e) => {
   display: flex;
   flex-direction: column;
   height: 100%;
-  background: rgba(255, 255, 255, 0.92);
+  background: rgba(var(--theme-paper-rgb), 0.92);
   backdrop-filter: blur(10px);
-  border: 1px solid rgba(56, 189, 248, 0.18);
+  border: 1px solid rgba(var(--theme-primary-rgb), 0.18);
   border-radius: 14px;
   overflow: hidden;
-  box-shadow: 0 4px 16px rgba(14, 165, 233, 0.06);
+  box-shadow: 0 4px 16px rgba(var(--theme-primary-strong-rgb), 0.06);
   cursor: pointer;
   transition:
     transform 0.35s cubic-bezier(0.25, 0.8, 0.25, 1),
@@ -116,8 +120,8 @@ const onGlowMove = (e) => {
 }
 .proj-card:hover {
   transform: translateY(-6px);
-  border-color: rgba(56, 189, 248, 0.5);
-  box-shadow: 0 14px 36px rgba(14, 165, 233, 0.18), 0 20px 50px rgba(251, 191, 36, 0.1);
+  border-color: rgba(var(--theme-primary-rgb), 0.5);
+  box-shadow: 0 14px 36px rgba(var(--theme-primary-strong-rgb), 0.18), 0 20px 50px rgba(var(--theme-accent-rgb), 0.1);
 }
 .proj-card.ef-card-glow::before { inset: 0; }
 
@@ -131,8 +135,8 @@ const onGlowMove = (e) => {
   transform: translate(-50%, -50%);
   background: radial-gradient(
     circle,
-    rgba(251, 191, 36, 0.13) 0%,
-    rgba(56, 189, 248, 0.09) 28%,
+    rgba(var(--theme-accent-rgb), 0.13) 0%,
+    rgba(var(--theme-primary-rgb), 0.09) 28%,
     transparent 60%
   );
   pointer-events: none;
@@ -150,7 +154,7 @@ const onGlowMove = (e) => {
   position: relative;
   aspect-ratio: 2 / 1;
   overflow: hidden;
-  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  background: linear-gradient(135deg, var(--c-botany-50) 0%, var(--c-botany-100) 100%);
   display: grid;
   place-items: center;
 }
@@ -175,19 +179,19 @@ const onGlowMove = (e) => {
   font-size: 15px;
   font-weight: 700;
   margin: 0 0 2px;
-  color: #0f172a;
+  color: var(--c-ink-900);
 }
 .title-dot {
   width: 7px; height: 7px;
   border-radius: 50%;
-  background: #fbbf24;
+  background: var(--c-autumn-500);
   flex-shrink: 0;
-  box-shadow: 0 0 5px rgba(251, 191, 36, 0.5);
+  box-shadow: 0 0 5px rgba(var(--theme-accent-rgb), 0.5);
 }
 .card-desc {
   font-family: var(--font-sans);
   font-size: 12px;
-  color: #64748b;
+  color: var(--c-ink-400);
   margin: 0;
   line-height: 1.4;
   display: -webkit-box;
@@ -208,9 +212,9 @@ const onGlowMove = (e) => {
   font-size: 12px;
   padding: 2px 8px;
   border-radius: 999px;
-  background: #f8fafc;
-  color: #475569;
-  border: 1px solid #e2e8f0;
+  background: var(--c-ink-50);
+  color: var(--c-ink-500);
+  border: 1px solid var(--c-line);
 }
 
 .card-actions {
@@ -218,7 +222,7 @@ const onGlowMove = (e) => {
   align-items: center;
   gap: 6px;
   padding: 6px 14px 10px;
-  border-top: 1px solid #f1f5f9;
+  border-top: 1px solid var(--c-ink-100);
   margin-top: auto;
 }
 .btn {
@@ -237,36 +241,36 @@ const onGlowMove = (e) => {
   white-space: nowrap;
 }
 .btn-gh {
-  background: #374151;
-  color: #fff;
+  background: var(--c-neutral-700);
+  color: var(--theme-on-primary);
   padding: 7px 14px;
 }
 .btn-gh:hover {
-  background: #1f2937;
+  background: var(--c-neutral-800);
   transform: translateY(-1px);
-  box-shadow: 0 6px 16px rgba(31, 41, 55, 0.3);
+  box-shadow: 0 6px 16px rgba(var(--theme-ink-deep-rgb), 0.3);
 }
 .btn-demo {
-  background: linear-gradient(135deg, #7dd3fc, #38bdf8);
-  color: #fff;
+  background: linear-gradient(135deg, var(--c-botany-300), var(--c-botany-500));
+  color: var(--theme-on-primary);
   padding: 7px 14px;
 }
 .btn-demo:hover {
-  background: linear-gradient(135deg, #38bdf8, #0ea5e9);
+  background: linear-gradient(135deg, var(--c-botany-500), var(--c-botany-700));
   transform: translateY(-1px);
-  box-shadow: 0 6px 16px rgba(56, 189, 248, 0.4);
+  box-shadow: 0 6px 16px rgba(var(--theme-primary-rgb), 0.4);
 }
 .btn-more {
   margin-left: auto;
-  background: #ffffff;
-  color: #475569;
-  border: 1px solid #cbd5e1;
+  background: var(--c-paper);
+  color: var(--c-ink-500);
+  border: 1px solid var(--c-ink-200);
   padding: 6px 13px;
 }
 .btn-more:hover {
-  background: #f1f5f9;
-  color: #0c4a6e;
-  border-color: #94a3b8;
+  background: var(--c-ink-100);
+  color: var(--c-botany-950);
+  border-color: var(--c-ink-300);
   transform: translateY(-1px);
 }
 

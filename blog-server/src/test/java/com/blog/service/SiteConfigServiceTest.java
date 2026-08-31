@@ -21,6 +21,7 @@ class SiteConfigServiceTest {
         when(mapper.selectList(null)).thenReturn(List.of(
                 config("siteName", "Example Blog"),
                 config("aboutContent", "Public profile"),
+                config("siteTheme", "ink"),
                 config("sensitive_words", "internal moderation list"),
                 config("github.token", "must-not-leave-server"),
                 config("smtpPassword", "must-not-leave-server")
@@ -31,6 +32,7 @@ class SiteConfigServiceTest {
 
         assertEquals("Example Blog", publicData.get("siteName"));
         assertEquals("Public profile", publicData.get("aboutContent"));
+        assertEquals("ink", publicData.get("siteTheme"));
         assertFalse(publicData.containsKey("sensitive_words"));
         assertFalse(publicData.containsKey("github.token"));
         assertFalse(publicData.containsKey("smtpPassword"));
@@ -48,6 +50,17 @@ class SiteConfigServiceTest {
                 () -> service.save(Map.of("githubToken", "not-allowed")));
         assertThrows(IllegalArgumentException.class,
                 () -> service.save(Map.of("smtp_password", "not-allowed")));
+    }
+
+    @Test
+    void publicMapFallsBackToSunnyForMissingOrInvalidTheme() {
+        SiteConfigMapper mapper = mock(SiteConfigMapper.class);
+        when(mapper.selectList(null)).thenReturn(List.of(config("siteTheme", "unsupported")));
+
+        SiteConfigService service = new SiteConfigService(mapper);
+        assertEquals("sunny", service.publicAsMap().get("siteTheme"));
+        assertEquals("sunny", SiteConfigService.normalizeSiteTheme(null));
+        assertEquals("sunny", SiteConfigService.normalizeSiteTheme("unsupported"));
     }
 
     private static SiteConfig config(String key, String value) {

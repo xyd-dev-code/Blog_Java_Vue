@@ -2,7 +2,7 @@
   <div class="share-bar reveal">
     <GradientBorderCard variant="sky" class="share-card">
       <div class="share-head">
-        <span class="share-eyebrow">SHARE · 分享</span>
+        <span class="share-eyebrow">{{ wx('SHARE · 分享') }}</span>
         <span v-if="shareCount > 0" class="share-count">{{ shareCount }} 次分享</span>
       </div>
       <div class="share-actions">
@@ -37,6 +37,9 @@
 </template>
 
 <script setup>
+import { useWuxiaCopy } from '@/composables/useWuxiaCopy'
+const { wx } = useWuxiaCopy()
+
 import { ref, computed, watch, nextTick } from 'vue'
 import { ElMessage } from 'element-plus'
 import { trackShare } from '@/api/share'
@@ -166,7 +169,7 @@ async function copyFromInput() {
 }
 .share-eyebrow {
   font-size: 12px; letter-spacing: 0.22em; font-weight: 600;
-  color: #06b6d4; text-transform: uppercase;
+  color: var(--c-cyan-700); text-transform: uppercase;
 }
 .share-count {
   font-size: 12px; color: var(--c-ink-soft);
@@ -178,36 +181,36 @@ async function copyFromInput() {
 .share-btn {
   display: inline-flex; align-items: center; gap: 6px;
   padding: 8px 14px;
-  background: rgba(255, 255, 255, 0.78);
-  border: 1px solid rgba(125, 211, 252, 0.55);
+  background: rgba(var(--theme-paper-rgb), 0.78);
+  border: 1px solid rgba(var(--theme-primary-light-rgb), 0.55);
   border-radius: 999px;
-  color: #0369a1;
+  color: var(--c-botany-900);
   font-size: 13px;
   cursor: pointer;
   transition: all 0.18s ease;
 }
 .share-btn:hover {
-  background: #38bdf8; color: #fff;
-  border-color: #38bdf8;
+  background: var(--c-botany-500); color: var(--theme-on-primary);
+  border-color: var(--c-botany-500);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(56, 189, 248, 0.25);
+  box-shadow: 0 4px 12px rgba(var(--theme-primary-rgb), 0.25);
 }
 .share-btn--active {
-  background: #22d3ee; color: #fff; border-color: #22d3ee;
+  background: var(--c-cyan-500); color: var(--theme-on-primary); border-color: var(--c-cyan-500);
 }
 .share-btn-icon { display: inline-flex; }
-.share-btn--wechat:hover  { background: #07c160; border-color: #07c160; }
-.share-btn--weibo:hover   { background: #e6162d; border-color: #e6162d; }
-.share-btn--qq:hover      { background: #1296db; border-color: #1296db; }
-.share-btn--douban:hover  { background: #2e8b57; border-color: #2e8b57; }
-.share-btn--copy:hover    { background: #6366f1; border-color: #6366f1; }
+.share-btn--wechat:hover  { background: var(--c-brand-wechat); border-color: var(--c-brand-wechat); }
+.share-btn--weibo:hover   { background: var(--c-brand-weibo); border-color: var(--c-brand-weibo); }
+.share-btn--qq:hover      { background: var(--c-brand-qq); border-color: var(--c-brand-qq); }
+.share-btn--douban:hover  { background: var(--c-brand-douban); border-color: var(--c-brand-douban); }
+.share-btn--copy:hover    { background: var(--c-indigo); border-color: var(--c-indigo); }
 
 .share-msg {
   margin-top: 10px;
   font-size: 12px;
-  color: #b91c1c;
+  color: var(--c-danger-strong);
 }
-.share-msg--ok { color: #047857; }
+.share-msg--ok { color: var(--c-success); }
 
 .wx-tip {
   margin: 0 0 8px;
@@ -222,11 +225,11 @@ async function copyFromInput() {
   color: var(--c-ink);
   line-height: 1.85;
 }
-.wx-steps li::marker { color: #06b6d4; font-weight: 600; }
+.wx-steps li::marker { color: var(--c-cyan-700); font-weight: 600; }
 .wx-link-box {
   display: flex; gap: 8px;
-  background: rgba(240, 249, 255, 0.85);
-  border: 1px dashed #7dd3fc;
+  background: rgba(var(--theme-page-pale-rgb), 0.85);
+  border: 1px dashed var(--c-botany-300);
   border-radius: 10px;
   padding: 8px 10px;
 }

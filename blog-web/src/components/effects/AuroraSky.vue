@@ -38,7 +38,7 @@
 .au-band-1 {
   top: 4vh;
   opacity: 0.38;
-  background: radial-gradient(ellipse at 50% 0%, rgba(125,211,252,0.45) 0%, rgba(125,211,252,0) 75%);
+  background: radial-gradient(ellipse at 50% 0%, rgba(var(--theme-primary-light-rgb), 0.45) 0%, rgba(var(--theme-primary-light-rgb), 0) 75%);
   animation: aurora-drift-1 30s ease-in-out infinite;
 }
 
@@ -47,7 +47,7 @@
   top: 10vh;
   opacity: 0.32;
   height: 18vh;
-  background: radial-gradient(ellipse at 60% 0%, rgba(251,191,36,0.3) 0%, rgba(251,191,36,0) 75%);
+  background: radial-gradient(ellipse at 60% 0%, rgba(var(--theme-accent-rgb), 0.3) 0%, rgba(var(--theme-accent-rgb), 0) 75%);
   animation: aurora-drift-2 35s ease-in-out infinite;
 }
 
@@ -56,7 +56,7 @@
   top: 16vh;
   opacity: 0.28;
   height: 14vh;
-  background: radial-gradient(ellipse at 40% 0%, rgba(167,243,208,0.35) 0%, rgba(167,243,208,0) 75%);
+  background: radial-gradient(ellipse at 40% 0%, rgba(var(--theme-mint-rgb), 0.35) 0%, rgba(var(--theme-mint-rgb), 0) 75%);
   animation: aurora-drift-3 40s ease-in-out infinite;
 }
 

@@ -4,11 +4,11 @@
       <template #header>
         <div class="header-bar">
           <div class="title-area">
-            <span class="title">归档管理</span>
+            <span class="title">{{ wx('归档管理') }}</span>
             <span class="sub">按月份聚合的所有文章，共 <b>{{ articles.length }}</b> 篇</span>
           </div>
           <div class="actions">
-            <el-input v-model="kw" placeholder="搜索标题…" clearable inputmode="search" style="width: 240px;" @keyup.enter="reload" />
+            <el-input v-model="kw" :placeholder="wx('搜索标题…')" clearable inputmode="search" style="width: 240px;" @keyup.enter="reload" />
             <el-button @click="reload"><el-icon><Refresh /></el-icon>&nbsp;刷新</el-button>
           </div>
         </div>
@@ -31,14 +31,14 @@
               <div class="m-count">{{ m.cnt }} 篇</div>
             </div>
           </div>
-          <el-empty v-else description="暂无归档" :image-size="60" />
+          <el-empty v-else :description="wx('暂无归档')" :image-size="60" />
         </aside>
 
         <!-- 右：当前月份文章 -->
         <main class="article-pane">
           <div class="pane-head">
             <div>
-              <div class="pane-eyebrow">{{ activeYm ? `${activeYm.split('-')[0]} 年 ${Number(activeYm.split('-')[1])} 月` : '所有文章' }}</div>
+              <div class="pane-eyebrow">{{ activeYm ? `${activeYm.split('-')[0]} 年 ${Number(activeYm.split('-')[1])} 月` : wx('所有文章') }}</div>
               <div class="pane-title">{{ filtered.length }} 篇</div>
             </div>
             <div class="pane-stats">
@@ -92,7 +92,7 @@
                 </template>
               </el-table-column>
             </el-table>
-            <el-empty v-if="!loading && !filtered.length" description="该月份下没有文章" :image-size="80" />
+            <el-empty v-if="!loading && !filtered.length" :description="wx('该月份下没有文章')" :image-size="80" />
           </div>
         </main>
       </div>
@@ -101,6 +101,9 @@
 </template>
 
 <script setup>
+import { useWuxiaCopy } from '@/composables/useWuxiaCopy'
+const { wx } = useWuxiaCopy()
+
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import {
@@ -185,8 +188,8 @@ onMounted(reload)
 
 /* 左：月份 */
 .month-aside {
-  background: linear-gradient(180deg, #f0f9ff 0%, #ffffff 100%);
-  border: 1px solid #e0f2fe;
+  background: linear-gradient(180deg, var(--c-botany-50) 0%, var(--c-white) 100%);
+  border: 1px solid var(--c-botany-100);
   border-radius: 10px;
   padding: 14px;
   /* 关键:固定高度 + 独立滚动 */
@@ -200,7 +203,7 @@ onMounted(reload)
   font-size: 12px;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: #06b6d4;
+  color: var(--c-cyan-700);
   font-weight: 600;
   margin-bottom: 12px;
 }
@@ -213,23 +216,23 @@ onMounted(reload)
   padding: 12px 14px;
   border-radius: 8px;
   cursor: pointer;
-  background: #fff;
+  background: var(--c-paper);
   border: 1px solid transparent;
   transition: all 0.2s ease;
   position: relative;
 }
 .month-item:hover {
-  border-color: #bae6fd;
-  background: #f0f9ff;
+  border-color: var(--c-botany-200);
+  background: var(--c-botany-50);
 }
 .month-item.active {
-  background: linear-gradient(135deg, #38bdf8, #22d3ee);
-  color: #fff;
-  box-shadow: 0 4px 12px rgba(56, 189, 248, 0.3);
+  background: linear-gradient(135deg, var(--c-botany-500), var(--c-cyan-500));
+  color: var(--theme-on-primary);
+  box-shadow: 0 4px 12px rgba(var(--theme-primary-rgb), 0.3);
 }
 .month-item.active .m-year,
-.month-item.active .m-count { color: rgba(255, 255, 255, 0.95); }
-.month-item.active .m-month { color: rgba(255, 255, 255, 0.85); }
+.month-item.active .m-count { color: rgba(var(--theme-paper-rgb), 0.95); }
+.month-item.active .m-month { color: rgba(var(--theme-paper-rgb), 0.85); }
 
 .m-year {
   font-family: var(--font-serif);
@@ -251,8 +254,8 @@ onMounted(reload)
 
 /* 右：当前月份 */
 .article-pane {
-  background: #fff;
-  border: 1px solid #e0f2fe;
+  background: var(--c-paper);
+  border: 1px solid var(--c-botany-100);
   border-radius: 10px;
   padding: 16px 18px;
   display: flex;
@@ -268,13 +271,13 @@ onMounted(reload)
   gap: 16px;
   padding-bottom: 14px;
   margin-bottom: 14px;
-  border-bottom: 1px dashed #e0f2fe;
+  border-bottom: 1px dashed var(--c-botany-100);
 }
 .pane-eyebrow {
   font-size: 12px;
   letter-spacing: 0.15em;
   text-transform: uppercase;
-  color: #06b6d4;
+  color: var(--c-cyan-700);
   font-weight: 600;
 }
 .pane-title {
@@ -292,15 +295,15 @@ onMounted(reload)
   display: inline-flex;
   align-items: center;
   padding: 4px 12px;
-  background: rgba(56, 189, 248, 0.08);
-  color: #0369a1;
+  background: rgba(var(--theme-primary-rgb), 0.08);
+  color: var(--c-botany-900);
   border-radius: 999px;
   font-size: 12px;
   font-weight: 500;
 }
 .stat-chip-sun {
-  background: rgba(251, 191, 36, 0.12);
-  color: #b45309;
+  background: rgba(var(--theme-accent-rgb), 0.12);
+  color: var(--c-autumn-900);
 }
 
 .art-table {
@@ -318,8 +321,8 @@ onMounted(reload)
   transition: all 0.2s ease;
 }
 .art-title:hover {
-  color: #0369a1;
-  border-bottom-color: #7dd3fc;
+  color: var(--c-botany-900);
+  border-bottom-color: var(--c-botany-300);
 }
 .art-meta-row {
   margin-top: 6px;

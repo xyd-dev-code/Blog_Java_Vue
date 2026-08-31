@@ -27,7 +27,7 @@
       </div>
     </div>
     <p v-if="friend.description" class="desc">{{ friend.description }}</p>
-    <p v-else class="desc desc-empty">这位朋友比较低调，暂无简介～</p>
+    <p v-else class="desc desc-empty">{{ wx('这位朋友比较低调，暂无简介～') }}</p>
 
     <div class="fc-foot">
       <span class="fc-tag">
@@ -45,6 +45,9 @@
 </template>
 
 <script setup>
+import { useWuxiaCopy } from '@/composables/useWuxiaCopy'
+const { wx } = useWuxiaCopy()
+
 import { computed } from 'vue'
 import GradientBorderCard from '@/components/GradientBorderCard.vue'
 
@@ -100,13 +103,13 @@ function friendlyUrl(u = '') {
   position: absolute;
   left: 0; bottom: 0;
   width: 0; height: 3px;
-  background: linear-gradient(90deg, #38bdf8, #fbbf24);
+  background: linear-gradient(90deg, var(--c-botany-500), var(--c-autumn-500));
   transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   border-radius: 0 3px 0 0;
 }
-.friend-card.group-friend::after { background: linear-gradient(90deg, #fbbf24, #f59e0b); }
-.friend-card.group-net::after   { background: linear-gradient(90deg, #38bdf8, #22d3ee); }
-.friend-card.group-star::after  { background: linear-gradient(90deg, #a855f7, #ec4899); }
+.friend-card.group-friend::after { background: linear-gradient(90deg, var(--c-autumn-500), var(--c-autumn-700)); }
+.friend-card.group-net::after   { background: linear-gradient(90deg, var(--c-botany-500), var(--c-cyan-500)); }
+.friend-card.group-star::after  { background: linear-gradient(90deg, var(--c-plum-500), var(--c-rouge-500)); }
 .friend-card:hover::after { width: 100%; }
 
 .fc-top {
@@ -123,7 +126,7 @@ function friendlyUrl(u = '') {
   width: 100%; height: 100%;
   border-radius: 50%;
   object-fit: cover;
-  background: #f1f5f9;
+  background: var(--c-ink-100);
   position: relative;
   z-index: 2;
   transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
@@ -132,29 +135,29 @@ function friendlyUrl(u = '') {
 .avatar-placeholder {
   display: grid;
   place-items: center;
-  background: linear-gradient(135deg, #38bdf8, #22d3ee);
-  color: #fff;
+  background: linear-gradient(135deg, var(--c-botany-500), var(--c-cyan-500));
+  color: var(--theme-on-primary);
   font-family: var(--font-serif);
   font-size: 22px;
   font-weight: 600;
 }
 .friend-card.group-friend .avatar-placeholder {
-  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+  background: linear-gradient(135deg, var(--c-autumn-500), var(--c-autumn-700));
 }
 .friend-card.group-star .avatar-placeholder {
-  background: linear-gradient(135deg, #a855f7, #ec4899);
+  background: linear-gradient(135deg, var(--c-plum-500), var(--c-rouge-500));
 }
 .fc-avatar-ring {
   position: absolute;
   inset: -3px;
   border-radius: 50%;
-  background: linear-gradient(135deg, rgba(56,189,248,0.6), rgba(251,191,36,0.6));
+  background: linear-gradient(135deg, rgba(var(--theme-primary-rgb), 0.6), rgba(var(--theme-accent-rgb), 0.6));
   z-index: 1;
   opacity: 0.55;
   transition: opacity 0.3s ease, transform 0.4s ease;
 }
-.friend-card.group-friend .fc-avatar-ring { background: linear-gradient(135deg, rgba(251,191,36,0.6), rgba(245,158,11,0.6)); }
-.friend-card.group-star .fc-avatar-ring  { background: linear-gradient(135deg, rgba(168,85,247,0.6), rgba(236,72,153,0.6)); }
+.friend-card.group-friend .fc-avatar-ring { background: linear-gradient(135deg, rgba(var(--theme-accent-rgb), 0.6), rgba(var(--theme-accent-strong-rgb), 0.6)); }
+.friend-card.group-star .fc-avatar-ring  { background: linear-gradient(135deg, rgba(var(--theme-plum-rgb), 0.6), rgba(var(--theme-rouge-rgb), 0.6)); }
 .friend-card:hover .avatar { transform: scale(1.05) rotate(-3deg); }
 .friend-card:hover .fc-avatar-ring { opacity: 1; transform: scale(1.08); }
 
@@ -173,7 +176,7 @@ function friendlyUrl(u = '') {
   align-items: center;
   gap: 6px;
 }
-.friend-card:hover :deep(.meta h4) { color: #0369a1; }
+.friend-card:hover :deep(.meta h4) { color: var(--c-botany-900); }
 .meta-badge {
   display: inline-flex;
   align-items: center;
@@ -181,9 +184,9 @@ function friendlyUrl(u = '') {
   font-family: var(--font-sans);
   font-size: 12px;
   font-weight: 500;
-  color: #b45309;
-  background: linear-gradient(135deg, rgba(251,191,36,0.18), rgba(245,158,11,0.10));
-  border: 1px solid rgba(245,158,11,0.30);
+  color: var(--c-autumn-900);
+  background: linear-gradient(135deg, rgba(var(--theme-accent-rgb), 0.18), rgba(var(--theme-accent-strong-rgb), 0.10));
+  border: 1px solid rgba(var(--theme-accent-strong-rgb), 0.30);
   border-radius: 999px;
   letter-spacing: 0.04em;
   flex-shrink: 0;
@@ -191,7 +194,7 @@ function friendlyUrl(u = '') {
 }
 .friend-card :deep(.meta .url) {
   font-size: 12px;
-  color: #94a3b8;
+  color: var(--c-ink-300);
   margin: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -201,7 +204,7 @@ function friendlyUrl(u = '') {
   gap: 4px;
   transition: color 0.2s ease;
 }
-.friend-card:hover :deep(.meta .url) { color: #0ea5e9; }
+.friend-card:hover :deep(.meta .url) { color: var(--c-botany-700); }
 
 .desc {
   font-size: 13px;
@@ -214,7 +217,7 @@ function friendlyUrl(u = '') {
   overflow: hidden;
   min-height: 42px;
 }
-.desc-empty { color: #cbd5e1; font-style: italic; }
+.desc-empty { color: var(--c-ink-200); font-style: italic; }
 
 .fc-foot {
   display: flex;
@@ -234,13 +237,13 @@ function friendlyUrl(u = '') {
 .fc-tag-dot {
   width: 6px; height: 6px;
   border-radius: 50%;
-  background: #38bdf8;
+  background: var(--c-botany-500);
   box-shadow: 0 0 6px currentColor;
 }
-.tag-friend { background: #fbbf24; color: #f59e0b; }
-.tag-net    { background: #38bdf8; color: #0ea5e9; }
-.tag-star   { background: #a855f7; color: #a855f7; }
-.tag-misc   { background: #94a3b8; color: #64748b; }
+.tag-friend { background: var(--c-autumn-500); color: var(--c-autumn-700); }
+.tag-net    { background: var(--c-botany-500); color: var(--c-botany-700); }
+.tag-star   { background: var(--c-plum-500); color: var(--c-plum-500); }
+.tag-misc   { background: var(--c-ink-300); color: var(--c-ink-400); }
 
 .fc-arrow {
   display: inline-flex;
@@ -248,14 +251,14 @@ function friendlyUrl(u = '') {
   justify-content: center;
   width: 28px; height: 28px;
   border-radius: 50%;
-  color: #94a3b8;
-  background: rgba(255, 255, 255, 0.6);
-  border: 1px solid rgba(125, 211, 252, 0.3);
+  color: var(--c-ink-300);
+  background: rgba(var(--theme-paper-rgb), 0.6);
+  border: 1px solid rgba(var(--theme-primary-light-rgb), 0.3);
   transition: all 0.3s ease;
 }
 .friend-card:hover .fc-arrow {
-  background: linear-gradient(135deg, #38bdf8, #0ea5e9);
-  color: #fff;
+  background: linear-gradient(135deg, var(--c-botany-500), var(--c-botany-700));
+  color: var(--theme-on-primary);
   border-color: transparent;
   transform: translate(2px, -2px) rotate(-3deg);
 }

@@ -4,9 +4,16 @@
 
 <script setup>
 import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { resolveThemeToken, subscribeThemeChange } from '@/utils/theme'
 
 const canvasRef = ref(null)
 let ctx, w, h, particles, animationId
+let particleRgb = ''
+let unsubscribeTheme = null
+
+const refreshParticleColor = () => {
+  particleRgb = resolveThemeToken('--theme-primary-rgb')
+}
 
 class Particle {
   constructor() {
@@ -30,7 +37,7 @@ class Particle {
   draw() {
     ctx.beginPath()
     ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2)
-    ctx.fillStyle = `rgba(56, 189, 248, ${this.opacity})`
+    ctx.fillStyle = `rgba(${particleRgb}, ${this.opacity})`
     ctx.fill()
   }
 }
@@ -57,8 +64,15 @@ const animate = () => {
   animationId = requestAnimationFrame(animate)
 }
 
-onMounted(init)
-onBeforeUnmount(() => animationId && cancelAnimationFrame(animationId))
+onMounted(() => {
+  refreshParticleColor()
+  unsubscribeTheme = subscribeThemeChange(refreshParticleColor)
+  init()
+})
+onBeforeUnmount(() => {
+  if (animationId) cancelAnimationFrame(animationId)
+  unsubscribeTheme?.()
+})
 </script>
 
 <style scoped>

@@ -11,25 +11,25 @@
     <!-- 渐变定义 -->
     <defs>
       <linearGradient :id="`sky-${uid}`" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%" stop-color="#dbeafe" />
-        <stop offset="100%" stop-color="#f0f9ff" />
+        <stop offset="0%" stop-color="var(--c-blue-100)" />
+        <stop offset="100%" stop-color="var(--c-botany-50)" />
       </linearGradient>
       <radialGradient :id="`sun-${uid}`" cx="0.5" cy="0.5" r="0.5">
-        <stop offset="0%" stop-color="#fefce8" />
-        <stop offset="60%" stop-color="#fde68a" />
-        <stop offset="100%" stop-color="#fcd34d" />
+        <stop offset="0%" stop-color="var(--c-sun-soft)" />
+        <stop offset="60%" stop-color="var(--c-autumn-200)" />
+        <stop offset="100%" stop-color="var(--c-autumn-300)" />
       </radialGradient>
       <linearGradient :id="`cloud-${uid}`" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%" stop-color="#ffffff" />
-        <stop offset="100%" stop-color="#e0f2fe" />
+        <stop offset="0%" stop-color="var(--c-white)" />
+        <stop offset="100%" stop-color="var(--c-botany-100)" />
       </linearGradient>
       <linearGradient :id="`laptop-${uid}`" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%" stop-color="#f8fafc" />
-        <stop offset="100%" stop-color="#cbd5e1" />
+        <stop offset="0%" stop-color="var(--c-ink-50)" />
+        <stop offset="100%" stop-color="var(--c-ink-200)" />
       </linearGradient>
       <linearGradient :id="`ray-${uid}`" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%" stop-color="#dbeafe" stop-opacity="0.85" />
-        <stop offset="100%" stop-color="#7dd3fc" stop-opacity="0.1" />
+        <stop offset="0%" stop-color="var(--c-blue-100)" stop-opacity="0.85" />
+        <stop offset="100%" stop-color="var(--c-botany-300)" stop-opacity="0.1" />
       </linearGradient>
     </defs>
 
@@ -50,7 +50,7 @@
         <circle cx="540" cy="90" r="68" :fill="`url(#sun-${uid})`" opacity="0.18" />
         <circle cx="540" cy="90" r="46" :fill="`url(#sun-${uid})`" />
         <!-- 光芒 -->
-        <g stroke="#fcd34d" stroke-width="4" stroke-linecap="round" opacity="0.55">
+        <g stroke="var(--c-autumn-300)" stroke-width="4" stroke-linecap="round" opacity="0.55">
           <line x1="540" y1="22" x2="540" y2="6" />
           <line x1="540" y1="158" x2="540" y2="174" />
           <line x1="472" y1="90" x2="456" y2="90" />
@@ -65,29 +65,29 @@
       <!-- 笔记本（中心偏下） -->
       <g transform="translate(220 140)">
         <!-- 屏幕 -->
-        <rect x="20" y="10" width="320" height="190" rx="14" :fill="`url(#laptop-${uid})`" stroke="#94a3b8" stroke-width="2" />
+        <rect x="20" y="10" width="320" height="190" rx="14" :fill="`url(#laptop-${uid})`" stroke="var(--c-ink-300)" stroke-width="2" />
         <!-- 屏幕内容（窗口 UI） -->
-        <rect x="32" y="22" width="296" height="166" rx="6" fill="#ffffff" />
+        <rect x="32" y="22" width="296" height="166" rx="6" fill="var(--c-white)" />
         <!-- 顶部窗口栏 -->
-        <rect x="32" y="22" width="296" height="22" rx="6" fill="#f1f5f9" />
-        <circle cx="44" cy="33" r="4" fill="#f87171" />
-        <circle cx="58" cy="33" r="4" fill="#fcd34d" />
-        <circle cx="72" cy="33" r="4" fill="#86efac" />
+        <rect x="32" y="22" width="296" height="22" rx="6" fill="var(--c-ink-100)" />
+        <circle cx="44" cy="33" r="4" fill="var(--c-danger-light)" />
+        <circle cx="58" cy="33" r="4" fill="var(--c-autumn-300)" />
+        <circle cx="72" cy="33" r="4" fill="var(--c-success-light)" />
         <!-- 侧边栏 -->
-        <rect x="32" y="44" width="64" height="144" fill="#f8fafc" />
-        <rect x="42" y="58" width="44" height="6" rx="3" fill="#cbd5e1" />
-        <rect x="42" y="72" width="34" height="6" rx="3" fill="#cbd5e1" />
-        <rect x="42" y="86" width="40" height="6" rx="3" fill="#cbd5e1" />
-        <rect x="42" y="100" width="30" height="6" rx="3" fill="#cbd5e1" />
+        <rect x="32" y="44" width="64" height="144" fill="var(--c-ink-50)" />
+        <rect x="42" y="58" width="44" height="6" rx="3" fill="var(--c-ink-200)" />
+        <rect x="42" y="72" width="34" height="6" rx="3" fill="var(--c-ink-200)" />
+        <rect x="42" y="86" width="40" height="6" rx="3" fill="var(--c-ink-200)" />
+        <rect x="42" y="100" width="30" height="6" rx="3" fill="var(--c-ink-200)" />
         <!-- 主区域内容（卡片） -->
-        <rect x="106" y="58" width="100" height="50" rx="6" fill="#e0f2fe" />
-        <rect x="214" y="58" width="100" height="50" rx="6" fill="#bae6fd" />
-        <rect x="106" y="116" width="208" height="14" rx="3" fill="#e2e8f0" />
-        <rect x="106" y="138" width="170" height="14" rx="3" fill="#e2e8f0" />
-        <rect x="106" y="160" width="140" height="14" rx="3" fill="#e2e8f0" />
+        <rect x="106" y="58" width="100" height="50" rx="6" fill="var(--c-botany-100)" />
+        <rect x="214" y="58" width="100" height="50" rx="6" fill="var(--c-botany-200)" />
+        <rect x="106" y="116" width="208" height="14" rx="3" fill="var(--c-line)" />
+        <rect x="106" y="138" width="170" height="14" rx="3" fill="var(--c-line)" />
+        <rect x="106" y="160" width="140" height="14" rx="3" fill="var(--c-line)" />
         <!-- 笔记本底座 -->
-        <path d="M 0 200 L 360 200 L 348 218 L 12 218 Z" fill="#94a3b8" />
-        <rect x="160" y="200" width="40" height="4" rx="2" fill="#64748b" />
+        <path d="M 0 200 L 360 200 L 348 218 L 12 218 Z" fill="var(--c-ink-300)" />
+        <rect x="160" y="200" width="40" height="4" rx="2" fill="var(--c-ink-400)" />
       </g>
 
       <!-- 底部大云：贴电脑脚,呼应设计图"云在电脑两侧" -->
@@ -102,9 +102,9 @@
       </g>
 
       <!-- 装饰星点 -->
-      <circle cx="60" cy="40" r="3" fill="#bae6fd" opacity="0.5" />
-      <circle cx="600" cy="220" r="2.5" fill="#38bdf8" opacity="0.6" />
-      <circle cx="80" cy="240" r="2" fill="#bae6fd" opacity="0.45" />
+      <circle cx="60" cy="40" r="3" fill="var(--c-botany-200)" opacity="0.5" />
+      <circle cx="600" cy="220" r="2.5" fill="var(--c-botany-500)" opacity="0.6" />
+      <circle cx="80" cy="240" r="2" fill="var(--c-botany-200)" opacity="0.45" />
     </g>
 
     <!-- ===================== 「精选项目」标题旁：去掉太阳避免与 Hero 重复，只留光柱+云朵 ===================== -->
@@ -125,98 +125,98 @@
 
     <!-- ================ 卡片占位（中性灰，不抢真实图视觉，6 种互不重复）================ -->
     <g v-else-if="variant === 'card-notebook'">
-      <rect x="0" y="0" width="240" height="160" fill="#f8fafc" />
-      <rect x="40" y="36" width="160" height="100" rx="8" fill="#fff" stroke="#cbd5e1" stroke-width="1.5" />
-      <rect x="50" y="46" width="140" height="80" rx="4" fill="#f1f5f9" />
-      <rect x="58" y="56" width="60" height="6" rx="3" fill="#94a3b8" />
-      <rect x="58" y="70" width="124" height="4" rx="2" fill="#cbd5e1" />
-      <rect x="58" y="80" width="110" height="4" rx="2" fill="#cbd5e1" />
-      <rect x="58" y="90" width="118" height="4" rx="2" fill="#cbd5e1" />
-      <rect x="58" y="100" width="80" height="4" rx="2" fill="#cbd5e1" />
-      <circle cx="55" cy="46" r="3" fill="#94a3b8" opacity="0.5" />
+      <rect x="0" y="0" width="240" height="160" fill="var(--c-ink-50)" />
+      <rect x="40" y="36" width="160" height="100" rx="8" fill="var(--c-white)" stroke="var(--c-ink-200)" stroke-width="1.5" />
+      <rect x="50" y="46" width="140" height="80" rx="4" fill="var(--c-ink-100)" />
+      <rect x="58" y="56" width="60" height="6" rx="3" fill="var(--c-ink-300)" />
+      <rect x="58" y="70" width="124" height="4" rx="2" fill="var(--c-ink-200)" />
+      <rect x="58" y="80" width="110" height="4" rx="2" fill="var(--c-ink-200)" />
+      <rect x="58" y="90" width="118" height="4" rx="2" fill="var(--c-ink-200)" />
+      <rect x="58" y="100" width="80" height="4" rx="2" fill="var(--c-ink-200)" />
+      <circle cx="55" cy="46" r="3" fill="var(--c-ink-300)" opacity="0.5" />
     </g>
 
     <g v-else-if="variant === 'card-toolbox'">
-      <rect x="0" y="0" width="240" height="160" fill="#f8fafc" />
-      <rect x="50" y="60" width="140" height="70" rx="8" fill="#e2e8f0" />
-      <rect x="50" y="50" width="140" height="20" rx="6" fill="#cbd5e1" />
-      <rect x="115" y="40" width="10" height="14" rx="2" fill="#64748b" />
+      <rect x="0" y="0" width="240" height="160" fill="var(--c-ink-50)" />
+      <rect x="50" y="60" width="140" height="70" rx="8" fill="var(--c-line)" />
+      <rect x="50" y="50" width="140" height="20" rx="6" fill="var(--c-ink-200)" />
+      <rect x="115" y="40" width="10" height="14" rx="2" fill="var(--c-ink-400)" />
       <g transform="translate(78 76) rotate(-15)">
-        <rect x="0" y="10" width="60" height="6" rx="3" fill="#fff" />
-        <circle cx="0" cy="13" r="8" fill="#fff" />
-        <circle cx="0" cy="13" r="3" fill="#cbd5e1" />
+        <rect x="0" y="10" width="60" height="6" rx="3" fill="var(--c-white)" />
+        <circle cx="0" cy="13" r="8" fill="var(--c-white)" />
+        <circle cx="0" cy="13" r="3" fill="var(--c-ink-200)" />
       </g>
     </g>
 
     <g v-else-if="variant === 'card-flask'">
-      <rect x="0" y="0" width="240" height="160" fill="#f8fafc" />
-      <path d="M 95 36 L 95 70 L 65 130 Q 65 138 75 138 L 165 138 Q 175 138 175 130 L 145 70 L 145 36 Z" fill="#e2e8f0" stroke="#94a3b8" stroke-width="2" />
-      <path d="M 72 110 L 168 110 L 175 130 Q 175 138 165 138 L 75 138 Q 65 138 65 130 Z" fill="#cbd5e1" />
-      <rect x="92" y="30" width="56" height="10" rx="2" fill="#cbd5e1" />
-      <circle cx="100" cy="118" r="3" fill="#fff" opacity="0.8" />
-      <circle cx="130" cy="122" r="2" fill="#fff" opacity="0.8" />
-      <circle cx="145" cy="116" r="2.5" fill="#fff" opacity="0.8" />
+      <rect x="0" y="0" width="240" height="160" fill="var(--c-ink-50)" />
+      <path d="M 95 36 L 95 70 L 65 130 Q 65 138 75 138 L 165 138 Q 175 138 175 130 L 145 70 L 145 36 Z" fill="var(--c-line)" stroke="var(--c-ink-300)" stroke-width="2" />
+      <path d="M 72 110 L 168 110 L 175 130 Q 175 138 165 138 L 75 138 Q 65 138 65 130 Z" fill="var(--c-ink-200)" />
+      <rect x="92" y="30" width="56" height="10" rx="2" fill="var(--c-ink-200)" />
+      <circle cx="100" cy="118" r="3" fill="var(--c-white)" opacity="0.8" />
+      <circle cx="130" cy="122" r="2" fill="var(--c-white)" opacity="0.8" />
+      <circle cx="145" cy="116" r="2.5" fill="var(--c-white)" opacity="0.8" />
     </g>
 
     <!-- 仪表板 -->
     <g v-else-if="variant === 'card-dashboard'">
-      <rect x="0" y="0" width="240" height="160" fill="#f8fafc" />
+      <rect x="0" y="0" width="240" height="160" fill="var(--c-ink-50)" />
       <!-- 顶栏 -->
-      <rect x="24" y="32" width="192" height="22" rx="4" fill="#f1f5f9" stroke="#e2e8f0" stroke-width="1" />
-      <rect x="36" y="39" width="40" height="8" rx="4" fill="#94a3b8" />
+      <rect x="24" y="32" width="192" height="22" rx="4" fill="var(--c-ink-100)" stroke="var(--c-line)" stroke-width="1" />
+      <rect x="36" y="39" width="40" height="8" rx="4" fill="var(--c-ink-300)" />
       <!-- 统计卡片 ×3 -->
-      <rect x="24" y="64" width="56" height="34" rx="5" fill="#fff" stroke="#e2e8f0" stroke-width="1" />
-      <rect x="40" y="72" width="24" height="8" rx="4" fill="#94a3b8" />
-      <rect x="40" y="84" width="32" height="4" rx="2" fill="#cbd5e1" />
-      <rect x="92" y="64" width="56" height="34" rx="5" fill="#fff" stroke="#e2e8f0" stroke-width="1" />
-      <rect x="108" y="72" width="24" height="8" rx="4" fill="#cbd5e1" />
-      <rect x="108" y="84" width="20" height="4" rx="2" fill="#cbd5e1" />
-      <rect x="160" y="64" width="56" height="34" rx="5" fill="#fff" stroke="#e2e8f0" stroke-width="1" />
-      <rect x="176" y="72" width="24" height="8" rx="4" fill="#cbd5e1" />
-      <rect x="176" y="84" width="26" height="4" rx="2" fill="#cbd5e1" />
+      <rect x="24" y="64" width="56" height="34" rx="5" fill="var(--c-white)" stroke="var(--c-line)" stroke-width="1" />
+      <rect x="40" y="72" width="24" height="8" rx="4" fill="var(--c-ink-300)" />
+      <rect x="40" y="84" width="32" height="4" rx="2" fill="var(--c-ink-200)" />
+      <rect x="92" y="64" width="56" height="34" rx="5" fill="var(--c-white)" stroke="var(--c-line)" stroke-width="1" />
+      <rect x="108" y="72" width="24" height="8" rx="4" fill="var(--c-ink-200)" />
+      <rect x="108" y="84" width="20" height="4" rx="2" fill="var(--c-ink-200)" />
+      <rect x="160" y="64" width="56" height="34" rx="5" fill="var(--c-white)" stroke="var(--c-line)" stroke-width="1" />
+      <rect x="176" y="72" width="24" height="8" rx="4" fill="var(--c-ink-200)" />
+      <rect x="176" y="84" width="26" height="4" rx="2" fill="var(--c-ink-200)" />
       <!-- 折线 -->
-      <path d="M 40 130 L 70 118 L 100 124 L 130 108 L 160 114 L 190 100" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" opacity="0.6" />
-      <circle cx="130" cy="108" r="3" fill="#94a3b8" />
+      <path d="M 40 130 L 70 118 L 100 124 L 130 108 L 160 114 L 190 100" fill="none" stroke="var(--c-ink-300)" stroke-width="2" stroke-linecap="round" opacity="0.6" />
+      <circle cx="130" cy="108" r="3" fill="var(--c-ink-300)" />
     </g>
 
     <!-- 代码编辑器 -->
     <g v-else-if="variant === 'card-code'">
-      <rect x="0" y="0" width="240" height="160" fill="#f8fafc" />
-      <rect x="20" y="24" width="200" height="120" rx="8" fill="#fff" stroke="#e2e8f0" stroke-width="1.5" />
-      <rect x="26" y="30" width="188" height="16" rx="3" fill="#f1f5f9" />
-      <circle cx="34" cy="38" r="4" fill="#94a3b8" />
-      <circle cx="46" cy="38" r="4" fill="#cbd5e1" />
-      <circle cx="58" cy="38" r="4" fill="#cbd5e1" />
+      <rect x="0" y="0" width="240" height="160" fill="var(--c-ink-50)" />
+      <rect x="20" y="24" width="200" height="120" rx="8" fill="var(--c-white)" stroke="var(--c-line)" stroke-width="1.5" />
+      <rect x="26" y="30" width="188" height="16" rx="3" fill="var(--c-ink-100)" />
+      <circle cx="34" cy="38" r="4" fill="var(--c-ink-300)" />
+      <circle cx="46" cy="38" r="4" fill="var(--c-ink-200)" />
+      <circle cx="58" cy="38" r="4" fill="var(--c-ink-200)" />
       <!-- 行号 + 代码行 -->
-      <rect x="26" y="54" width="14" height="38" rx="2" fill="#f8fafc" />
-      <rect x="34" y="58" width="6" height="6" rx="3" fill="#cbd5e1" />
-      <rect x="34" y="72" width="6" height="6" rx="3" fill="#cbd5e1" />
-      <rect x="34" y="86" width="6" height="6" rx="3" fill="#cbd5e1" />
+      <rect x="26" y="54" width="14" height="38" rx="2" fill="var(--c-ink-50)" />
+      <rect x="34" y="58" width="6" height="6" rx="3" fill="var(--c-ink-200)" />
+      <rect x="34" y="72" width="6" height="6" rx="3" fill="var(--c-ink-200)" />
+      <rect x="34" y="86" width="6" height="6" rx="3" fill="var(--c-ink-200)" />
       <!-- 彩色代码条 -->
-      <rect x="46" y="58" width="40" height="6" rx="3" fill="#94a3b8" />
-      <rect x="60" y="72" width="120" height="6" rx="3" fill="#cbd5e1" />
-      <rect x="60" y="86" width="100" height="6" rx="3" fill="#cbd5e1" />
-      <rect x="46" y="100" width="90" height="6" rx="3" fill="#cbd5e1" />
-      <rect x="46" y="114" width="140" height="6" rx="3" fill="#cbd5e1" />
-      <rect x="46" y="128" width="70" height="6" rx="3" fill="#cbd5e1" />
+      <rect x="46" y="58" width="40" height="6" rx="3" fill="var(--c-ink-300)" />
+      <rect x="60" y="72" width="120" height="6" rx="3" fill="var(--c-ink-200)" />
+      <rect x="60" y="86" width="100" height="6" rx="3" fill="var(--c-ink-200)" />
+      <rect x="46" y="100" width="90" height="6" rx="3" fill="var(--c-ink-200)" />
+      <rect x="46" y="114" width="140" height="6" rx="3" fill="var(--c-ink-200)" />
+      <rect x="46" y="128" width="70" height="6" rx="3" fill="var(--c-ink-200)" />
     </g>
 
     <!-- 文档 -->
     <g v-else-if="variant === 'card-document'">
-      <rect x="0" y="0" width="240" height="160" fill="#f8fafc" />
-      <rect x="28" y="28" width="184" height="116" rx="6" fill="#fff" stroke="#e2e8f0" stroke-width="1.5" />
+      <rect x="0" y="0" width="240" height="160" fill="var(--c-ink-50)" />
+      <rect x="28" y="28" width="184" height="116" rx="6" fill="var(--c-white)" stroke="var(--c-line)" stroke-width="1.5" />
       <!-- 大标题 -->
-      <rect x="44" y="44" width="100" height="8" rx="4" fill="#64748b" />
-      <rect x="44" y="58" width="152" height="4" rx="2" fill="#cbd5e1" />
-      <rect x="44" y="68" width="138" height="4" rx="2" fill="#cbd5e1" />
-      <rect x="44" y="78" width="146" height="4" rx="2" fill="#cbd5e1" />
-      <rect x="44" y="88" width="120" height="4" rx="2" fill="#cbd5e1" />
-      <rect x="44" y="98" width="132" height="4" rx="2" fill="#cbd5e1" />
-      <rect x="44" y="108" width="100" height="4" rx="2" fill="#cbd5e1" />
-      <rect x="44" y="118" width="80" height="4" rx="2" fill="#cbd5e1" />
-      <rect x="44" y="128" width="144" height="4" rx="2" fill="#cbd5e1" />
+      <rect x="44" y="44" width="100" height="8" rx="4" fill="var(--c-ink-400)" />
+      <rect x="44" y="58" width="152" height="4" rx="2" fill="var(--c-ink-200)" />
+      <rect x="44" y="68" width="138" height="4" rx="2" fill="var(--c-ink-200)" />
+      <rect x="44" y="78" width="146" height="4" rx="2" fill="var(--c-ink-200)" />
+      <rect x="44" y="88" width="120" height="4" rx="2" fill="var(--c-ink-200)" />
+      <rect x="44" y="98" width="132" height="4" rx="2" fill="var(--c-ink-200)" />
+      <rect x="44" y="108" width="100" height="4" rx="2" fill="var(--c-ink-200)" />
+      <rect x="44" y="118" width="80" height="4" rx="2" fill="var(--c-ink-200)" />
+      <rect x="44" y="128" width="144" height="4" rx="2" fill="var(--c-ink-200)" />
       <!-- 小图标 -->
-      <circle cx="44" cy="44" r="5" fill="#94a3b8" opacity="0.4" />
+      <circle cx="44" cy="44" r="5" fill="var(--c-ink-300)" opacity="0.4" />
     </g>
   </svg>
 </template>

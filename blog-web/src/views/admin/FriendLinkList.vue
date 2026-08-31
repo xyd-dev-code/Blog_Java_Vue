@@ -3,7 +3,7 @@
     <el-card>
       <template #header>
         <div class="header-bar">
-          <span>友链管理</span>
+          <span>{{ wx('友链管理') }}</span>
           <el-button type="primary" @click="openForm()"><el-icon><Plus /></el-icon> 新建友链</el-button>
         </div>
       </template>
@@ -51,7 +51,7 @@
                 inline-prompt
                 active-text="是"
                 inactive-text="否"
-                active-color="#f59e0b"
+                active-color="var(--c-autumn-700)"
               />
             </template>
           </el-table-column>
@@ -112,7 +112,7 @@
             active-text="是 — 前台卡片显示「推荐」徽章"
             inactive-text="否"
             inline-prompt
-            active-color="#f59e0b"
+            active-color="var(--c-autumn-700)"
           />
         </el-form-item>
         <el-form-item label="状态">
@@ -135,6 +135,9 @@
 </template>
 
 <script setup>
+import { useWuxiaCopy } from '@/composables/useWuxiaCopy'
+const { wx } = useWuxiaCopy()
+
 import { ref, reactive, onMounted } from 'vue'
 import { Plus } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'

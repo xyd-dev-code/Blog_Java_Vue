@@ -64,9 +64,9 @@ const orbs = computed(() =>
   filter: blur(1.5px);
   background: radial-gradient(
     circle,
-    rgba(255, 255, 255, 0.75) 0%,
-    rgba(125, 211, 252, 0.28) 55%,
-    rgba(125, 211, 252, 0) 72%
+    rgba(var(--theme-paper-rgb), 0.75) 0%,
+    rgba(var(--theme-primary-light-rgb), 0.28) 55%,
+    rgba(var(--theme-primary-light-rgb), 0) 72%
   );
   will-change: transform, opacity;
   animation: bokeh-rise var(--dur) linear var(--delay) infinite;

@@ -13,24 +13,32 @@ export const useSiteStore = defineStore('site', {
      * 需要强制刷新(如 admin 修改站点信息后)请传 force=true 或调用 reload()。
      */
     async load(force = false) {
+      if (!force && this.loaded) return this.info
+      if (!force && typeof window !== 'undefined' && window.__BLOG_SITE_CONFIG__) {
+        this.info = window.__BLOG_SITE_CONFIG__
+        this.loaded = true
+        return this.info
+      }
       try {
         const resp = await siteConfig()
         this.info = resp.data
         this.loaded = true
+        if (typeof window !== 'undefined') window.__BLOG_SITE_CONFIG__ = resp.data
+        return this.info
       } catch (e) {
         // 请求失败时保持 loaded=false,下次可以重试
+        return null
       }
     },
     /** 强制重新拉取 */
     async reload() {
       return this.load(true)
+    },
+    /** 管理员保存站点主题成功后，同步当前页面使用的公开站点配置快照。 */
+    setSiteTheme(themeId) {
+      this.info = { ...(this.info || {}), siteTheme: themeId }
+      this.loaded = true
+      if (typeof window !== 'undefined') window.__BLOG_SITE_CONFIG__ = this.info
     }
   }
 })
-
-/**
- * 模块加载即触发一次拉取。store 是 pinia 单例,此副作用只执行一次,
- * 早于任何组件渲染,避免首屏渲染陈旧的 authorName 闪现。
- */
-const _site = useSiteStore()
-_site.load()

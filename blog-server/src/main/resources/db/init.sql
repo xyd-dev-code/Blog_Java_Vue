@@ -387,6 +387,7 @@ INSERT INTO site_config (config_key, config_value, description) VALUES
 ('email', 'your_email@example.com', '联系邮箱（占位，部署后请在后台替换）'),
 ('authorName', '站长', '站长/博主展示名,默认随 admin 用户昵称同步'),
 ('captcha_enabled', '1', '留言/评论提交是否开启算术验证码 (0=关, 1=开)'),
+('siteTheme', 'sunny', '网站主题（sunny=晴天, ink=国风水墨；仅管理员可修改）'),
 ('sensitive_words', '', '敏感词列表，逗号或空格分隔；命中后正文将被 ** 掩码');
 
 -- 项目（与前端静态示例保持一致）

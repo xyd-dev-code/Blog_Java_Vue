@@ -1,10 +1,10 @@
 <template>
   <div class="article-mgmt-page">
     <el-tabs v-model="activeTab" class="article-mgmt-tabs">
-      <el-tab-pane label="文章列表" name="articles">
+      <el-tab-pane :label="wx('文章列表')" name="articles">
         <ArticleList />
       </el-tab-pane>
-      <el-tab-pane label="文章分类" name="categories">
+      <el-tab-pane :label="wx('文章分类')" name="categories">
         <CategoryList />
       </el-tab-pane>
       <el-tab-pane label="标签" name="tags">
@@ -15,6 +15,9 @@
 </template>
 
 <script setup>
+import { useWuxiaCopy } from '@/composables/useWuxiaCopy'
+const { wx } = useWuxiaCopy()
+
 import { ref, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import ArticleList from './ArticleList.vue'

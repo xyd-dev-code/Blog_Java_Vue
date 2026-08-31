@@ -1,19 +1,29 @@
 <template>
-  <div class="app-root" :class="{ 'cursor-click': cursorClicked }">
+  <div class="app-root" :class="{ 'cursor-click': cursorClicked }" :data-wuxia-page="isWuxiaPage || undefined">
+    <InkWashBackdrop />
     <div v-if="showCursor" class="cursor-dot" :style="dotStyle"></div>
     <div v-if="showCursor" class="cursor-ring" :style="ringStyle"></div>
-    <el-config-provider :locale="zhCn">
+    <el-config-provider :locale="uiLocale">
       <router-view />
     </el-config-provider>
   </div>
 </template>
 
 <script setup>
-import { ref, watch, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { useRoute } from 'vue-router'
 import zhCn from 'element-plus/es/locale/lang/zh-cn'
+import InkWashBackdrop from '@/components/effects/InkWashBackdrop.vue'
+import { useInkInteractions } from '@/composables/useInkInteractions'
+import { useWuxiaCopy } from '@/composables/useWuxiaCopy'
 
 const route = useRoute()
+const { isWuxiaPage } = useWuxiaCopy()
+const uiLocale = computed(() => isWuxiaPage.value ? {
+  ...zhCn,
+  el: { ...zhCn.el, table: { ...zhCn.el.table, emptyText: '暂无卷宗' } },
+} : zhCn)
+useInkInteractions()
 const cursorClicked = ref(false)
 const showCursor = ref(false)
 

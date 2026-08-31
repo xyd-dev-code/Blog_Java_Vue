@@ -17,7 +17,7 @@
       </div>
 
       <!-- 空状态 -->
-      <el-empty v-else-if="!allList.length" description="还没有留言，来抢沙发吧～" />
+      <el-empty v-else-if="!allList.length" :description="wx('还没有留言，来抢沙发吧～')" />
 
       <!-- 内容 -->
       <template v-else>
@@ -59,7 +59,7 @@
 
         <!-- 底部：到底 + 总数 -->
         <div class="gb-footer" v-if="allList.length">
-          <span class="gb-overline">— 已经到底啦 —</span>
+          <span class="gb-overline">{{ wx('— 已经到底啦 —') }}</span>
           <span class="gb-total">共 {{ totalCount }} 条回复</span>
         </div>
       </template>
@@ -71,7 +71,7 @@
     </button>
 
     <!-- 写留言弹窗（桌面 + 移动端共用） -->
-    <el-dialog v-model="formVisible" :title="replyTo ? '回复 @' + replyTo.nickname : '写下你的留言'"
+    <el-dialog v-model="formVisible" :title="replyTo ? '回复 @' + replyTo.nickname : wx('写下你的留言')"
       :width="replyTo ? 'min(480px, 92vw)' : 'min(560px, 92vw)'" :top="'84px'" class="gb-form-dialog" :close-on-click-modal="false"
       @close="replyTo = null">
       <GuestbookForm
@@ -114,6 +114,9 @@
 </template>
 
 <script setup>
+import { useWuxiaCopy } from '@/composables/useWuxiaCopy'
+const { wx } = useWuxiaCopy()
+
 import { ref, reactive, computed, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { EditPen, Loading } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
@@ -189,7 +192,7 @@ const load = async () => {
     allList.value = resp.data || []
     visibleCount.value = Math.min(PAGE_BATCH, gridList.value.length) || 12
   } catch (e) {
-    ElMessage.error('留言加载失败，请稍后重试')
+    ElMessage.error(wx('留言加载失败，请稍后重试'))
   } finally {
     loading.value = false
   }
@@ -392,8 +395,8 @@ onBeforeUnmount(() => {
   position: fixed; right: 20px; bottom: 28px; z-index: 50;
   width: 54px; height: 54px; border-radius: 50%; border: none;
   background: linear-gradient(135deg, var(--c-botany-500), var(--c-botany-700));
-  color: #fff; font-size: 22px; cursor: pointer;
-  box-shadow: 0 8px 24px rgba(14, 165, 233, 0.4);
+  color: var(--theme-on-primary); font-size: 22px; cursor: pointer;
+  box-shadow: 0 8px 24px rgba(var(--theme-primary-strong-rgb), 0.4);
   display: flex; align-items: center; justify-content: center;
   transition: transform 0.2s ease;
 }

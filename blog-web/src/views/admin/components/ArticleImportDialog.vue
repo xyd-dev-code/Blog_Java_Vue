@@ -78,7 +78,7 @@
         <el-table-column v-if="hasError" label="" width="60">
           <template #default="{ row }">
             <el-tooltip v-if="row.error" :content="row.error" placement="top">
-              <el-icon style="color:#f56c6c"><WarningFilled /></el-icon>
+              <el-icon style="color: var(--c-element-danger)"><WarningFilled /></el-icon>
             </el-tooltip>
           </template>
         </el-table-column>
@@ -290,7 +290,7 @@ async function downloadMdTemplate() {
 .imp-intro { margin-bottom: 16px; }
 .imp-intro p { margin: 0; line-height: 1.7; font-size: 13px; }
 .imp-intro code {
-  background: #f5f7fa; border: 1px solid var(--c-line-soft);
+  background: var(--c-editor-fill); border: 1px solid var(--c-line-soft);
   padding: 0 4px; border-radius: 3px; font-size: 12px;
 }
 .imp-tpl-row {
@@ -329,9 +329,9 @@ async function downloadMdTemplate() {
 }
 .imp-pill {
   font-size: 12px; padding: 2px 8px; border-radius: 999px;
-  background: #f3f4f6; color: #475569;
+  background: var(--c-neutral-fill); color: var(--c-ink-500);
 }
-.imp-pill-new { background: #ecfdf5; color: #047857; }
-.imp-pill-up  { background: #fff7ed; color: #c2410c; }
-.imp-pill-err { background: #fef2f2; color: #b91c1c; }
+.imp-pill-new { background: var(--c-success-soft); color: var(--c-success); }
+.imp-pill-up  { background: var(--c-warning-soft); color: var(--c-warning-text); }
+.imp-pill-err { background: var(--c-danger-soft); color: var(--c-danger-strong); }
 </style>

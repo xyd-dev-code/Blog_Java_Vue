@@ -3,7 +3,7 @@
     <el-card>
       <template #header>
         <div class="header-bar">
-          <span>评论管理</span>
+          <span>{{ wx('评论管理') }}</span>
           <el-radio-group v-model="filter" @change="reload">
             <el-radio-button value="all">全部</el-radio-button>
             <el-radio-button value="pending">待审核 ({{ counts.pending || 0 }})</el-radio-button>
@@ -107,7 +107,7 @@
           ↳ 回复 <b>@{{ replyTarget.nickname }}</b>：{{ clipText(replyTarget.content) }}
         </div>
         <el-input v-model="replyContent" type="textarea" :rows="4" maxlength="1000" show-word-limit
-          placeholder="输入回复内容…" />
+          :placeholder="wx('输入回复内容…')" />
         <template #footer>
           <el-button @click="replyVisible = false">取消</el-button>
           <el-button type="primary" :loading="replyLoading" @click="submitReply">发送回复</el-button>
@@ -118,6 +118,9 @@
 </template>
 
 <script setup>
+import { useWuxiaCopy } from '@/composables/useWuxiaCopy'
+const { wx } = useWuxiaCopy()
+
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
@@ -230,7 +233,7 @@ onMounted(reload)
   border-radius: 12px;
   padding: 14px 16px;
   margin-bottom: 12px;
-  background: #fff;
+  background: var(--c-paper);
 }
 .cm-card-head { display: flex; align-items: center; gap: 10px; }
 .cm-card-meta { flex: 1; min-width: 0; }

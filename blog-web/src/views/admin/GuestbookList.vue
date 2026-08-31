@@ -3,7 +3,7 @@
     <el-card>
       <template #header>
         <div class="header-bar">
-          <span>留言管理</span>
+          <span>{{ wx('留言管理') }}</span>
           <el-radio-group v-model="filter" @change="reload">
             <el-radio-button value="all">全部</el-radio-button>
             <el-radio-button value="pending">待审核 ({{ counts.pending || 0 }})</el-radio-button>
@@ -90,12 +90,12 @@
           @current-change="(p) => { query.page = p; reload(false) }" />
       </div>
 
-      <el-dialog v-model="replyVisible" title="回复留言" width="min(520px, 92vw)" append-to-body>
+      <el-dialog v-model="replyVisible" :title="wx('回复留言')" width="min(520px, 92vw)" append-to-body>
         <div v-if="replyTarget" class="reply-quote">
           ↳ 回复 <b>@{{ replyTarget.nickname }}</b>：{{ clipText(replyTarget.content) }}
         </div>
         <el-input v-model="replyContent" type="textarea" :rows="4" maxlength="1000" show-word-limit
-          placeholder="输入回复内容…" />
+          :placeholder="wx('输入回复内容…')" />
         <template #footer>
           <el-button @click="replyVisible = false">取消</el-button>
           <el-button type="primary" :loading="replyLoading" @click="submitReply">发送回复</el-button>
@@ -106,6 +106,9 @@
 </template>
 
 <script setup>
+import { useWuxiaCopy } from '@/composables/useWuxiaCopy'
+const { wx } = useWuxiaCopy()
+
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Star } from '@element-plus/icons-vue'

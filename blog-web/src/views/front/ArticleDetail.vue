@@ -9,10 +9,10 @@
         <div class="orb orb-1"></div>
         <div class="orb orb-2"></div>
         <svg class="cloud cloud-1" viewBox="0 0 200 80" preserveAspectRatio="none">
-          <path fill="rgba(255,255,255,.18)" d="M40,60 Q50,30 70,35 Q80,10 110,15 Q130,0 160,25 Q185,20 190,45 Q200,60 180,65 L30,65 Z"/>
+          <path fill="rgba(var(--theme-paper-rgb), .18)" d="M40,60 Q50,30 70,35 Q80,10 110,15 Q130,0 160,25 Q185,20 190,45 Q200,60 180,65 L30,65 Z"/>
         </svg>
         <svg class="cloud cloud-2" viewBox="0 0 160 60" preserveAspectRatio="none">
-          <path fill="rgba(255,255,255,.12)" d="M20,45 Q35,20 55,28 Q65,8 90,12 Q105,0 130,18 Q150,15 155,35 Q160,45 140,48 L15,48 Z"/>
+          <path fill="rgba(var(--theme-paper-rgb), .12)" d="M20,45 Q35,20 55,28 Q65,8 90,12 Q105,0 130,18 Q150,15 155,35 Q160,45 140,48 L15,48 Z"/>
         </svg>
         <div v-if="article.coverImage" class="hero-cover" :style="{ backgroundImage: `url(${article.coverImage})` }"></div>
         <div class="hero-cover-mask"></div>
@@ -43,7 +43,7 @@
                   <span class="dot">·</span>
                   <span><el-icon><View /></el-icon>&nbsp;{{ article.viewCount || 0 }} 阅读</span>
                   <span class="dot">·</span>
-                  <span><el-icon><ChatDotRound /></el-icon>&nbsp;{{ article.commentCount || 0 }} 评论</span>
+                  <span><el-icon><ChatDotRound /></el-icon>&nbsp;{{ article.commentCount || 0 }} {{ wx('评论') }}</span>
                   <span v-if="readMinutes" class="dot">·</span>
                   <span v-if="readMinutes">⏱ {{ readMinutes }} 分钟</span>
                 </div>
@@ -64,7 +64,7 @@
     <div class="container-narrow art-body">
       <!-- 左侧目录侧边栏：独立滚动容器 + sticky 固定 -->
       <aside class="art-toc" v-if="tocItems.length" aria-label="文章目录">
-        <div class="toc-title">目录</div>
+        <div class="toc-title">{{ wx('目录') }}</div>
         <ul class="toc-list">
           <li
             v-for="item in tocItems"
@@ -81,7 +81,7 @@
       <nav class="art-breadcrumb" aria-label="面包屑导航">
         <router-link to="/" class="bc-item">首页</router-link>
         <span class="bc-sep">/</span>
-        <router-link to="/articles" class="bc-item">文章</router-link>
+        <router-link to="/articles" class="bc-item">{{ wx('文章') }}</router-link>
         <span class="bc-sep">/</span>
         <span class="bc-item bc-current" aria-current="page">{{ article.title }}</span>
       </nav>
@@ -96,7 +96,7 @@
 
       <!-- 标签条（正文末尾） -->
       <div class="art-tags-foot reveal" v-if="article.tags?.length">
-        <span class="tags-label">本文标签：</span>
+        <span class="tags-label">{{ wx('本文标签：') }}</span>
         <router-link v-for="t in article.tags" :key="t.id" :to="`/tags/${t.slug}`" class="tag-pill">
           # {{ t.name }}
         </router-link>
@@ -109,13 +109,13 @@
       <div class="art-footer-nav">
         <router-link v-if="prev" :to="`/articles/${prev.slug}`" class="nav-card reveal">
           <GradientBorderCard variant="sky" hoverable class="nav-inner">
-            <span class="lbl">← 上一篇</span>
+            <span class="lbl">{{ wx('← 上一篇') }}</span>
             <span class="t">{{ prev.title }}</span>
           </GradientBorderCard>
         </router-link>
         <router-link v-if="next" :to="`/articles/${next.slug}`" class="nav-card reveal">
           <GradientBorderCard variant="sun" hoverable class="nav-inner nav-next">
-            <span class="lbl">下一篇 →</span>
+            <span class="lbl">{{ wx('下一篇 →') }}</span>
             <span class="t">{{ next.title }}</span>
           </GradientBorderCard>
         </router-link>
@@ -133,6 +133,9 @@
 </template>
 
 <script setup>
+import { useWuxiaCopy } from '@/composables/useWuxiaCopy'
+const { wx } = useWuxiaCopy()
+
 import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import { Calendar, View, ChatDotRound, Folder } from '@element-plus/icons-vue'
@@ -268,11 +271,11 @@ onUnmounted(() => { window.removeEventListener('scroll', onScroll) })
   top: 0;
   left: 0;
   height: 3px;
-  background: linear-gradient(90deg, #38bdf8, #22d3ee, #fbbf24);
+  background: linear-gradient(90deg, var(--c-botany-500), var(--c-cyan-500), var(--c-autumn-500));
   z-index: 1000;
   transition: width 0.15s ease-out;
   border-radius: 0 2px 2px 0;
-  box-shadow: 0 0 8px rgba(56,189,248,0.4);
+  box-shadow: 0 0 8px rgba(var(--theme-primary-rgb), 0.4);
 }
 
 /* ===== Hero 区 ===== */
@@ -280,13 +283,13 @@ onUnmounted(() => { window.removeEventListener('scroll', onScroll) })
   position: relative;
   overflow: hidden;
   padding: 60px 0 80px;
-  background: linear-gradient(180deg, #e0f7ff 0%, #f0f9ff 60%, #ffffff 100%);
+  background: linear-gradient(180deg, var(--c-primary-mist) 0%, var(--c-botany-50) 60%, var(--c-white) 100%);
 }
 /* 有封面时:深蓝底色 + 底部留出柔和过渡到白色正文区,
    不再硬切,避免与下方 body 形成明显切割线。 */
 .art-hero.has-cover {
-  background: linear-gradient(180deg, #0c4a6e 0%, #0c4a6e 70%, #075985 88%, #38bdf8 96%, #ffffff 100%);
-  color: #f0f9ff;
+  background: linear-gradient(180deg, var(--c-botany-950) 0%, var(--c-botany-950) 70%, var(--c-footer-deep) 88%, var(--c-botany-500) 96%, var(--c-white) 100%);
+  color: var(--c-botany-50);
 }
 .hero-bg { position: absolute; inset: 0; pointer-events: none; }
 
@@ -305,11 +308,11 @@ onUnmounted(() => { window.removeEventListener('scroll', onScroll) })
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(180deg, rgba(12, 74, 110, 0.45) 0%, rgba(12, 74, 110, 0.25) 50%, rgba(12, 74, 110, 0.55) 100%),
-    radial-gradient(ellipse at center, transparent 0%, rgba(12, 74, 110, 0.4) 100%);
+    linear-gradient(180deg, rgba(var(--theme-primary-deep-rgb), 0.45) 0%, rgba(var(--theme-primary-deep-rgb), 0.25) 50%, rgba(var(--theme-primary-deep-rgb), 0.55) 100%),
+    radial-gradient(ellipse at center, transparent 0%, rgba(var(--theme-primary-deep-rgb), 0.4) 100%);
 }
 .has-cover .orb { opacity: 0.25; mix-blend-mode: screen; }
-.has-cover .cloud path { fill: rgba(255, 255, 255, 0.22); }
+.has-cover .cloud path { fill: rgba(var(--theme-paper-rgb), 0.22); }
 .orb {
   position: absolute;
   border-radius: 50%;
@@ -318,13 +321,13 @@ onUnmounted(() => { window.removeEventListener('scroll', onScroll) })
 }
 .orb-1 {
   width: 360px; height: 360px;
-  background: radial-gradient(circle, #38bdf8, transparent 70%);
+  background: radial-gradient(circle, var(--c-botany-500), transparent 70%);
   top: -60px; right: -40px;
   animation: orb-float 12s ease-in-out infinite;
 }
 .orb-2 {
   width: 280px; height: 280px;
-  background: radial-gradient(circle, #fbbf24, transparent 70%);
+  background: radial-gradient(circle, var(--c-autumn-500), transparent 70%);
   bottom: -40px; left: -40px;
   opacity: 0.35;
   animation: orb-float 16s ease-in-out infinite -3s;
@@ -358,28 +361,28 @@ onUnmounted(() => { window.removeEventListener('scroll', onScroll) })
   display: inline-flex;
   align-items: center;
   padding: 4px 12px;
-  background: rgba(255, 255, 255, 0.65);
-  color: #0369a1;
-  border: 1px solid rgba(125, 211, 252, 0.6);
+  background: rgba(var(--theme-paper-rgb), 0.65);
+  color: var(--c-botany-900);
+  border: 1px solid rgba(var(--theme-primary-light-rgb), 0.6);
   border-radius: 999px;
   font-size: 12px;
   backdrop-filter: blur(6px);
   transition: all 0.2s ease;
 }
 .tag-pill:hover {
-  background: #38bdf8;
-  color: #fff;
-  border-color: #38bdf8;
+  background: var(--c-botany-500);
+  color: var(--theme-on-primary);
+  border-color: var(--c-botany-500);
 }
 .tag-pill-sun {
-  color: #b45309;
-  border-color: #fde68a;
-  background: rgba(255, 251, 235, 0.7);
+  color: var(--c-autumn-900);
+  border-color: var(--c-autumn-200);
+  background: rgba(var(--theme-accent-paper-rgb), 0.7);
 }
 .tag-pill-sun:hover {
-  background: #fbbf24;
-  color: #fff;
-  border-color: #fbbf24;
+  background: var(--c-autumn-500);
+  color: var(--theme-on-primary);
+  border-color: var(--c-autumn-500);
 }
 
 .art-title {
@@ -388,7 +391,7 @@ onUnmounted(() => { window.removeEventListener('scroll', onScroll) })
   line-height: 1.3;
   margin: 0 0 14px;
   color: var(--c-ink);
-  background: linear-gradient(135deg, #0369a1 0%, #38bdf8 60%, #22d3ee 100%);
+  background: linear-gradient(135deg, var(--c-botany-900) 0%, var(--c-botany-500) 60%, var(--c-cyan-500) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
           background-clip: text;
@@ -403,45 +406,45 @@ onUnmounted(() => { window.removeEventListener('scroll', onScroll) })
 
 /* 有封面时:hero 文本切到浅色 + 玻璃质卡片 */
 .has-cover .art-title {
-  background: linear-gradient(135deg, #ffffff 0%, #bae6fd 60%, #fde68a 100%);
+  background: linear-gradient(135deg, var(--c-white) 0%, var(--c-botany-200) 60%, var(--c-autumn-200) 100%);
   -webkit-background-clip: text;
           background-clip: text;
   -webkit-text-fill-color: transparent;
-  text-shadow: 0 2px 18px rgba(12, 74, 110, 0.55);
+  text-shadow: 0 2px 18px rgba(var(--theme-primary-deep-rgb), 0.55);
 }
-.has-cover .art-deck { color: rgba(240, 249, 255, 0.92); }
+.has-cover .art-deck { color: rgba(var(--theme-page-pale-rgb), 0.92); }
 .has-cover .tag-pill {
-  background: rgba(255, 255, 255, 0.22);
-  color: #f0f9ff;
-  border-color: rgba(186, 230, 253, 0.55);
+  background: rgba(var(--theme-paper-rgb), 0.22);
+  color: var(--c-botany-50);
+  border-color: rgba(var(--theme-primary-soft-rgb), 0.55);
   backdrop-filter: blur(8px);
 }
-.has-cover .tag-pill:hover { background: #38bdf8; color: #fff; }
+.has-cover .tag-pill:hover { background: var(--c-botany-500); color: var(--theme-on-primary); }
 .has-cover .tag-pill-sun {
-  color: #fde68a;
-  border-color: rgba(253, 230, 138, 0.55);
-  background: rgba(255, 251, 235, 0.18);
+  color: var(--c-autumn-200);
+  border-color: rgba(var(--theme-accent-light-rgb), 0.55);
+  background: rgba(var(--theme-accent-paper-rgb), 0.18);
 }
-.has-cover .tag-pill-sun:hover { background: #fbbf24; color: #fff; }
-.has-cover .section-eyebrow { color: #fde68a; }
-.has-cover .weather-line { color: #f0f9ff; }
-.has-cover .author-name { color: #f0f9ff; }
-.has-cover .author-meta { color: rgba(240, 249, 255, 0.78); }
-.has-cover .author-meta .dot { color: rgba(240, 249, 255, 0.5); }
-.has-cover .avatar { box-shadow: 0 4px 12px rgba(12, 74, 110, 0.5); }
+.has-cover .tag-pill-sun:hover { background: var(--c-autumn-500); color: var(--theme-on-primary); }
+.has-cover .section-eyebrow { color: var(--c-autumn-200); }
+.has-cover .weather-line { color: var(--c-botany-50); }
+.has-cover .author-name { color: var(--c-botany-50); }
+.has-cover .author-meta { color: rgba(var(--theme-page-pale-rgb), 0.78); }
+.has-cover .author-meta .dot { color: rgba(var(--theme-page-pale-rgb), 0.5); }
+.has-cover .avatar { box-shadow: 0 4px 12px rgba(var(--theme-primary-deep-rgb), 0.5); }
 
 /* 穿透 GradientBorderCard:深色玻璃底 + 内部浅色文字 */
 .has-cover :deep(.gradient-border-card) {
-  background: rgba(15, 23, 42, 0.55);
+  background: rgba(var(--theme-ink-rgb), 0.55);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
-  border: 1px solid rgba(186, 230, 253, 0.35);
+  border: 1px solid rgba(var(--theme-primary-soft-rgb), 0.35);
 }
-.has-cover :deep(.gradient-border-card) .author-name { color: #f0f9ff; }
-.has-cover :deep(.gradient-border-card) .author-meta { color: rgba(240, 249, 255, 0.85); }
-.has-cover :deep(.gradient-border-card) .author-meta .dot { color: rgba(240, 249, 255, 0.55); }
-.has-cover :deep(.gradient-border-card) .section-eyebrow { color: #fde68a; }
-.has-cover :deep(.gradient-border-card) .weather-line { color: #f0f9ff; }
+.has-cover :deep(.gradient-border-card) .author-name { color: var(--c-botany-50); }
+.has-cover :deep(.gradient-border-card) .author-meta { color: rgba(var(--theme-page-pale-rgb), 0.85); }
+.has-cover :deep(.gradient-border-card) .author-meta .dot { color: rgba(var(--theme-page-pale-rgb), 0.55); }
+.has-cover :deep(.gradient-border-card) .section-eyebrow { color: var(--c-autumn-200); }
+.has-cover :deep(.gradient-border-card) .weather-line { color: var(--c-botany-50); }
 
 /* ===== 作者条（渐变描边卡内嵌） ===== */
 .art-author-bar {
@@ -464,12 +467,12 @@ onUnmounted(() => { window.removeEventListener('scroll', onScroll) })
 .avatar {
   width: 48px; height: 48px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #38bdf8, #22d3ee);
-  color: #fff;
+  background: linear-gradient(135deg, var(--c-botany-500), var(--c-cyan-500));
+  color: var(--theme-on-primary);
   font-family: var(--font-serif);
   font-size: 22px;
   display: grid; place-items: center;
-  box-shadow: 0 4px 12px rgba(56, 189, 248, 0.35);
+  box-shadow: 0 4px 12px rgba(var(--theme-primary-rgb), 0.35);
   flex-shrink: 0;
 }
 .avatar-img { object-fit: cover; }
@@ -490,7 +493,7 @@ onUnmounted(() => { window.removeEventListener('scroll', onScroll) })
   color: var(--c-ink-soft);
   margin-top: 4px;
 }
-.author-meta .dot { color: #cbd5e1; }
+.author-meta .dot { color: var(--c-ink-200); }
 
 .author-right {
   text-align: right;
@@ -500,14 +503,14 @@ onUnmounted(() => { window.removeEventListener('scroll', onScroll) })
   font-size: 12px;
   letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: #06b6d4;
+  color: var(--c-cyan-700);
   font-weight: 600;
   margin-bottom: 4px;
 }
 .weather-line {
   font-family: var(--font-serif);
   font-size: 16px;
-  color: #0369a1;
+  color: var(--c-botany-900);
   font-weight: 600;
 }
 
@@ -522,16 +525,16 @@ onUnmounted(() => { window.removeEventListener('scroll', onScroll) })
   height: 40px;
   pointer-events: none;
   background: linear-gradient(180deg,
-    rgba(255, 255, 255, 0)   0%,
-    rgba(255, 255, 255, 0.35) 60%,
-    rgba(255, 255, 255, 0.85) 100%);
+    rgba(var(--theme-paper-rgb), 0)   0%,
+    rgba(var(--theme-paper-rgb), 0.35) 60%,
+    rgba(var(--theme-paper-rgb), 0.85) 100%);
   border-radius: 24px 24px 0 0;
 }
 .art-hero.has-cover .hero-divider {
   background: linear-gradient(180deg,
-    rgba(255, 255, 255, 0)   0%,
-    rgba(56, 189, 248, 0.25) 55%,
-    rgba(240, 249, 255, 0.95) 100%);
+    rgba(var(--theme-paper-rgb), 0)   0%,
+    rgba(var(--theme-primary-rgb), 0.25) 55%,
+    rgba(var(--theme-page-pale-rgb), 0.95) 100%);
 }
 /* wave 类已全站移除 */
 
@@ -543,7 +546,7 @@ onUnmounted(() => { window.removeEventListener('scroll', onScroll) })
      显式保留水平 padding,移动端缩到 16px。 */
   padding: 40px 24px 80px;
   position: relative;
-  background: linear-gradient(180deg, #ffffff 0%, #f0f9ff 60%, #e0f7ff 100%);
+  background: linear-gradient(180deg, var(--c-white) 0%, var(--c-botany-50) 60%, var(--c-primary-mist) 100%);
 }
 @media (max-width: 768px) {
   .art-body { padding: 32px 16px 60px; }
@@ -571,8 +574,8 @@ onUnmounted(() => { window.removeEventListener('scroll', onScroll) })
   max-height: calc(100vh - 112px);
   overflow-y: auto;
   padding: 18px 14px 18px 16px;
-  background: rgba(255, 255, 255, 0.62);
-  border: 1px solid rgba(186, 230, 253, 0.6);
+  background: rgba(var(--theme-paper-rgb), 0.62);
+  border: 1px solid rgba(var(--theme-primary-soft-rgb), 0.6);
   border-radius: 14px;
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
@@ -607,9 +610,9 @@ onUnmounted(() => { window.removeEventListener('scroll', onScroll) })
   background: var(--c-botany-50);
 }
 .toc-item.active a {
-  color: #0369a1;
-  background: rgba(56, 189, 248, 0.12);
-  border-left-color: #38bdf8;
+  color: var(--c-botany-900);
+  background: rgba(var(--theme-primary-rgb), 0.12);
+  border-left-color: var(--c-botany-500);
   font-weight: 600;
 }
 /* 锚点跳转时为固定 header 预留偏移，避免标题被遮挡 */
@@ -654,7 +657,7 @@ onUnmounted(() => { window.removeEventListener('scroll', onScroll) })
 }
 .bc-current:hover { background: transparent; }
 .bc-sep {
-  color: #cbd5e1;
+  color: var(--c-ink-200);
   user-select: none;
 }
 @media (max-width: 480px) {
@@ -667,7 +670,7 @@ onUnmounted(() => { window.removeEventListener('scroll', onScroll) })
   margin-bottom: 36px;
   border-radius: 18px;
   overflow: hidden;
-  box-shadow: 0 12px 36px rgba(14, 165, 233, 0.15);
+  box-shadow: 0 12px 36px rgba(var(--theme-primary-strong-rgb), 0.15);
 }
 .cover img { width: 100%; display: block; }
 
@@ -705,8 +708,8 @@ onUnmounted(() => { window.removeEventListener('scroll', onScroll) })
   gap: 8px;
   margin: 36px 0 0;
   padding: 16px 20px;
-  background: rgba(255, 255, 255, 0.6);
-  border: 1px dashed #bae6fd;
+  background: rgba(var(--theme-paper-rgb), 0.6);
+  border: 1px dashed var(--c-botany-200);
   border-radius: 12px;
 }
 .tags-label {
@@ -734,7 +737,7 @@ onUnmounted(() => { window.removeEventListener('scroll', onScroll) })
   min-height: 80px;
 }
 .nav-next { text-align: right; align-items: flex-end; }
-.lbl { font-size: 12px; letter-spacing: 0.1em; color: #06b6d4; font-weight: 600; }
+.lbl { font-size: 12px; letter-spacing: 0.1em; color: var(--c-cyan-700); font-weight: 600; }
 .t {
   font-family: var(--font-serif);
   font-size: 15px;
@@ -752,7 +755,7 @@ onUnmounted(() => { window.removeEventListener('scroll', onScroll) })
   word-break: break-word;
   line-height: 1.45;
 }
-.nav-card:hover .t { color: #0369a1; }
+.nav-card:hover .t { color: var(--c-botany-900); }
 
 /* Reveal */
 .reveal {

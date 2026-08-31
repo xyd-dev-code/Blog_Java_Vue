@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "vite --host",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test:theme-layout": "node scripts/check-theme-layout.mjs",
+    "test:theme-layout:browser": "node scripts/theme-layout-regression.mjs"
   },
   "dependencies": {
     "@element-plus/icons-vue": "^2.3.1",

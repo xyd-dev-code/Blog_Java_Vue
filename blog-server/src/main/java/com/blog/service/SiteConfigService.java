@@ -11,6 +11,9 @@ import java.util.Set;
 
 @Service
 public class SiteConfigService {
+    public static final String DEFAULT_SITE_THEME = "sunny";
+    private static final Set<String> SUPPORTED_SITE_THEMES = Set.of("sunny", "ink");
+
     /**
      * 匿名站点接口允许返回的配置项。站点配置表也可能被旧版本写入内部配置，
      * 因此公开接口必须使用正向白名单，不能直接返回整张表。
@@ -32,6 +35,8 @@ public class SiteConfigService {
             "commentAudit", "commentPlaceholder", "githubUrl",
             "siteName", "motto", "description", "keywords", "beian", "comment_audit",
             "github", "email", "authorName", "userNickname",
+            // 站点级主题（只允许管理员修改，匿名端只读）
+            "siteTheme",
             // About 页面个人资料全部由数据库维护
             "greeting", "roleTitle", "userBio", "aboutContent", "aboutSkills", "aboutTimeline",
             // 天气卡展示配置
@@ -63,7 +68,17 @@ public class SiteConfigService {
                 map.put(key, c.getConfigValue());
             }
         });
+        // 旧数据库可能还没有该键，或曾被人工写入非法值；公开端始终拿到安全默认值。
+        map.put("siteTheme", normalizeSiteTheme(map.get("siteTheme")));
         return map;
+    }
+
+    public static boolean isSupportedSiteTheme(String themeId) {
+        return themeId != null && SUPPORTED_SITE_THEMES.contains(themeId);
+    }
+
+    public static String normalizeSiteTheme(String themeId) {
+        return isSupportedSiteTheme(themeId) ? themeId : DEFAULT_SITE_THEME;
     }
 
     /**

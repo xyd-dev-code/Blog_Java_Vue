@@ -5,8 +5,8 @@
       <div class="hero-bg" aria-hidden="true">
         <!-- 太阳 -->
         <svg class="hero-sun" viewBox="0 0 64 64" width="56" height="56">
-          <circle cx="32" cy="32" r="14" fill="#fbbf24" />
-          <g stroke="#fbbf24" stroke-width="3" stroke-linecap="round">
+          <circle cx="32" cy="32" r="14" fill="var(--c-autumn-500)" />
+          <g stroke="var(--c-autumn-500)" stroke-width="3" stroke-linecap="round">
             <line x1="32" y1="2" x2="32" y2="10" />
             <line x1="32" y1="54" x2="32" y2="62" />
             <line x1="2" y1="32" x2="10" y2="32" />
@@ -31,11 +31,11 @@
           <input
             v-model="kw"
             class="hero-search-input"
-            placeholder="搜索你需要的工具"
+            :placeholder="wx('搜索你需要的工具')"
             @keyup.enter="kw = kw"
           />
           <svg class="hero-search-icon" width="18" height="18" viewBox="0 0 24 24"
-            fill="none" stroke="#38bdf8" stroke-width="2" aria-hidden="true">
+            fill="none" stroke="var(--c-botany-500)" stroke-width="2" aria-hidden="true">
             <circle cx="11" cy="11" r="7" />
             <line x1="16.5" y1="16.5" x2="21" y2="21" />
           </svg>
@@ -43,7 +43,7 @@
         <p class="hero-hint">
           <el-icon><Clock /></el-icon>
           时间工作需要的工具
-          <el-tooltip content="免登录即用 · 轻量高效 · 持续更新中" placement="top">
+          <el-tooltip :content="wx('免登录即用 · 轻量高效 · 持续更新中')" placement="top">
             <el-icon class="hint-info"><InfoFilled /></el-icon>
           </el-tooltip>
         </p>
@@ -81,7 +81,7 @@
       </div>
 
       <div v-else-if="!filteredTools.length" class="empty">
-        <el-empty description="没有匹配的工具" :image-size="80" />
+        <el-empty :description="wx('没有匹配的工具')" :image-size="80" />
         <el-button type="primary" plain @click="kw = ''; activeCat = 'all'">清除筛选</el-button>
       </div>
 
@@ -119,7 +119,7 @@
           <!-- 右上图标：图片 URL 优先渲染，否则蓝线稿文档图标兜底 -->
           <img v-if="isIconUrl(t.icon)" :src="t.icon" class="card-icon card-icon-img" alt="" aria-hidden="true" loading="lazy" decoding="async" />
           <svg v-else class="card-icon" width="60" height="60" viewBox="0 0 60 60"
-            fill="none" stroke="#38bdf8" stroke-width="2" stroke-linejoin="round"
+            fill="none" stroke="var(--c-botany-500)" stroke-width="2" stroke-linejoin="round"
             aria-hidden="true">
             <rect x="14" y="8" width="32" height="44" rx="3" />
             <line x1="20" y1="18" x2="40" y2="18" />
@@ -133,16 +133,16 @@
               {{ catLabel(t.category) }}
             </span>
             <template v-if="t.status === 1">
-              <span class="use-btn ef-neon" @click.stop="onUse(t)">开始使用</span>
+              <span class="use-btn ef-neon" @click.stop="onUse(t)">{{ wx('开始使用') }}</span>
             </template>
             <template v-else-if="t.status === 2">
-              <span class="use-btn muted" @click.stop="onMaintain">维护中</span>
+              <span class="use-btn muted" @click.stop="onMaintain">{{ wx('维护中') }}</span>
             </template>
             <template v-else-if="t.status === 3">
-              <span class="use-btn upcoming" @click.stop="onUpcoming">即将上线</span>
+              <span class="use-btn upcoming" @click.stop="onUpcoming">{{ wx('即将上线') }}</span>
             </template>
             <template v-else>
-              <span class="use-btn muted">已下线</span>
+              <span class="use-btn muted">{{ wx('已下线') }}</span>
             </template>
           </div>
         </article>
@@ -151,16 +151,19 @@
 
     <!-- ============ 底部标语 ============ -->
     <footer class="footer container">
-      <span>免登录即用</span>
+      <span>{{ wx('免登录即用') }}</span>
       <span class="dot"></span>
-      <span>轻量高效</span>
+      <span>{{ wx('轻量高效') }}</span>
       <span class="dot"></span>
-      <span>持续更新中</span>
+      <span>{{ wx('持续更新中') }}</span>
     </footer>
   </div>
 </template>
 
 <script setup>
+import { useWuxiaCopy } from '@/composables/useWuxiaCopy'
+const { wx } = useWuxiaCopy()
+
 import { ref, computed, onMounted, watch } from 'vue'
 import { Clock, InfoFilled, StarFilled, Plus, WarningFilled } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
@@ -247,8 +250,8 @@ const onUse = async (t) => {
   ElMessage.warning('该工具尚未配置地址,请联系站长')
 }
 
-const onMaintain = () => ElMessage.warning('该工具正在维护中,请稍后再来')
-const onUpcoming = () => ElMessage.info('该工具即将上线,敬请期待')
+const onMaintain = () => ElMessage.warning(wx('该工具正在维护中,请稍后再来'))
+const onUpcoming = () => ElMessage.info(wx('该工具即将上线,敬请期待'))
 
 const load = async () => {
   loading.value = true
@@ -281,7 +284,7 @@ onMounted(async () => { loadCategories(); await load() })
   /* 天空底色交给 FrontLayout（全局渐变 + 视差云层）承担；
      此处只叠一层半透明柔光，否则不透明底色会把云朵整片盖住 */
   background:
-    radial-gradient(ellipse 80% 30% at 50% 100%, rgba(255, 255, 255, 0.6) 0%, transparent 70%);
+    radial-gradient(ellipse 80% 30% at 50% 100%, rgba(var(--theme-paper-rgb), 0.6) 0%, transparent 70%);
 }
 
 .container {
@@ -307,7 +310,7 @@ onMounted(async () => { loadCategories(); await load() })
   /* 不铺不透明渐变底色——让全局天空透上来；
      只留极淡的 alpha 光斑作为装饰 */
   background:
-    radial-gradient(ellipse 60% 40% at 50% 0%, rgba(255, 255, 255, 0.35) 0%, transparent 55%);
+    radial-gradient(ellipse 60% 40% at 50% 0%, rgba(var(--theme-paper-rgb), 0.35) 0%, transparent 55%);
   z-index: 0;
   pointer-events: none;
 }
@@ -319,7 +322,7 @@ onMounted(async () => { loadCategories(); await load() })
   left: 58%;
   width: 64px;
   height: 64px;
-  filter: drop-shadow(0 0 18px rgba(251, 191, 36, 0.6)) drop-shadow(0 0 40px rgba(251, 191, 36, 0.25));
+  filter: drop-shadow(0 0 18px rgba(var(--theme-accent-rgb), 0.6)) drop-shadow(0 0 40px rgba(var(--theme-accent-rgb), 0.25));
   opacity: 0.95;
   animation: sun-pulse 4s ease-in-out infinite;
 }
@@ -332,14 +335,14 @@ onMounted(async () => { loadCategories(); await load() })
 .cloud {
   position: absolute;
   border-radius: 999px;
-  background: #fff;
-  filter: drop-shadow(0 8px 24px rgba(125, 211, 252, 0.22));
+  background: var(--c-paper);
+  filter: drop-shadow(0 8px 24px rgba(var(--theme-primary-light-rgb), 0.22));
   opacity: 0.92;
   &::before,
   &::after {
     content: '';
     position: absolute;
-    background: #fff;
+    background: var(--c-paper);
     border-radius: 50%;
   }
 }
@@ -395,10 +398,10 @@ onMounted(async () => { loadCategories(); await load() })
   font-family: var(--font-serif);
   font-size: clamp(32px, 4vw, 44px);
   font-weight: 700;
-  color: #0c4a6e;
+  color: var(--c-botany-950);
   margin: 0 0 12px;
   letter-spacing: 0.06em;
-  text-shadow: 0 2px 16px rgba(255, 255, 255, 0.7);
+  text-shadow: 0 2px 16px rgba(var(--theme-paper-rgb), 0.7);
 }
 /* 扫光阶段文字填充为透明，白色投影会从字形后透出一圈毛边，故关闭 */
 .hero-title.ef-title-shine {
@@ -406,7 +409,7 @@ onMounted(async () => { loadCategories(); await load() })
 }
 .hero-subtitle {
   font-size: 15px;
-  color: #0369a1;
+  color: var(--c-botany-900);
   margin: 0 0 18px;
   font-weight: 500;
   letter-spacing: 0.04em;
@@ -415,14 +418,14 @@ onMounted(async () => { loadCategories(); await load() })
   position: relative;
   max-width: 580px;
   margin: 0 auto;
-  background: rgba(255, 255, 255, 0.98);
-  border: 1px solid rgba(56, 189, 248, 0.35);
+  background: rgba(var(--theme-paper-rgb), 0.98);
+  border: 1px solid rgba(var(--theme-primary-rgb), 0.35);
   border-radius: 999px;
   padding: 14px 22px;
   display: flex;
   align-items: center;
   gap: 10px;
-  box-shadow: 0 8px 28px rgba(56, 189, 248, 0.18);
+  box-shadow: 0 8px 28px rgba(var(--theme-primary-rgb), 0.18);
 }
 .hero-search-input {
   flex: 1;
@@ -430,8 +433,8 @@ onMounted(async () => { loadCategories(); await load() })
   outline: none;
   background: transparent;
   font-size: 14px;
-  color: #1e293b;
-  &::placeholder { color: #94a3b8; }
+  color: var(--c-ink-800);
+  &::placeholder { color: var(--c-ink-300); }
 }
 .hero-search-icon { flex-shrink: 0; }
 .hero-hint {
@@ -441,14 +444,14 @@ onMounted(async () => { loadCategories(); await load() })
   margin-top: 10px;
   padding: 6px 16px;
   border-radius: 999px;
-  border: 1px solid rgba(56, 189, 248, 0.3);
-  background: rgba(255, 255, 255, 0.65);
+  border: 1px solid rgba(var(--theme-primary-rgb), 0.3);
+  background: rgba(var(--theme-paper-rgb), 0.65);
   backdrop-filter: blur(8px);
-  color: #0369a1;
+  color: var(--c-botany-900);
   font-size: 13px;
   white-space: nowrap;
-  .el-icon { color: #38bdf8; }
-  .hint-info { color: #94a3b8; cursor: help; }
+  .el-icon { color: var(--c-botany-500); }
+  .hint-info { color: var(--c-ink-300); cursor: help; }
 }
 
 /* ============ Tab 行（嵌在 grid-section 内，与卡片同宽左对齐） ============ */
@@ -464,22 +467,22 @@ onMounted(async () => { loadCategories(); await load() })
   font-size: 13px;
   padding: 6px 14px;
   border-radius: 999px;
-  border: 1px solid rgba(56, 189, 248, 0.35);
-  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(var(--theme-primary-rgb), 0.35);
+  background: rgba(var(--theme-paper-rgb), 0.7);
   backdrop-filter: blur(8px);
-  color: #0c4a6e;
+  color: var(--c-botany-950);
   cursor: pointer;
   transition: all 0.25s ease;
   &:hover {
-    border-color: #38bdf8;
-    background: rgba(186, 230, 253, 0.5);
+    border-color: var(--c-botany-500);
+    background: rgba(var(--theme-primary-soft-rgb), 0.5);
     transform: translateY(-1px);
   }
   &.active {
-    background: linear-gradient(135deg, #38bdf8, #0ea5e9);
-    color: #fff;
+    background: linear-gradient(135deg, var(--c-botany-500), var(--c-botany-700));
+    color: var(--theme-on-primary);
     border-color: transparent;
-    box-shadow: 0 6px 18px rgba(56, 189, 248, 0.35);
+    box-shadow: 0 6px 18px rgba(var(--theme-primary-rgb), 0.35);
   }
 }
 
@@ -491,11 +494,11 @@ onMounted(async () => { loadCategories(); await load() })
   margin: 0 auto 4px;
   padding: 10px 16px;
   border-radius: 10px;
-  background: rgba(254, 243, 199, 0.6);
-  border: 1px solid rgba(217, 119, 6, 0.2);
-  color: #854f0b;
+  background: rgba(var(--theme-accent-soft-rgb), 0.6);
+  border: 1px solid rgba(var(--theme-accent-dark-rgb), 0.2);
+  color: var(--c-autumn-950);
   font-size: 13px;
-  .el-icon { color: #d97706; }
+  .el-icon { color: var(--c-autumn-800); }
 }
 
 /* ============ 卡片网格 ============ */
@@ -513,8 +516,8 @@ onMounted(async () => { loadCategories(); await load() })
 
 .tool-card {
   position: relative;
-  background: #fff;
-  border: 1px solid rgba(186, 230, 253, 0.6);
+  background: var(--c-paper);
+  border: 1px solid rgba(var(--theme-primary-soft-rgb), 0.6);
   border-radius: 14px;
   padding: 22px 18px 18px;
   display: grid;
@@ -526,27 +529,27 @@ onMounted(async () => { loadCategories(); await load() })
     "desc  desc"
     "foot  foot";
   gap: 10px 14px;
-  box-shadow: 0 4px 16px rgba(56, 189, 248, 0.08);
+  box-shadow: 0 4px 16px rgba(var(--theme-primary-rgb), 0.08);
   transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
   cursor: pointer;
   overflow: hidden;
 
   &:hover {
-    box-shadow: 0 10px 28px rgba(56, 189, 248, 0.18);
-    border-color: rgba(56, 189, 248, 0.4);
+    box-shadow: 0 10px 28px rgba(var(--theme-primary-rgb), 0.18);
+    border-color: rgba(var(--theme-primary-rgb), 0.4);
   }
 
   &.is-maintain {
-    background: #f8fafc;
+    background: var(--c-ink-50);
     border-style: dashed;
-    border-color: #cbd5e1;
+    border-color: var(--c-ink-200);
     opacity: 0.7;
-    .card-title { color: #64748b; }
+    .card-title { color: var(--c-ink-400); }
   }
   &.is-upcoming {
-    background: #fff;
+    background: var(--c-paper);
     border-style: dashed;
-    border-color: rgba(56, 189, 248, 0.4);
+    border-color: rgba(var(--theme-primary-rgb), 0.4);
   }
   &.is-offline { opacity: 0.5; }
 }
@@ -563,8 +566,8 @@ onMounted(async () => { loadCategories(); await load() })
   transform: translate(-50%, -50%);
   background: radial-gradient(
     circle,
-    rgba(251, 191, 36, 0.14) 0%,
-    rgba(56, 189, 248, 0.10) 30%,
+    rgba(var(--theme-accent-rgb), 0.14) 0%,
+    rgba(var(--theme-primary-rgb), 0.10) 30%,
     transparent 65%
   );
   pointer-events: none;
@@ -584,7 +587,7 @@ onMounted(async () => { loadCategories(); await load() })
 /* 骨架态 */
 .skeleton {
   .sk-line, .sk-icon {
-    background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+    background: linear-gradient(90deg, var(--c-ink-100) 25%, var(--c-line) 50%, var(--c-ink-100) 75%);
     background-size: 200% 100%;
     animation: sk-shimmer 1.4s infinite linear;
     border-radius: 6px;
@@ -607,8 +610,8 @@ onMounted(async () => { loadCategories(); await load() })
   display: inline-block;
   padding: 3px 10px;
   font-size: 12px;
-  background: #f1f5f9;
-  color: #64748b;
+  background: var(--c-ink-100);
+  color: var(--c-ink-400);
   border-radius: 6px;
   align-self: flex-start;
 }
@@ -616,25 +619,25 @@ onMounted(async () => { loadCategories(); await load() })
   grid-area: add;
   width: 22px;
   height: 22px;
-  border: 1px solid #e2e8f0;
-  background: #fff;
+  border: 1px solid var(--c-line);
+  background: var(--c-paper);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  color: #94a3b8;
+  color: var(--c-ink-300);
   transition: all 0.2s ease;
   .el-icon { font-size: 12px; }
   &:hover {
-    color: #0ea5e9;
-    border-color: #0ea5e9;
+    color: var(--c-botany-700);
+    border-color: var(--c-botany-700);
     transform: scale(1.05);
   }
   &.active {
-    color: #fbbf24;
-    border-color: #fbbf24;
-    background: rgba(251, 191, 36, 0.08);
+    color: var(--c-autumn-500);
+    border-color: var(--c-autumn-500);
+    background: rgba(var(--theme-accent-rgb), 0.08);
   }
 }
 .card-title {
@@ -642,7 +645,7 @@ onMounted(async () => { loadCategories(); await load() })
   font-family: var(--font-serif);
   font-size: 17px;
   font-weight: 600;
-  color: #0c4a6e;
+  color: var(--c-botany-950);
   margin: 0;
   line-height: 1.3;
   padding-right: 50px; // 避开右上 icon
@@ -651,7 +654,7 @@ onMounted(async () => { loadCategories(); await load() })
 .card-desc {
   grid-area: desc;
   font-size: 12px;
-  color: #64748b;
+  color: var(--c-ink-400);
   line-height: 1.6;
   margin: 0;
   display: -webkit-box;
@@ -671,7 +674,7 @@ onMounted(async () => { loadCategories(); await load() })
 .card-icon-img {
   object-fit: contain;
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.55);
+  background: rgba(var(--theme-paper-rgb), 0.55);
   padding: 4px;
 }
 
@@ -683,45 +686,45 @@ onMounted(async () => { loadCategories(); await load() })
   gap: 8px;
   margin-top: 4px;
   padding-top: 12px;
-  border-top: 1px dashed rgba(186, 230, 253, 0.6);
+  border-top: 1px dashed rgba(var(--theme-primary-soft-rgb), 0.6);
 }
 .cat-pill {
   display: inline-block;
   padding: 5px 14px;
   font-size: 12px;
   border-radius: 999px;
-  background: linear-gradient(135deg, #38bdf8, #0ea5e9);
-  color: #fff;
-  &.muted { background: #f1f5f9; color: #94a3b8; }
+  background: linear-gradient(135deg, var(--c-botany-500), var(--c-botany-700));
+  color: var(--theme-on-primary);
+  &.muted { background: var(--c-ink-100); color: var(--c-ink-300); }
 }
 .use-btn {
   display: inline-block;
   padding: 6px 18px;
   font-size: 12px;
   border-radius: 999px;
-  background: #fff;
-  border: 1px solid rgba(56, 189, 248, 0.5);
-  color: #0ea5e9;
+  background: var(--c-paper);
+  border: 1px solid rgba(var(--theme-primary-rgb), 0.5);
+  color: var(--c-botany-700);
   cursor: pointer;
   transition: all 0.2s ease;
   &:hover {
-    background: linear-gradient(135deg, #38bdf8, #0ea5e9);
-    color: #fff;
+    background: linear-gradient(135deg, var(--c-botany-500), var(--c-botany-700));
+    color: var(--theme-on-primary);
     border-color: transparent;
-    box-shadow: 0 4px 12px rgba(56, 189, 248, 0.3);
+    box-shadow: 0 4px 12px rgba(var(--theme-primary-rgb), 0.3);
   }
   &.muted {
-    border-color: #cbd5e1;
-    color: #94a3b8;
+    border-color: var(--c-ink-200);
+    color: var(--c-ink-300);
     cursor: not-allowed;
-    &:hover { background: #fff; color: #94a3b8; box-shadow: none; }
+    &:hover { background: var(--c-paper); color: var(--c-ink-300); box-shadow: none; }
   }
   &.upcoming {
-    background: rgba(56, 189, 248, 0.1);
-    border-color: rgba(56, 189, 248, 0.4);
-    color: #0ea5e9;
+    background: rgba(var(--theme-primary-rgb), 0.1);
+    border-color: rgba(var(--theme-primary-rgb), 0.4);
+    color: var(--c-botany-700);
     cursor: default;
-    &:hover { background: rgba(56, 189, 248, 0.1); color: #0ea5e9; }
+    &:hover { background: rgba(var(--theme-primary-rgb), 0.1); color: var(--c-botany-700); }
   }
 }
 
@@ -747,11 +750,11 @@ onMounted(async () => { loadCategories(); await load() })
   gap: 14px;
   padding: 24px;
   font-size: 13px;
-  color: #94a3b8;
+  color: var(--c-ink-300);
   .dot {
     width: 4px;
     height: 4px;
-    background: #cbd5e1;
+    background: var(--c-ink-200);
     border-radius: 50%;
   }
 }

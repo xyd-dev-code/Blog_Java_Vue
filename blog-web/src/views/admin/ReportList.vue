@@ -3,7 +3,7 @@
     <el-card>
       <template #header>
         <div class="header-bar">
-          <span>举报管理</span>
+          <span>{{ wx('举报管理') }}</span>
           <el-radio-group v-model="filter" @change="reload">
             <el-radio-button value="all">全部</el-radio-button>
             <el-radio-button value="pending">待处理 ({{ counts.pending || 0 }})</el-radio-button>
@@ -78,6 +78,9 @@
 </template>
 
 <script setup>
+import { useWuxiaCopy } from '@/composables/useWuxiaCopy'
+const { wx } = useWuxiaCopy()
+
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {

@@ -1,10 +1,10 @@
 <template>
   <div class="tool-mgmt-page">
     <el-tabs v-model="activeTab" class="tool-mgmt-tabs">
-      <el-tab-pane label="工具列表" name="items">
+      <el-tab-pane :label="wx('工具列表')" name="items">
         <ToolItemList />
       </el-tab-pane>
-      <el-tab-pane label="工具分类" name="categories">
+      <el-tab-pane :label="wx('工具分类')" name="categories">
         <ToolCategoryList />
       </el-tab-pane>
     </el-tabs>
@@ -12,6 +12,9 @@
 </template>
 
 <script setup>
+import { useWuxiaCopy } from '@/composables/useWuxiaCopy'
+const { wx } = useWuxiaCopy()
+
 import { ref, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import ToolItemList from './ToolItemList.vue'

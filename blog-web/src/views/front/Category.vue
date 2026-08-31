@@ -13,7 +13,7 @@
         class="reveal"
         :style="{ transitionDelay: `${(i % 6) * 60}ms` }"
       />
-      <el-empty v-if="!loading && !list.length" description="该分类下暂无文章" />
+      <el-empty v-if="!loading && !list.length" :description="wx('该分类下暂无文章')" />
       <div class="pagination" v-if="total > pageSize">
         <el-pagination background layout="prev, pager, next, total"
           :current-page="page" :page-size="pageSize" :total="total"
@@ -24,6 +24,9 @@
 </template>
 
 <script setup>
+import { useWuxiaCopy } from '@/composables/useWuxiaCopy'
+const { wx } = useWuxiaCopy()
+
 import { ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import PostCardSky from '@/components/PostCardSky.vue'
