@@ -19,6 +19,7 @@ import com.blog.security.SecurityUtil;
 import org.jsoup.Jsoup;
 import org.jsoup.safety.Safelist;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -27,8 +28,8 @@ import java.util.stream.Collectors;
 @Service
 public class CommentService {
 
-    /** 留言板评论使用的特殊 articleId，与历史数据保持一致 */
-    public static final long GUESTBOOK_ARTICLE_ID = 1L;
+    public static final String GUESTBOOK = "GUESTBOOK";
+    public static final String ARTICLE = "ARTICLE";
 
     private final CommentMapper commentMapper;
     private final ArticleMapper articleMapper;
@@ -56,10 +57,15 @@ public class CommentService {
     private static final int MAX_PARENT_DEPTH = 5;
 
     public Comment create(CommentDTO dto, String ip, String ua) {
-        if (dto.getArticleId() == null) throw new BizException("文章 id 必填");
-        if (articleMapper.selectCount(new LambdaQueryWrapper<com.blog.entity.Article>()
-                .eq(com.blog.entity.Article::getId, dto.getArticleId())) == 0) {
-            throw new BizException("文章不存在");
+        boolean guestbook = GUESTBOOK.equals(dto.getTargetType());
+        if (!guestbook && !ARTICLE.equals(dto.getTargetType())) throw new BizException("评论对象类型无效");
+        if (guestbook) {
+            dto.setArticleId(0L); // No article reference; target_type determines the namespace.
+        } else {
+            if (dto.getArticleId() == null || dto.getArticleId() <= 0) throw new BizException("文章 id 必填");
+            var article = articleMapper.selectById(dto.getArticleId());
+            ArticleVisibility.requirePublic(article);
+            if (!Integer.valueOf(1).equals(article.getAllowComment())) throw new BizException("文章已关闭评论");
         }
         // 校验 parentId:必须属于同一文章,且嵌套深度不超过 MAX_PARENT_DEPTH
         if (dto.getParentId() != null && dto.getParentId() > 0) {
@@ -67,7 +73,9 @@ public class CommentService {
             if (parent == null) {
                 throw new BizException("父评论不存在");
             }
-            if (!parent.getArticleId().equals(dto.getArticleId())) {
+            if (!Objects.equals(parent.getArticleId(), dto.getArticleId())
+                    || !Objects.equals(parent.getTargetType(), dto.getTargetType())
+                    || !Integer.valueOf(1).equals(parent.getStatus())) {
                 throw new BizException("父评论不属于同一文章");
             }
             // 沿 parentId 链向上数深度,超限拒绝
@@ -86,6 +94,7 @@ public class CommentService {
         String audit = siteConfigService.get("comment_audit", "0");
         Comment c = new Comment();
         c.setArticleId(dto.getArticleId());
+        c.setTargetType(dto.getTargetType());
         c.setParentId(dto.getParentId() == null ? 0L : dto.getParentId());
         c.setNickname(sanitize(dto.getNickname()));
         c.setEmail(dto.getEmail());
@@ -114,17 +123,19 @@ public class CommentService {
      * 点赞 / 取消点赞。按 IP(游客)或登录用户去重,同一人同一留言只能点一次。
      * 再次调用即取消点赞。返回最新 {liked, likeCount}。
      */
+    @Transactional
     public Map<String, Object> like(Long commentId, String ip, Long userId) {
-        Comment c = commentMapper.selectById(commentId);
+        Comment c = commentMapper.lockById(commentId);
         if (c == null || c.getStatus() == null || c.getStatus() != 1) {
             throw new BizException("评论不存在或待审核");
         }
+        requireVisible(c);
         LambdaQueryWrapper<CommentLike> w = new LambdaQueryWrapper<CommentLike>()
                 .eq(CommentLike::getCommentId, commentId);
         if (userId != null) {
             w.eq(CommentLike::getUserId, userId);
         } else {
-            w.eq(CommentLike::getIp, ip == null ? "" : ip);
+            w.isNull(CommentLike::getUserId).eq(CommentLike::getIp, ip == null ? "" : ip);
         }
         CommentLike existing = commentLikeMapper.selectOne(w);
         boolean liked;
@@ -135,14 +146,14 @@ public class CommentService {
         } else {
             CommentLike like = new CommentLike();
             like.setCommentId(commentId);
-            like.setIp(ip == null ? "" : ip);
+            like.setIp(userId == null ? (ip == null ? "" : ip) : "user:" + userId);
             like.setUserId(userId);
             like.setCreateTime(LocalDateTime.now());
             commentLikeMapper.insert(like);
             c.setLikeCount((c.getLikeCount() == null ? 0 : c.getLikeCount()) + 1);
             liked = true;
         }
-        commentMapper.updateById(c);
+        commentMapper.adjustLikes(commentId, liked ? 1 : -1);
         Map<String, Object> m = new HashMap<>();
         m.put("liked", liked);
         m.put("likeCount", c.getLikeCount());
@@ -153,11 +164,13 @@ public class CommentService {
      * 举报评论。写入 comment_report 并累加 comment.report_count。
      * 风控:调用方需对 IP 限频,避免被滥用刷举报。
      */
+    @Transactional
     public void report(Long commentId, String reason, String detail, String email, String ip) {
-        Comment c = commentMapper.selectById(commentId);
+        Comment c = commentMapper.lockById(commentId);
         if (c == null || c.getStatus() == null || c.getStatus() != 1) {
             throw new BizException("评论不存在或待审核");
         }
+        requireVisible(c);
         CommentReport r = new CommentReport();
         r.setCommentId(commentId);
         r.setReason(reason == null ? "" : reason);
@@ -168,24 +181,83 @@ public class CommentService {
         r.setCreateTime(LocalDateTime.now());
         commentReportMapper.insert(r);
         c.setReportCount((c.getReportCount() == null ? 0 : c.getReportCount()) + 1);
-        commentMapper.updateById(c);
+        commentMapper.incrementReports(commentId);
     }
 
     public List<CommentPublicVO> treeByArticle(Long articleId, boolean includePending) {
-        LambdaQueryWrapper<Comment> w = new LambdaQueryWrapper<Comment>()
-                .eq(Comment::getArticleId, articleId)
-                .orderByAsc(Comment::getCreateTime);
-        if (!includePending) w.eq(Comment::getStatus, 1);
-        List<Comment> all = commentMapper.selectList(w);
-        return toPublicTree(all);
+        return treeByArticle(articleId, includePending, 1, 50);
     }
 
-    public List<CommentPublicVO> guestbook() {
-        List<Comment> all = commentMapper.selectList(new LambdaQueryWrapper<Comment>()
-                .eq(Comment::getArticleId, GUESTBOOK_ARTICLE_ID)
-                .eq(Comment::getStatus, 1)
-                .orderByDesc(Comment::getCreateTime));
-        return toPublicTree(all);
+    public List<CommentPublicVO> treeByArticle(Long articleId, boolean includePending, long page, long size) {
+        if (!includePending) ArticleVisibility.requirePublic(articleMapper.selectById(articleId));
+        return pagedTree(ARTICLE, articleId, includePending, page, size);
+    }
+
+    public List<CommentPublicVO> guestbook() { return guestbook(1, 50); }
+
+    public List<CommentPublicVO> guestbook(long page, long size) {
+        return pagedTree(GUESTBOOK, 0L, false, page, size);
+    }
+
+    private List<CommentPublicVO> pagedTree(String type, Long articleId, boolean includePending, long page, long size) {
+        var rootsQuery = new LambdaQueryWrapper<Comment>().eq(Comment::getTargetType, type)
+                .eq(Comment::getArticleId, articleId)
+                .and(w -> w.eq(Comment::getParentId, 0).or().apply("NOT EXISTS (SELECT 1 FROM comment parent WHERE parent.id = comment.parent_id AND parent.deleted = 0 AND parent.target_type = comment.target_type AND parent.article_id = comment.article_id" + (includePending ? "" : " AND parent.status = 1") + ")"))
+                .eq(!includePending, Comment::getStatus, 1).orderByDesc(Comment::getCreateTime).orderByDesc(Comment::getId);
+        List<Comment> roots = commentMapper.selectPage(Page.of(Math.max(1, page), Math.max(1, Math.min(50, size))), rootsQuery).getRecords();
+        List<Comment> all = new ArrayList<>(roots);
+        List<Long> parents = roots.stream().map(Comment::getId).toList();
+        for (int level = 0; level < MAX_PARENT_DEPTH && !parents.isEmpty() && all.size() < 1000; level++) {
+            var children = commentMapper.selectList(new LambdaQueryWrapper<Comment>()
+                    .eq(Comment::getTargetType, type).eq(Comment::getArticleId, articleId)
+                    .in(Comment::getParentId, parents).eq(!includePending, Comment::getStatus, 1)
+                    .orderByAsc(Comment::getId).last("LIMIT " + (1000 - all.size())));
+            all.addAll(children);
+            parents = children.stream().map(Comment::getId).toList();
+        }
+        List<CommentPublicVO> tree = toPublicTree(all);
+        markRemainingReplies(tree, all, type, articleId, includePending);
+        return tree;
+    }
+
+    /** Cursor pagination keeps every reply reachable even when the initial tree reaches its size limit. */
+    public Map<String, Object> replies(Long parentId, long afterId, long size) {
+        Comment parent = commentMapper.selectById(parentId);
+        if (parent == null || !Integer.valueOf(1).equals(parent.getStatus())) throw new BizException(404, "评论不存在");
+        requireVisible(parent);
+        int limit = (int) Math.max(1, Math.min(50, size));
+        List<Comment> rows = commentMapper.selectList(new LambdaQueryWrapper<Comment>()
+                .eq(Comment::getTargetType, parent.getTargetType()).eq(Comment::getArticleId, parent.getArticleId())
+                .eq(Comment::getParentId, parentId).eq(Comment::getStatus, 1)
+                .gt(Comment::getId, Math.max(0, afterId)).orderByAsc(Comment::getId).last("LIMIT " + (limit + 1)));
+        boolean hasMore = rows.size() > limit;
+        List<Comment> records = rows.subList(0, Math.min(limit, rows.size()));
+        User admin = findPublicAdmin();
+        List<CommentPublicVO> result = records.stream().map(c -> {
+            c.setParentName(parent.getNickname());
+            c.setReplies(List.of());
+            return toPublicVo(c, admin);
+        }).toList();
+        markRemainingReplies(result, records, parent.getTargetType(), parent.getArticleId(), false);
+        return Map.of("records", result, "hasMore", hasMore,
+                "nextCursor", records.isEmpty() ? Math.max(0, afterId) : records.get(records.size() - 1).getId());
+    }
+
+    private void markRemainingReplies(List<CommentPublicVO> tree, List<Comment> all, String type, Long articleId, boolean includePending) {
+        if (all.isEmpty()) return;
+        Map<Long, Long> counts = commentMapper.countReplies(all.stream().map(Comment::getId).toList(), type, articleId, includePending)
+                .stream().collect(Collectors.toMap(com.blog.vo.CommentReplyCount::getParentId, com.blog.vo.CommentReplyCount::getCount));
+        Deque<CommentPublicVO> pending = new ArrayDeque<>(tree);
+        while (!pending.isEmpty()) {
+            CommentPublicVO node = pending.removeFirst();
+            List<CommentPublicVO> children = node.getReplies() == null ? List.of() : node.getReplies();
+            node.setHasMoreReplies(counts.getOrDefault(node.getId(), 0L) > children.size());
+            pending.addAll(children);
+        }
+    }
+
+    private void requireVisible(Comment comment) {
+        if (!GUESTBOOK.equals(comment.getTargetType())) ArticleVisibility.requirePublic(articleMapper.selectById(comment.getArticleId()));
     }
 
     /** 前台提交评论成功后回显也走公开 VO，避免把作者自己的邮箱/IP/UA 回吐给客户端 */
@@ -230,7 +302,7 @@ public class CommentService {
         if (featured) {
             commentMapper.update(null, new LambdaUpdateWrapper<Comment>()
                 .set(Comment::getFeatured, 0)
-                .eq(Comment::getArticleId, c.getArticleId())
+                .eq(Comment::getArticleId, c.getArticleId()).eq(Comment::getTargetType, c.getTargetType())
                 .ne(Comment::getId, id));
         }
         Comment u = new Comment();
@@ -265,6 +337,7 @@ public class CommentService {
         }
 
         Comment c = new Comment();
+        c.setTargetType(parent.getTargetType());
         c.setArticleId(parent.getArticleId());   // 与父同文章(评论/留言自动一致)
         c.setParentId(parentId);
         c.setNickname(nickname);
@@ -319,15 +392,15 @@ public class CommentService {
     // ── 留言板专用统计 ──
     public long countPendingGuestbook() {
         return commentMapper.selectCount(new LambdaQueryWrapper<Comment>()
-                .eq(Comment::getArticleId, GUESTBOOK_ARTICLE_ID).eq(Comment::getStatus, 0));
+                .eq(Comment::getTargetType, GUESTBOOK).eq(Comment::getStatus, 0));
     }
     public long countApprovedGuestbook() {
         return commentMapper.selectCount(new LambdaQueryWrapper<Comment>()
-                .eq(Comment::getArticleId, GUESTBOOK_ARTICLE_ID).eq(Comment::getStatus, 1));
+                .eq(Comment::getTargetType, GUESTBOOK).eq(Comment::getStatus, 1));
     }
     public long countSpamGuestbook() {
         return commentMapper.selectCount(new LambdaQueryWrapper<Comment>()
-                .eq(Comment::getArticleId, GUESTBOOK_ARTICLE_ID).eq(Comment::getStatus, 2));
+                .eq(Comment::getTargetType, GUESTBOOK).eq(Comment::getStatus, 2));
     }
 
     public Page<Comment> page(Page<Comment> p,
@@ -354,24 +427,28 @@ public class CommentService {
     }
 
     private List<Comment> buildTree(List<Comment> all) {
-        Map<Long, Comment> map = all.stream().collect(Collectors.toMap(Comment::getId, c -> c));
+        Map<Long, Comment> map = new LinkedHashMap<>();
+        for (Comment comment : all) {
+            comment.setReplies(new ArrayList<>());
+            map.put(comment.getId(), comment);
+        }
         List<Comment> roots = new ArrayList<>();
-        Set<Long> visited = new HashSet<>();
-        for (Comment c : all) {
-            if (visited.contains(c.getId())) continue; // 防御数据层环形 parentId 导致无限递归
-            visited.add(c.getId());
-            if (c.getParentId() == null || c.getParentId() == 0L) {
-                roots.add(c);
+        for (Comment comment : map.values()) {
+            Comment parent = map.get(comment.getParentId());
+            Set<Long> ancestors = new HashSet<>();
+            ancestors.add(comment.getId());
+            Comment cursor = parent;
+            boolean cycle = false;
+            while (cursor != null) {
+                if (!ancestors.add(cursor.getId()) || ancestors.size() > MAX_PARENT_DEPTH + 1) { cycle = true; break; }
+                cursor = map.get(cursor.getParentId());
+            }
+            if (parent == null || cycle || !Objects.equals(parent.getArticleId(), comment.getArticleId())
+                    || !Objects.equals(parent.getTargetType(), comment.getTargetType())) {
+                roots.add(comment);
             } else {
-                Comment parent = map.get(c.getParentId());
-                if (parent != null && !visited.contains(parent.getId())) {
-                    if (parent.getReplies() == null) parent.setReplies(new ArrayList<>());
-                    c.setParentName(parent.getNickname());
-                    parent.getReplies().add(c);
-                } else if (parent != null) {
-                    // parent 已在本轮处理(环形),把孤儿节点提升为根,避免丢失
-                    roots.add(c);
-                }
+                comment.setParentName(parent.getNickname());
+                parent.getReplies().add(comment);
             }
         }
         return roots;
@@ -476,19 +553,4 @@ public class CommentService {
         return masked;
     }
 
-    private String md5Like(String s) {
-        try {
-            java.security.MessageDigest md = java.security.MessageDigest.getInstance("MD5");
-            byte[] hash = md.digest((s == null ? "" : s.trim().toLowerCase()).getBytes());
-            StringBuilder sb = new StringBuilder();
-            for (byte b : hash) {
-                int v = b & 0xff;
-                sb.append(Character.forDigit(v >>> 4, 16));
-                sb.append(Character.forDigit(v & 0x0f, 16));
-            }
-            return sb.toString();
-        } catch (Exception e) {
-            return "";
-        }
-    }
 }

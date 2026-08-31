@@ -73,7 +73,7 @@
     </div>
 
     <!-- 子回复（默认折叠,避免某一卡片撑高导致整行留白） -->
-    <div v-if="comment.replies && comment.replies.length" class="ci-children">
+    <div v-if="comment.replies?.length || comment.hasMoreReplies" class="ci-children">
       <CommentItem
         v-for="c in visibleReplies"
         :key="c.id"
@@ -87,6 +87,9 @@
         @report="$emit('report', $event)"
         @mention="$emit('mention', $event)"
       />
+      <button v-if="comment.hasMoreReplies" type="button" class="ci-expand" :disabled="loadingReplies" @click="loadMoreReplies">
+        {{ loadingReplies ? '加载中…' : '加载更多回复' }}
+      </button>
       <!-- 折叠控制 -->
       <div v-if="hiddenRepliesCount > 0" class="ci-expand" @click="allRepliesShown = true">
         <el-icon><ArrowDown /></el-icon>
@@ -106,6 +109,7 @@ const { wx } = useWuxiaCopy()
 
 import { computed, ref, watch } from 'vue'
 import { TopLeft, Loading, Pointer, Star, WarnTriangleFilled, ArrowDown, ArrowUp } from '@element-plus/icons-vue'
+import { commentReplies } from '@/api/front'
 import { fromNow, renderComment } from '@/utils/format'
 import { useSiteStore } from '@/stores/site'
 
@@ -125,6 +129,24 @@ const imgError = ref(false)
 const avatarSrc = ref('')
 const usingSiteFallback = ref(false)
 const allRepliesShown = ref(false)
+const loadingReplies = ref(false)
+const loadMoreReplies = async () => {
+  if (loadingReplies.value) return
+  loadingReplies.value = true
+  try {
+    const existing = props.comment.replies || []
+    const afterId = existing.filter(c => !c._pending).reduce((last, c) => Math.max(last, c.id), 0)
+    const { data } = await commentReplies(props.comment.id, { afterId, size: 50 })
+    const ids = new Set(existing.map(c => c.id))
+    props.comment.replies = [...existing, ...(data.records || []).filter(c => !ids.has(c.id))]
+    props.comment.hasMoreReplies = !!data.hasMore
+    allRepliesShown.value = true
+  } catch (_) {
+    // The API interceptor reports the error; retain the cursor so the user can retry.
+  } finally {
+    loadingReplies.value = false
+  }
+}
 
 // 头像是否存在:有 URL 且 trim 后非空。决定 fallback 是否渲染
 const hasAvatar = computed(() => {
@@ -165,6 +187,7 @@ const visibleReplies = computed(() => {
   return list.slice(0, props.maxReplies)
 })
 const hiddenRepliesCount = computed(() => {
+  if (allRepliesShown.value) return 0
   const total = (props.comment.replies || []).length
   return Math.max(0, total - props.maxReplies)
 })

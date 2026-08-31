@@ -14,9 +14,14 @@ import java.util.List;
 public class PublicToolController {
 
     private final ToolService toolService;
+    private final com.blog.security.RateLimiter rateLimiter;
+    private final com.blog.security.ClientIpResolver ipResolver;
 
-    public PublicToolController(ToolService toolService) {
+    public PublicToolController(ToolService toolService, com.blog.security.RateLimiter rateLimiter,
+                               com.blog.security.ClientIpResolver ipResolver) {
         this.toolService = toolService;
+        this.rateLimiter = rateLimiter;
+        this.ipResolver = ipResolver;
     }
 
     /** 前台工具列表(可选 category 过滤);返回 status=1 的工具 */
@@ -27,7 +32,7 @@ public class PublicToolController {
 
     @GetMapping("/{id}")
     public R<Tool> detail(@PathVariable Long id) {
-        return R.ok(toolService.getById(id));
+        return R.ok(toolService.getPublishedById(id));
     }
 
     @GetMapping("/slug/{slug}")
@@ -37,7 +42,8 @@ public class PublicToolController {
 
     /** 累计点击 +1 + 今日点击 upsert */
     @PostMapping("/{id}/click")
-    public R<Void> click(@PathVariable Long id) {
+    public R<Void> click(@PathVariable Long id, jakarta.servlet.http.HttpServletRequest request) {
+        rateLimiter.acquireOrThrow("tool:click:" + ipResolver.resolve(request), 60, 60);
         toolService.recordClick(id);
         return R.ok();
     }

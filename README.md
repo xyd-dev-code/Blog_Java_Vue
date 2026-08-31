@@ -11,10 +11,12 @@
 - 首页、文章列表与详情、全文搜索、分类、标签和归档
 - 项目集、工具集、友链、留言板和关于页面
 - 文章评论、回复、点赞、举报及访客头像上传
-- Open-Meteo 天气卡，支持浏览器定位和城市搜索
+- Open-Meteo 天气卡，默认按 IP 估算位置（不申请浏览器定位权限），支持城市/区县搜索并记住选择
 - 文章、项目和工具的分享点击统计
 - 邮箱订阅、确认订阅、退订和内容更新通知
 - 响应式布局、路由懒加载和“晴天”主题动效
+
+天气定位精度、可选区县数据源与部署配置见 [天气 IP 定位说明](docs/天气IP定位.md)。
 
 ### 管理后台
 
@@ -47,9 +49,9 @@
 | 前端 | Vue 3.5、Vite 6、Vue Router 4.5、Pinia 2.3、Axios 1.7 |
 | UI | Element Plus 2.9、SCSS、ECharts 5.5 |
 | 编辑器 | Tiptap 3、md-editor-v3、marked、Turndown |
-| 可选集成 | SMTP、Pandoc、ip2region、Open-Meteo、BigDataCloud |
+| 可选集成 | SMTP、Pandoc、ip2region、Open-Meteo、IPWhois、IP2Location.io |
 
-> Maven 中保留了 Redis Starter，但当前业务没有依赖 Redis。单实例开发和部署不需要启动 Redis；多实例部署时，应把限流、JWT 黑名单等状态迁移到共享存储。
+> 当前业务不依赖 Redis，无需启动 Redis。JWT 撤销状态保存在数据库；限流使用进程内存，多实例部署时需要为限流配置共享存储。
 
 ## 项目结构
 

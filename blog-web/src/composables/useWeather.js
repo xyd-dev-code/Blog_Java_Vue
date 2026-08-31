@@ -1,4 +1,5 @@
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { fetchWeatherJson, locateByIp, normalizeLocation, readManualCity, saveManualCity } from '@/utils/weatherLocation'
 
 /**
  * 访客当地天气（多源数据 + 交叉校验 + 城市切换）。
@@ -33,8 +34,8 @@ import { ref, onMounted } from 'vue'
  *   windSpeed   风速（km/h）
  *   windDir     风向中文（如「东风」）
  *   pressure    气压（hPa，海平面气压）
- *   location    城市名
- *   status      idle | locating | fetching | ready | denied | error
+ *   location    IP 服务返回的城市/区县，或手动选择的位置
+ *   status      idle | locating | fetching | ready | location-error | error
  *
  *   城市选择器：
  *   showPicker    是否展开城市搜索面板
@@ -45,8 +46,8 @@ import { ref, onMounted } from 'vue'
  *   onCityInput()   输入变化回调（防抖）
  *   searchCities(k) 搜索城市
  *   pickCity(c)     选择城市并加载天气
- *   resetCity()     回到默认定位
- *   reAuthorize()   重新触发浏览器定位
+ *   resetCity()     清除手动选择，重新按 IP 定位（不申请设备权限）
+ *   retry()         重试 IP 定位或所选位置的天气
  */
 
 // ─── WMO Code 完整映射表 ──────────────────────────────
@@ -131,7 +132,7 @@ function validateWeather(data) {
   if (p != null && (p < 870 || p > 1085)) return { valid: false, reason: 'pressure_out_of_range' }
 
   if (c.time) {
-    const ageMs = Date.now() - new Date(c.time).getTime()
+    const ageMs = Date.now() - (typeof c.time === 'number' ? c.time * 1000 : new Date(c.time).getTime())
     if (ageMs > 2 * 3600 * 1000) return { valid: false, reason: 'data_stale' }
   }
 
@@ -154,8 +155,7 @@ function sanityCheckDesc(temp, wmoCode, mapped) {
 
 // ─── 主逻辑 ───────────────────────────────────────────
 
-export function useWeather(options = {}) {
-  const { lang = 'zh' } = options
+export function useWeather() {
 
   // ════════════════════════════════════════════
   // 响应式状态 — 天气数据
@@ -170,6 +170,8 @@ export function useWeather(options = {}) {
   const pressure = ref(null)
   const location = ref('')
   const status = ref('idle')
+  const locationSource = ref('ip')
+  const locationPrecision = ref('city')
 
   // ════════════════════════════════════════════
   // 响应式状态 — 城市选择器
@@ -178,39 +180,17 @@ export function useWeather(options = {}) {
   const cityKeyword = ref('')
   const searchResults = ref([])
   const searching = ref(false)
+  const searchError = ref('')
 
-  let manualCoords = null
+  let manualCoords = readManualCity()
+  let selectedCoords = null
   let debounceTimer = null
-
-  // ── 1. 浏览器定位 ──
-
-  const getCoords = () => new Promise((resolve) => {
-    if (!('geolocation' in navigator)) {
-      resolve({ _denied: true, _reason: 'not_supported' })
-      return
-    }
-    navigator.geolocation.getCurrentPosition(
-      pos => resolve({ lat: pos.coords.latitude, lon: pos.coords.longitude }),
-      () => resolve({ _denied: true, _reason: 'user_denied' }),
-      { timeout: 8000, maximumAge: 10 * 60 * 1000 }
-    )
-  })
-
-  // ── 2. 反向地理编码（BigDataCloud 免费 CORS 接口） ──
-
-  const reverseGeocode = async (lat, lon) => {
-    try {
-      const url = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=${lang}`
-      const resp = await fetch(url)
-      if (!resp.ok) return null
-      const data = await resp.json()
-      return data?.city || data?.locality || data?.principalSubdivision || null
-    } catch { return null }
-  }
+  let loadController = null
+  let searchController = null
 
   // ── 3. Open-Meteo 天气获取（增强版：全字段 + 校验） ──
 
-  const fetchWeather = async (lat, lon) => {
+  const fetchWeather = async (lat, lon, signal) => {
     const params = new URLSearchParams({
       latitude: String(lat),
       longitude: String(lon),
@@ -223,15 +203,12 @@ export function useWeather(options = {}) {
         'wind_direction_10m',
         'pressure_msl'
       ].join(','),
-      timezone: 'auto'
+      timezone: 'auto',
+      timeformat: 'unixtime'
     })
 
     const url = `https://api.open-meteo.com/v1/forecast?${params.toString()}`
-    const resp = await fetch(url)
-
-    if (!resp.ok) throw new Error(`weather_api_http_${resp.status}`)
-
-    const data = await resp.json()
+    const data = await fetchWeatherJson(url, { signal, timeout: 10000 })
 
     const validation = validateWeather(data)
     if (!validation.valid) throw new Error(`weather_validate_${validation.reason}`)
@@ -253,11 +230,12 @@ export function useWeather(options = {}) {
 
   // ── 4. 加载 & 渲染管线 ──
 
-  const loadWeather = async (lat, lon, cityName) => {
+  const loadWeather = async (lat, lon, cityName, signal) => {
     status.value = 'fetching'
 
     try {
-      const w = await fetchWeather(lat, lon)
+      const w = await fetchWeather(lat, lon, signal)
+      if (signal.aborted) return
       const roundedTemp = Math.round(w.temperature)
 
       let mapped = WMO_MAP[w.code] || null
@@ -286,6 +264,7 @@ export function useWeather(options = {}) {
         (final !== mapped ? ` [code ${w.code} "${mapped.desc}" 已校准→"${final.desc}"]` : '')
       )
     } catch (err) {
+      if (signal.aborted) return
       console.error('[useWeather] 天气加载失败:', err.message || err)
       status.value = 'error'
 
@@ -302,53 +281,68 @@ export function useWeather(options = {}) {
 
   // ── 5. 入口编排 ──
 
-  const load = async () => {
-    if (manualCoords) {
-      await loadWeather(manualCoords.lat, manualCoords.lon, manualCoords.name || location.value || '')
-      return
-    }
-
+  const load = async ({ refresh = false } = {}) => {
+    loadController?.abort()
+    const controller = new AbortController()
+    loadController = controller
+    const { signal } = controller
+    locationSource.value = manualCoords ? 'manual' : 'ip'
     status.value = 'locating'
-    const coords = await getCoords()
-
-    if (coords._denied) {
-      status.value = 'denied'
-      return
+    try {
+      const coords = manualCoords || (!refresh && selectedCoords) || await locateByIp({ signal, refresh })
+      if (signal.aborted) return
+      selectedCoords = coords
+      location.value = coords.name
+      locationPrecision.value = coords.precision
+      await loadWeather(coords.lat, coords.lon, coords.name, signal)
+    } catch {
+      if (signal.aborted) return
+      selectedCoords = null
+      location.value = ''
+      status.value = 'location-error'
     }
-
-    const name = await reverseGeocode(coords.lat, coords.lon)
-    await loadWeather(coords.lat, coords.lon, name)
   }
 
   // ── 6. 城市选择器逻辑 ──
 
   const searchCities = async (keyword) => {
+    clearTimeout(debounceTimer)
+    searchController?.abort()
+    searchError.value = ''
     if (!keyword || keyword.trim().length < 1) {
       searchResults.value = []
+      searching.value = false
       return
     }
 
+    const controller = new AbortController()
+    searchController = controller
     searching.value = true
     try {
       const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(keyword.trim())}&count=5&language=zh&format=json`
-      const resp = await fetch(url)
-      if (!resp.ok) { searchResults.value = []; return }
-      const data = await resp.json()
-      searchResults.value = (data.results || []).map((r) => ({
+      const data = await fetchWeatherJson(url, { signal: controller.signal })
+      if (controller.signal.aborted) return
+      searchResults.value = (data.results || []).filter(r => normalizeLocation({ name: r.name, lat: r.latitude, lon: r.longitude })).map((r) => ({
         name: r.name || '',
         lat: r.latitude,
         lon: r.longitude,
-        admin: r.admin1 ? `${r.admin1}${r.country ? (' · ' + r.country) : ''}` : (r.country || '')
+        admin: [...new Set([r.admin2, r.admin1, r.country].filter(Boolean))].join(' · ')
       }))
     } catch {
+      if (controller.signal.aborted) return
       searchResults.value = []
+      searchError.value = '搜索暂不可用，请稍后重试'
     } finally {
-      searching.value = false
+      if (!controller.signal.aborted) searching.value = false
     }
   }
 
   const onCityInput = () => {
     if (debounceTimer) clearTimeout(debounceTimer)
+    searchController?.abort()
+    searchResults.value = []
+    searchError.value = ''
+    searching.value = !!cityKeyword.value.trim()
     debounceTimer = setTimeout(() => {
       searchCities(cityKeyword.value)
     }, 300)
@@ -362,34 +356,50 @@ export function useWeather(options = {}) {
   }
 
   const pickCity = (city) => {
-    manualCoords = { lat: city.lat, lon: city.lon, name: city.name }
-    location.value = city.name
+    const coords = normalizeLocation(city)
+    if (!coords) return
+    manualCoords = coords
+    selectedCoords = null
+    saveManualCity(coords)
+    closePicker()
+    load()
+  }
+
+  const closePicker = () => {
+    clearTimeout(debounceTimer)
+    searchController?.abort()
+    searching.value = false
+    searchError.value = ''
     cityKeyword.value = ''
     searchResults.value = []
     showPicker.value = false
-    loadWeather(city.lat, city.lon, city.name)
   }
 
   const resetCity = () => {
     manualCoords = null
-    cityKeyword.value = ''
-    searchResults.value = []
-    showPicker.value = false
-    load()
+    selectedCoords = null
+    saveManualCity(null)
+    closePicker()
+    load({ refresh: true })
   }
 
   // ── 7. 生命周期 & 对外暴露 ──
 
   onMounted(load)
+  onBeforeUnmount(() => {
+    clearTimeout(debounceTimer)
+    loadController?.abort()
+    searchController?.abort()
+  })
 
-  const reAuthorize = () => { load() }
+  const retry = () => { load() }
 
   return {
     temp, feelsLike, desc, icon,
     humidity, windSpeed, windDir, pressure,
-    location, status,
-    showPicker, cityKeyword, searchResults, searching,
+    location, status, locationSource, locationPrecision,
+    showPicker, cityKeyword, searchResults, searching, searchError,
     togglePicker, onCityInput, searchCities, pickCity, resetCity,
-    reAuthorize
+    retry
   }
 }

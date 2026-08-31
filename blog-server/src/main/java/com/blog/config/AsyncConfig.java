@@ -38,6 +38,19 @@ public class AsyncConfig implements AsyncConfigurer {
         return exec;
     }
 
+    @Bean(name = "visitTaskExecutor")
+    public Executor visitTaskExecutor() {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        executor.setCorePoolSize(1);
+        executor.setMaxPoolSize(2);
+        executor.setQueueCapacity(200);
+        executor.setThreadNamePrefix("visit-async-");
+        executor.setRejectedExecutionHandler((r, e) -> org.slf4j.LoggerFactory.getLogger(AsyncConfig.class)
+                .warn("访问统计队列已满，丢弃本次记录"));
+        executor.initialize();
+        return executor;
+    }
+
     @Override
     public AsyncUncaughtExceptionHandler getAsyncUncaughtExceptionHandler() {
         return new SimpleAsyncUncaughtExceptionHandler();

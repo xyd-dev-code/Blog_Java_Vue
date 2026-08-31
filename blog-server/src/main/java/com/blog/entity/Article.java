@@ -23,6 +23,7 @@ public class Article {
     private Integer isTop;
     private Integer isFeatured;
     private Integer allowComment;
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private String password;
     private LocalDateTime publishTime;
     private LocalDateTime createTime;

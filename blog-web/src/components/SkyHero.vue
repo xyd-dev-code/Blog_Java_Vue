@@ -54,24 +54,25 @@
         <div class="weather-head">
           <div>
             <div class="weather-eyebrow">
-              <span class="we-text">{{ (status === 'ready' || status === 'error') ? (location || '本地') : '今日天气' }}</span>
-              <button class="weather-loc-btn" type="button" :title="location ? '切换城市' : '选择城市'" @click="togglePicker">📍</button>
+              <span class="we-text" :title="locationSource === 'ip' ? '根据 IP 估算位置，可能与实际所在地不同' : '手动选择的位置'">{{ location || '今日天气' }}</span>
+              <button class="weather-loc-btn" type="button" title="切换城市或区县" aria-label="切换城市或区县" :aria-expanded="showPicker" @click="togglePicker">📍</button>
             </div>
-            <div class="weather-temp">
+            <div class="weather-temp" aria-live="polite" aria-atomic="true">
                   <template v-if="status === 'ready'">
                     {{ desc }} · {{ temp ?? '--' }}°
                     <span v-if="feelsLike != null && feelsLike !== temp" class="weather-feels">（体感 {{ feelsLike }}°）</span>
                   </template>
                   <template v-else-if="status === 'error'">
                     <span class="weather-fail">{{ desc }}</span>
-                    <button class="wd-btn" type="button" @click="reAuthorize">重试</button>
+                    <button class="wd-btn" type="button" @click="retry">重试</button>
                   </template>
-                  <template v-else-if="status === 'denied'">
-                    <span class="weather-fail">位置信息暂未授权</span>
-                    <button class="wd-btn" type="button" @click="reAuthorize">重新授权</button>
+                  <template v-else-if="status === 'location-error'">
+                    <span class="weather-fail">暂未识别所在地</span>
+                    <button class="wd-btn" type="button" @click="retry">重试</button>
+                    <button class="wd-btn" type="button" @click="togglePicker">选择城市</button>
                   </template>
               <template v-else>
-                正在获取天气…
+                {{ status === 'locating' ? '正在识别所在地…' : '正在获取天气…' }}
               </template>
             </div>
                 <div v-if="status === 'ready' && (humidity != null || windSpeed != null || pressure != null)" class="weather-detail">
@@ -94,25 +95,28 @@
               class="cp-input"
               type="text"
               inputmode="search"
-              placeholder="搜索城市，如 深圳 / 北京 / 上海"
+              aria-label="搜索城市或区县"
+              placeholder="输入城市或区县名称"
               @input="onCityInput"
               @keyup.enter="searchCities(cityKeyword)"
             />
-            <button v-if="location" class="cp-reset" type="button" @click="resetCity" title="回到默认位置">默认</button>
+            <button class="cp-reset" type="button" @click="resetCity" title="清除手动选择，重新按 IP 识别">自动</button>
           </div>
+          <div class="cp-tip">默认按 IP 估算位置，无需定位授权。区县信息不可用时显示城市；可手动搜索并记住选择。</div>
           <div v-if="searching" class="cp-tip">搜索中…</div>
+          <div v-else-if="searchError" class="cp-tip" role="status">{{ searchError }}</div>
           <ul v-else-if="searchResults.length" class="cp-list">
             <li
               v-for="c in searchResults"
               :key="c.name + c.lat + c.lon"
-              class="cp-item"
-              @click="pickCity(c)"
             >
-              <span class="cp-name">{{ c.name }}</span>
-              <span class="cp-admin">{{ c.admin }}</span>
+              <button type="button" class="cp-item" @click="pickCity(c)">
+                <span class="cp-name">{{ c.name }}</span>
+                <span class="cp-admin">{{ c.admin }}</span>
+              </button>
             </li>
           </ul>
-          <div v-else-if="cityKeyword.trim()" class="cp-tip">未找到匹配的城市</div>
+          <div v-else-if="cityKeyword.trim()" class="cp-tip">未找到匹配位置，可试城市名或拼音；部分区县暂无数据</div>
         </div>
         <div class="weather-divider"></div>
         <div class="weather-grid">
@@ -141,10 +145,10 @@ import WuxiaTitleLettering from './WuxiaTitleLettering.vue'
 
 // 天气卡展示访客所选城市的天气。默认按 IP 定位到城市，访客可手动搜索切换城市。
 const {
-  temp, desc, icon, location, status,
+  temp, desc, icon, location, status, locationSource,
   humidity, windSpeed, windDir, pressure, feelsLike,
-  showPicker, cityKeyword, searchResults, searching,
-  togglePicker, onCityInput, searchCities, pickCity, resetCity, reAuthorize
+  showPicker, cityKeyword, searchResults, searching, searchError,
+  togglePicker, onCityInput, searchCities, pickCity, resetCity, retry
 } = useWeather()
 
 const siteStore = useSiteStore()
@@ -449,6 +453,12 @@ onMounted(() => {
 }
 .cp-item {
   display: flex;
+  width: 100%;
+  min-height: 44px;
+  border: none;
+  background: transparent;
+  font: inherit;
+  text-align: left;
   align-items: baseline;
   justify-content: space-between;
   gap: 8px;
@@ -465,7 +475,12 @@ onMounted(() => {
 .cp-admin {
   font-size: 12px;
   color: var(--c-ink-soft, var(--c-ink-400));
-  flex-shrink: 0;
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+.cp-item:focus-visible, .cp-reset:focus-visible, .weather-loc-btn:focus-visible {
+  outline: 2px solid var(--c-cyan-700);
+  outline-offset: 2px;
 }
 .cp-tip {
   margin-top: 10px;

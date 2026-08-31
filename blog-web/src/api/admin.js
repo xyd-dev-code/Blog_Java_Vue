@@ -60,7 +60,6 @@ export const adminSpamComment = (id) => http.put(`/admin/comments/${id}/spam`)
 export const adminDeleteComment = (id) => http.delete(`/admin/comments/${id}`)
 export const adminCommentStats = () => http.get('/admin/comments/stats')
 export const adminReplyComment = (id, data) => http.post(`/admin/comments/${id}/reply`, data)
-export const adminSetFeaturedComment = (id, featured) => http.put(`/admin/comments/${id}/featured`, { featured })
 
 // guestbook
 export const adminGuestbook = (params) => http.get('/admin/guestbook', { params })
@@ -128,7 +127,6 @@ export const adminUpload = (file) => {
   return http.post('/admin/upload', fd)
 }
 export const adminUploadBase64 = (base64) => http.post('/admin/upload/base64', { base64 })
-export const adminDeleteUpload = (url) => http.delete('/admin/upload', { params: { url } })
 
 // avatar (public, for visitors)
 export const uploadAvatar = (file) => {
@@ -155,7 +153,6 @@ export const adminCreateTool = (data) => http.post('/admin/tools', data)
 export const adminUpdateTool = (id, data) => http.put(`/admin/tools/${id}`, data)
 export const adminDeleteTool = (id) => http.delete(`/admin/tools/${id}`)
 export const adminUpdateToolStatus = (id, status) => http.put(`/admin/tools/${id}/status`, { status })
-export const adminReorderTools = (ids) => http.put('/admin/tools/reorder', { ids })
 // 新建工具时预填的下一个序号(当前最大 sort_order + 1)
 export const adminNextToolSort = () => http.get('/admin/tools/next-sort', { silent: true })
 
@@ -167,4 +164,3 @@ export const adminUpdateToolCategory = (id, data) => http.put(`/admin/tool-categ
 export const adminDeleteToolCategory = (id) => http.delete(`/admin/tool-categories/${id}`)
 export const adminSetToolCategoryStatus = (id, status) => http.patch(`/admin/tool-categories/${id}/status`, { status })
 export const adminToolCategoryLogs = (limit = 20) => http.get('/admin/tool-categories/logs', { params: { limit } })
-export const adminReorderToolCategories = (ids) => http.put('/admin/tool-categories/reorder', { ids })

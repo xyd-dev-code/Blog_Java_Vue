@@ -15,7 +15,6 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 
 @Service
@@ -32,7 +31,7 @@ public class VisitLogService {
      * 异步写访问日志(由 Filter 触发,不阻塞业务请求)。
      * 自带爬虫过滤:bot/crawler/spider 跳过,免得表被刷爆。
      */
-    @Async("mailTaskExecutor")
+    @Async("visitTaskExecutor")
     public void recordAsync(String ip, String path, String userAgent) {
         if (UserAgentUtil.isBot(userAgent)) return;
         try {
@@ -48,7 +47,7 @@ public class VisitLogService {
             v.setVisitTime(LocalDateTime.now());
             visitLogMapper.insert(v);
         } catch (Exception e) {
-            // 写日志失败不应影响请求 — 静默
+            org.slf4j.LoggerFactory.getLogger(VisitLogService.class).warn("访问统计写入失败: {}", e.getClass().getSimpleName());
         }
     }
 

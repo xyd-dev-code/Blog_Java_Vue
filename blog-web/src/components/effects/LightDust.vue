@@ -20,7 +20,6 @@ const hues = [
   'rgba(var(--theme-mint-rgb),',
   'rgba(var(--theme-primary-rgb),',
 ]
-const rand = (i, mod) => ((i * 173 + 41) % (mod * 10)) / 10
 const specks = Array.from({ length: 16 }, (_, i) => {
   const hue = hues[i % hues.length]
   const left = (i * 37 + 7) % 100

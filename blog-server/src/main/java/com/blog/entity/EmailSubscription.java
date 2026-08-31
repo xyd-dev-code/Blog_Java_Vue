@@ -1,7 +1,6 @@
 package com.blog.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
@@ -11,7 +10,7 @@ import java.time.LocalDateTime;
 /**
  * 邮箱订阅（原 RSS 订阅的替代方案）。
  * 采用双重确认（double opt-in）：提交后落库为待确认(status=0)，
- * 发送确认邮件，用户点击链接后_status 置 1。未配置 SMTP 时自动直接确认，保证功能可用。
+ * 发送确认邮件，用户点击链接后_status 置 1。未配置 SMTP 时拒绝新订阅，不伪造用户确认。
  */
 @TableName("email_subscription")
 public class EmailSubscription {
@@ -21,9 +20,11 @@ public class EmailSubscription {
     private String email;
     /** 0=待确认 1=已确认 */
     private Integer status;
-    /** 确认令牌（UUID 去横杠），确认后保留以便幂等 */
+    /** 退订令牌，与一次性确认令牌分离 */
     @JsonIgnore
     private String token;
+    @JsonIgnore private String confirmationToken;
+    @JsonIgnore private LocalDateTime confirmationExpiresAt;
     /** 订阅来源：web / admin ... */
     private String source;
     private LocalDateTime createTime;
@@ -37,6 +38,10 @@ public class EmailSubscription {
     public void setEmail(String email) { this.email = email; }
     public Integer getStatus() { return status; }
     public void setStatus(Integer status) { this.status = status; }
+    public String getConfirmationToken() { return confirmationToken; }
+    public void setConfirmationToken(String token) { this.confirmationToken = token; }
+    public LocalDateTime getConfirmationExpiresAt() { return confirmationExpiresAt; }
+    public void setConfirmationExpiresAt(LocalDateTime value) { this.confirmationExpiresAt = value; }
     public String getToken() { return token; }
     public void setToken(String token) { this.token = token; }
     public String getSource() { return source; }

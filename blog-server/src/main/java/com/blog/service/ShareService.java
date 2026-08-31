@@ -52,7 +52,7 @@ public class ShareService {
         Article a = articleMapper.selectOne(new LambdaQueryWrapper<Article>()
                 .eq(Article::getId, articleId)
                 .eq(Article::getDeleted, 0));
-        if (a == null) throw new BizException("文章不存在");
+        ArticleVisibility.requirePublic(a);
 
         String ip = ipResolver.resolve(req);
 

@@ -27,7 +27,7 @@ import java.time.Duration;
  *
  * <p>路径白名单:SecurityConfig 中已 permitAll 的路径前缀。</p>
  *
- * <p>异步写日志(VisitLogService.recordAsync @Async mailTaskExecutor),
+ * <p>异步写日志(VisitLogService.recordAsync @Async visitTaskExecutor),
  * 不阻塞请求响应;失败仅 WARN。</p>
  */
 @Component
@@ -107,37 +107,6 @@ public class VisitLogFilter extends OncePerRequestFilter {
             boolean includeLocalIp = props.getVisitLog().isIncludeLocalIp();
             boolean localIp = SKIPPED_IPS.contains(ip);
 
-            // 诊断日志：帮助判断"为什么没记录"（默认不输出，需开 DEBUG）
-            if (log.isDebugEnabled()) {
-                if (!"GET".equalsIgnoreCase(method)) {
-                    log.debug("[VisitLog] 跳过非 GET 请求: method={}, path={}", method, path);
-                } else if (status < 200 || status >= 400) {
-                    log.debug("[VisitLog] 跳过非 2xx/3xx 响应: status={}, path={}", status, path);
-                } else if (!isTracked(path)) {
-                    log.debug("[VisitLog] 跳过非白名单路径: path={}", path);
-                } else if (SKIPPED_PATHS.contains(path)) {
-                    log.debug("[VisitLog] 跳过自动请求路径: path={}", path);
-                } else if (isAdminReferer(request)) {
-                    log.debug("[VisitLog] 跳过后台 admin 页面来源: path={}", path);
-                } else if (isRecentDuplicate(ip, path, ua)) {
-                    log.debug("[VisitLog] 跳过短期内重复记录: path={}", path);
-                } else if (isSessionDuplicate(ip, ua)) {
-                    log.debug("[VisitLog] 跳过同会话重复访问: sessionWindow={}s",
-                            props.getVisitLog().getSessionIntervalSeconds());
-                } else if (localIp) {
-                    if (includeLocalIp) {
-                        log.debug("[VisitLog] 本地/回环 IP 但已开启 include-local-ip，将记录: path={}", path);
-                    } else {
-                        log.debug("[VisitLog] 跳过本地/回环 IP: path={}", path);
-                    }
-                } else if (UserAgentUtil.isBot(ua)) {
-                    log.debug("[VisitLog] 跳过爬虫 UA: path={}", path);
-                } else {
-                    log.debug("[VisitLog] 准备记录: path={}, status={}, uaPresent={}",
-                            path, status, ua != null && !ua.isBlank());
-                }
-            }
-
             // 只记录 GET + 2xx/3xx + 白名单路径 + 跳过自动请求 + 跳过爬虫
             // 本地/回环 IP 是否跳过由配置 includeLocalIp 决定(dev 调试放开,生产默认跳过)
             boolean skipIp = localIp && !includeLocalIp;
@@ -146,10 +115,11 @@ public class VisitLogFilter extends OncePerRequestFilter {
                     && isTracked(path)
                     && !SKIPPED_PATHS.contains(path)
                     && !isAdminReferer(request)
-                    && !isRecentDuplicate(ip, path, ua)
-                    && !isSessionDuplicate(ip, ua)
                     && !skipIp
-                    && !UserAgentUtil.isBot(ua)) {
+                    && !UserAgentUtil.isBot(ua)
+                    && !isRecentDuplicate(ip, path, ua)
+                    && !isSessionDuplicate(ip, ua)) {
+                log.debug("[VisitLog] 记录访问: path={}, status={}", path, status);
                 visitLogService.recordAsync(ip, path, ua);
             }
         }
@@ -187,11 +157,7 @@ public class VisitLogFilter extends OncePerRequestFilter {
      */
     private boolean isRecentDuplicate(String ip, String path, String ua) {
         String key = buildDedupKey(ip, path, ua);
-        if (recentVisitCache.getIfPresent(key) != null) {
-            return true;
-        }
-        recentVisitCache.put(key, Boolean.TRUE);
-        return false;
+        return recentVisitCache.asMap().putIfAbsent(key, Boolean.TRUE) != null;
     }
 
     /**
@@ -200,11 +166,7 @@ public class VisitLogFilter extends OncePerRequestFilter {
      */
     private boolean isSessionDuplicate(String ip, String ua) {
         String key = buildDedupKey(ip, null, ua);
-        if (sessionVisitCache.getIfPresent(key) != null) {
-            return true;
-        }
-        sessionVisitCache.put(key, Boolean.TRUE);
-        return false;
+        return sessionVisitCache.asMap().putIfAbsent(key, Boolean.TRUE) != null;
     }
 
     private static String buildDedupKey(String ip, String path, String ua) {

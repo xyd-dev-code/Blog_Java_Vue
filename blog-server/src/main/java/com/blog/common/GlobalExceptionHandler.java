@@ -29,6 +29,7 @@ public class GlobalExceptionHandler {
         if (e.getCode() == 401) status = HttpStatus.UNAUTHORIZED;
         else if (e.getCode() == 403) status = HttpStatus.FORBIDDEN;
         else if (e.getCode() == 404) status = HttpStatus.NOT_FOUND;
+        else if (e.getCode() == 409) status = HttpStatus.CONFLICT;
         else if (e.getCode() == 429) status = HttpStatus.TOO_MANY_REQUESTS;
         else if (e.getCode() == 503) status = HttpStatus.SERVICE_UNAVAILABLE;
         return ResponseEntity.status(status).body(R.fail(e.getCode(), e.getMessage()));

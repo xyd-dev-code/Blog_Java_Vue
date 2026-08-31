@@ -3,6 +3,7 @@ package com.blog.controller;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.blog.common.R;
 import com.blog.entity.Article;
+import com.blog.vo.ArticlePublicVO;
 import com.blog.entity.Category;
 import com.blog.service.ArticleService;
 import com.blog.service.CategoryService;
@@ -60,8 +61,8 @@ public class HomeController {
         stats.put("tagCount", tags.size());
         stats.put("viewCount", articleService.sumViews());
         stats.put("commentCount", commentService.totalApproved());
-        map.put("featured", featured);
-        map.put("latest", latest);
+        map.put("featured", ArticlePublicVO.list(featured));
+        map.put("latest", ArticlePublicVO.list(latest));
         map.put("categories", categories);
         map.put("tags", tags);
         map.put("stats", stats);
@@ -70,34 +71,37 @@ public class HomeController {
 
     @Operation(summary = "归档总览")
     @GetMapping("/archives")
-    public R<Map<String, Object>> archives() {
+    public R<Map<String, Object>> archives(@RequestParam(defaultValue = "1") long page, @RequestParam(defaultValue = "50") long size) {
         Map<String, Object> map = new HashMap<>();
         List<Map<String, Object>> months = articleService.archive();
-        List<Article> all = articleService.listAllPublished();
+        Page<Article> all = articleService.archivePage(page, size);
         map.put("months", months);
-        map.put("articles", all);
+        map.put("articles", ArticlePublicVO.list(all.getRecords()));
+        map.put("total", all.getTotal());
+        map.put("page", all.getCurrent());
+        map.put("size", all.getSize());
         return R.ok(map);
     }
 
     @Operation(summary = "归档按月")
     @GetMapping("/archives/{ym}")
-    public R<List<Article>> archiveMonth(@PathVariable @Pattern(regexp = "^\\d{4}-\\d{2}$", message = "ym 格式须为 YYYY-MM") String ym) {
-        return R.ok(articleService.listByMonth(ym));
+    public R<List<ArticlePublicVO>> archiveMonth(@PathVariable @Pattern(regexp = "^\\d{4}-\\d{2}$", message = "ym 格式须为 YYYY-MM") String ym) {
+        return R.ok(ArticlePublicVO.list(articleService.listByMonth(ym)));
     }
 
     @Operation(summary = "按分类分页")
     @GetMapping("/categories/{slug}/articles")
-    public R<Page<Article>> articlesByCategory(@PathVariable String slug,
+    public R<Page<ArticlePublicVO>> articlesByCategory(@PathVariable String slug,
                                               @RequestParam(defaultValue = "1") @Min(1) long page,
                                               @RequestParam(defaultValue = "10") @Min(1) @Max(100) long size) {
-        return R.ok(articleService.pageByCategorySlug(slug, page, size));
+        return R.ok(ArticlePublicVO.page(articleService.pageByCategorySlug(slug, page, size)));
     }
 
     @Operation(summary = "按标签分页")
     @GetMapping("/tags/{slug}/articles")
-    public R<Page<Article>> articlesByTag(@PathVariable String slug,
+    public R<Page<ArticlePublicVO>> articlesByTag(@PathVariable String slug,
                                           @RequestParam(defaultValue = "1") @Min(1) long page,
                                           @RequestParam(defaultValue = "10") @Min(1) @Max(100) long size) {
-        return R.ok(articleService.pageByTagSlug(slug, page, size));
+        return R.ok(ArticlePublicVO.page(articleService.pageByTagSlug(slug, page, size)));
     }
 }

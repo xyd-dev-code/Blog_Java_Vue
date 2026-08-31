@@ -85,8 +85,7 @@ public class CommentNotificationService {
             String articleTitle = articleTitleOf(c.getArticleId());
             String snippet = clip(c.getContent());
             String link;
-            boolean isGuestbook = c.getArticleId() != null
-                    && c.getArticleId() == CommentService.GUESTBOOK_ARTICLE_ID;
+            boolean isGuestbook = CommentService.GUESTBOOK.equals(c.getTargetType());
 
             if (isGuestbook) {
                 subject = "[待审核-留言板] " + safe(c.getNickname());
@@ -172,7 +171,7 @@ public class CommentNotificationService {
         String subject = "[评论已通过] " + safe(articleTitle);
         String snippet = clip(c.getContent());
         String link;
-        if (c.getArticleId() != null && c.getArticleId() == CommentService.GUESTBOOK_ARTICLE_ID) {
+        if (CommentService.GUESTBOOK.equals(c.getTargetType())) {
             link = siteUrl + "/guestbook#comment-" + c.getId();
         } else {
             link = siteUrl + "/articles/" + c.getArticleId() + "#comment-" + c.getId();
@@ -180,7 +179,7 @@ public class CommentNotificationService {
         String text = String.format(
                 "%s,你%s的评论已通过审核,谢谢!\n\n文章:%s\n内容:%s\n\n查看:%s\n\n%s",
                 safe(c.getNickname()),
-                c.getArticleId() != null && c.getArticleId() == CommentService.GUESTBOOK_ARTICLE_ID
+                CommentService.GUESTBOOK.equals(c.getTargetType())
                         ? "在留言板留下" : "在文章下留下",
                 articleTitle, snippet, link, signature());
         mailService.send(c.getEmail(), subject, text, null);
@@ -192,7 +191,7 @@ public class CommentNotificationService {
         String subject = "[回复通知] " + safe(parent.getNickname()) + ",有人在你的评论下回复";
         String snippet = clip(reply.getContent());
         String link;
-        if (reply.getArticleId() != null && reply.getArticleId() == CommentService.GUESTBOOK_ARTICLE_ID) {
+        if (CommentService.GUESTBOOK.equals(reply.getTargetType())) {
             link = siteUrl + "/guestbook#comment-" + reply.getId();
         } else {
             link = siteUrl + "/articles/" + reply.getArticleId() + "#comment-" + reply.getId();

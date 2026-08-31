@@ -99,7 +99,7 @@ import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
   Expand, Fold, DataLine, DataAnalysis, Document,
-  ChatDotRound, ChatLineSquare, Files, View, ArrowDown, Box, Link, User, Clock, Tools, Bell, Brush,
+  ChatDotRound, ChatLineSquare, View, ArrowDown, Box, Link, User, Clock, Tools, Bell, Brush,
 } from '@element-plus/icons-vue'
 import { useUserStore } from '@/stores/user'
 import { useSiteStore } from '@/stores/site'
@@ -112,7 +112,6 @@ const siteStore = useSiteStore()
 const collapsed = ref(false)
 const drawerOpen = ref(false)
 const isMobile = ref(false)
-const isToolsActive = computed(() => route.path.startsWith('/admin/tools') || route.path.startsWith('/admin/tool-categories'))
 const userInitial = computed(() => (userStore.userInfo?.username || 'A')[0].toUpperCase())
 const siteLogo = computed(() => siteStore.info?.siteLogo || '')
 

@@ -26,7 +26,7 @@ public interface EmailSubscriptionMapper extends BaseMapper<EmailSubscription> {
      * 用于：待确认重发确认信、退订后重新订阅、离线直接确认。
      */
     @Update("UPDATE email_subscription SET status = #{status}, deleted = 0, token = #{token}, "
-            + "source = #{source}, create_time = #{createTime}, confirm_time = #{confirmTime} "
+            + "source = #{source}, create_time = #{createTime}, confirm_time = #{confirmTime}, confirmation_token = NULL, confirmation_expires_at = NULL "
             + "WHERE email = #{email}")
     int updateRawByEmail(@Param("email") String email,
                          @Param("status") int status,
@@ -34,6 +34,12 @@ public interface EmailSubscriptionMapper extends BaseMapper<EmailSubscription> {
                          @Param("source") String source,
                          @Param("createTime") LocalDateTime createTime,
                          @Param("confirmTime") LocalDateTime confirmTime);
+
+    @Update("UPDATE email_subscription SET status = 0, deleted = 0, token = #{unsubscribeToken}, "
+            + "confirmation_token = #{confirmationToken}, confirmation_expires_at = #{expiresAt}, "
+            + "source = 'web', confirm_time = NULL WHERE email = #{email} AND (status <> 1 OR deleted <> 0)")
+    int resetPending(@Param("email") String email, @Param("unsubscribeToken") String unsubscribeToken,
+                     @Param("confirmationToken") String confirmationToken, @Param("expiresAt") LocalDateTime expiresAt);
 
     /**
      * 真删除（绕过 @TableLogic），用于后台“删除”操作（彻底移除记录）。

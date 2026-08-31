@@ -41,7 +41,6 @@ import { useWuxiaCopy } from '@/composables/useWuxiaCopy'
 const { wx } = useWuxiaCopy()
 
 import { ref, computed, watch, nextTick } from 'vue'
-import { ElMessage } from 'element-plus'
 import { trackShare } from '@/api/share'
 import GradientBorderCard from '@/components/GradientBorderCard.vue'
 

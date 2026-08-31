@@ -6,7 +6,6 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.blog.common.BizException;
 import com.blog.dto.ToolDTO;
 import com.blog.entity.Tool;
-import com.blog.entity.ToolDailyClick;
 import com.blog.mapper.ToolDailyClickMapper;
 import com.blog.mapper.ToolMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -56,31 +55,21 @@ public class ToolService {
         return t;
     }
 
+    public Tool getPublishedById(Long id) {
+        Tool tool = toolMapper.selectById(id);
+        if (tool == null || !Integer.valueOf(1).equals(tool.getStatus())) throw new BizException(404, "工具不存在或已下线");
+        return tool;
+    }
+
     /** 累计点击 +1 + 今日点击 upsert */
     @Transactional
     public void recordClick(Long toolId) {
-        if (toolId == null) return;
+        getPublishedById(toolId);
         // click_count + 1
         toolMapper.update(null, new LambdaUpdateWrapper<Tool>()
                 .eq(Tool::getId, toolId)
                 .setSql("click_count = click_count + 1"));
-        // tool_daily_click upsert
-        LocalDate today = LocalDate.now();
-        ToolDailyClick exist = clickMapper.selectOne(new LambdaQueryWrapper<ToolDailyClick>()
-                .eq(ToolDailyClick::getToolId, toolId)
-                .eq(ToolDailyClick::getClickDate, today)
-                .last("LIMIT 1"));
-        if (exist == null) {
-            ToolDailyClick rec = new ToolDailyClick();
-            rec.setToolId(toolId);
-            rec.setClickDate(today);
-            rec.setClickCount(1);
-            clickMapper.insert(rec);
-        } else {
-            clickMapper.update(null, new LambdaUpdateWrapper<ToolDailyClick>()
-                    .eq(ToolDailyClick::getId, exist.getId())
-                    .setSql("click_count = click_count + 1"));
-        }
+        clickMapper.increment(toolId, LocalDate.now());
     }
 
     // ====== 后台 ======

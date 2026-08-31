@@ -57,6 +57,8 @@
         <h3 class="sec-title"><span class="sec-line"></span>{{ wx('我的故事') }}<span class="sec-line"></span></h3>
         <div class="story-card">
           <MdPreview
+          :sanitize="sanitizeMarkdown"
+          :sanitize-mermaid="sanitizeDiagram"
             :model-value="processedMd"
             theme="light"
             preview-theme="default"
@@ -148,10 +150,11 @@
 import { useWuxiaCopy } from '@/composables/useWuxiaCopy'
 const { wx } = useWuxiaCopy()
 
-import { ref, reactive, nextTick, onMounted, computed, watch } from 'vue'
+import { ref, reactive, nextTick, onMounted, computed } from 'vue'
 import { home, subscribeEmail } from '@/api/front'
 import { ElMessage } from 'element-plus'
 import { MdPreview } from 'md-editor-v3'
+import { sanitizeMarkdown, sanitizeDiagram } from '@/utils/markdownSecurity'
 import 'md-editor-v3/lib/preview.css'
 import HeroAbout from '@/components/HeroAbout.vue'
 import { useSiteStore } from '@/stores/site'

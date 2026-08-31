@@ -1,6 +1,5 @@
 package com.blog.service;
 
-import com.blog.common.BizException;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import org.springframework.stereotype.Service;

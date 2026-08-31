@@ -17,7 +17,6 @@ import com.blog.mapper.TagMapper;
 import com.blog.mapper.TagRelationMapper;
 import com.blog.mapper.UserMapper;
 import com.blog.mapper.CommentMapper;
-import com.blog.entity.Comment;
 import org.springframework.beans.BeanUtils;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
@@ -31,7 +30,7 @@ import java.util.stream.Collectors;
 
 @Service
 public class ArticleService {
-    public ArticleService(ArticleMapper articleMapper, ArticleTagMapper articleTagMapper, CategoryMapper categoryMapper, TagMapper tagMapper, TagRelationMapper tagRelationMapper, UserMapper userMapper, CommentMapper commentMapper) {
+    public ArticleService(ArticleMapper articleMapper, ArticleTagMapper articleTagMapper, CategoryMapper categoryMapper, TagMapper tagMapper, TagRelationMapper tagRelationMapper, UserMapper userMapper, CommentMapper commentMapper, jakarta.validation.Validator validator) {
         this.articleMapper = articleMapper;
         this.articleTagMapper = articleTagMapper;
         this.categoryMapper = categoryMapper;
@@ -39,6 +38,7 @@ public class ArticleService {
         this.tagRelationMapper = tagRelationMapper;
         this.userMapper = userMapper;
         this.commentMapper = commentMapper;
+        this.validator = validator;
     }
 
 
@@ -49,11 +49,11 @@ public class ArticleService {
     private final TagRelationMapper tagRelationMapper;
     private final UserMapper userMapper;
     private final CommentMapper commentMapper;
+    private final jakarta.validation.Validator validator;
 
     public Page<Article> homePage(long page, long size) {
-        Page<Article> p = Page.of(page, size);
-        p = articleMapper.selectPage(p, new LambdaQueryWrapper<Article>()
-                .eq(Article::getStatus, 1)
+        Page<Article> p = Page.of(Math.max(1, page), Math.max(1, Math.min(size, 100)));
+        p = articleMapper.selectPage(p, ArticleVisibility.summaries()
                 .orderByDesc(Article::getIsTop)
                 .orderByDesc(Article::getPublishTime));
         // 注入作者信息
@@ -67,7 +67,7 @@ public class ArticleService {
         // cap size 防单请求拉全表(size=1_000_000 等)
         long size = Math.max(1, Math.min(q.getSize(), 100));
         long page = Math.max(1, q.getPage());
-        Page<Article> p = Page.of(page, size);
+        Page<Article> p = Page.of(Math.max(1, page), Math.max(1, Math.min(size, 100)));
         LambdaQueryWrapper<Article> w = new LambdaQueryWrapper<>();
         if (q.getStatus() != null) w.eq(Article::getStatus, q.getStatus());
         if (q.getCategoryId() != null) w.eq(Article::getCategoryId, q.getCategoryId());
@@ -87,8 +87,7 @@ public class ArticleService {
     public List<Article> listFeatured(int limit) {
         // 防御性 cap,public front-controller 直接传 limit 给前端
         int safeLimit = Math.max(1, Math.min(limit, 50));
-        List<Article> list = articleMapper.selectList(new LambdaQueryWrapper<Article>()
-                .eq(Article::getStatus, 1).eq(Article::getIsFeatured, 1)
+        List<Article> list = articleMapper.selectList(ArticleVisibility.summaries().eq(Article::getIsFeatured, 1)
                 .orderByDesc(Article::getPublishTime)
                 .last("LIMIT " + safeLimit));
         User admin = userMapper.selectById(1L);
@@ -98,10 +97,9 @@ public class ArticleService {
     }
 
     public List<Article> listByCategory(Long categoryId) {
-        List<Article> list = articleMapper.selectList(new LambdaQueryWrapper<Article>()
-                .eq(Article::getStatus, 1).eq(Article::getCategoryId, categoryId)
+        List<Article> list = articleMapper.selectList(ArticleVisibility.summaries().eq(Article::getCategoryId, categoryId)
                 .orderByDesc(Article::getIsTop)
-                .orderByDesc(Article::getPublishTime));
+                .orderByDesc(Article::getPublishTime).last("LIMIT 100"));
         User admin = userMapper.selectById(1L);
         for (Article a : list) setAuthor(a, admin);
         injectCommentCount(list);
@@ -109,12 +107,14 @@ public class ArticleService {
     }
 
     public List<Article> listByTag(Long tagId) {
-        return tagRelationMapper.findByTag(tagId);
+        List<Long> ids = tagRelationMapper.findArticleIdsByTag(tagId);
+        if (ids.isEmpty()) return List.of();
+        return articleMapper.selectList(ArticleVisibility.summaries().in(Article::getId, ids)
+                .orderByDesc(Article::getPublishTime).last("LIMIT 100"));
     }
 
     public Article detailBySlug(String slug) {
-        Article a = articleMapper.selectOne(new LambdaQueryWrapper<Article>()
-                .eq(Article::getSlug, slug).eq(Article::getStatus, 1));
+        Article a = articleMapper.selectOne(ArticleVisibility.query().eq(Article::getSlug, slug));
         if (a == null) throw new BizException(404, "文章不存在");
         decorate(a);
         return a;
@@ -131,8 +131,8 @@ public class ArticleService {
 
     public Article prevNext(Long id, boolean prev) {
         Article cur = articleMapper.selectById(id);
-        if (cur == null) return null;
-        LambdaQueryWrapper<Article> w = new LambdaQueryWrapper<Article>().eq(Article::getStatus, 1);
+        if (!ArticleVisibility.isPublic(cur) || cur.getPublishTime() == null) return null;
+        LambdaQueryWrapper<Article> w = ArticleVisibility.summaries();
         if (prev) {
             w.lt(Article::getPublishTime, cur.getPublishTime())
              .orderByDesc(Article::getPublishTime).last("LIMIT 1");
@@ -145,9 +145,8 @@ public class ArticleService {
 
     public List<Article> related(Long articleId) {
         Article a = articleMapper.selectById(articleId);
-        if (a == null || a.getCategoryId() == null) return List.of();
-        return articleMapper.selectList(new LambdaQueryWrapper<Article>()
-                .eq(Article::getStatus, 1).eq(Article::getCategoryId, a.getCategoryId())
+        if (!ArticleVisibility.isPublic(a) || a.getCategoryId() == null) return List.of();
+        return articleMapper.selectList(ArticleVisibility.summaries().eq(Article::getCategoryId, a.getCategoryId())
                 .ne(Article::getId, articleId)
                 .orderByDesc(Article::getPublishTime).last("LIMIT 6"));
     }
@@ -158,8 +157,7 @@ public class ArticleService {
         if (safeKw.length() < 2 || safeKw.length() > 50) return List.of();
         int safeLimit = Math.max(1, Math.min(limit, 50));
         final String likeKw = safeKw;
-        List<Article> list = articleMapper.selectList(new LambdaQueryWrapper<Article>()
-                .eq(Article::getStatus, 1)
+        List<Article> list = articleMapper.selectList(ArticleVisibility.summaries()
                 .and(z -> z.like(Article::getTitle, likeKw).or().like(Article::getSummary, likeKw))
                 .orderByDesc(Article::getPublishTime)
                 .last("LIMIT " + safeLimit));
@@ -174,10 +172,10 @@ public class ArticleService {
     }
 
     public List<Article> listByMonth(String ym) {
-        List<Article> list = articleMapper.selectList(new LambdaQueryWrapper<Article>()
-                .eq(Article::getStatus, 1)
-                .apply("DATE_FORMAT(publish_time, '%Y-%m') = {0}", ym)
-                .orderByDesc(Article::getPublishTime));
+        List<Article> list = articleMapper.selectList(ArticleVisibility.summaries()
+                .ge(Article::getPublishTime, monthStart(ym))
+                .lt(Article::getPublishTime, monthStart(ym).plusMonths(1))
+                .orderByDesc(Article::getPublishTime).last("LIMIT 100"));
         User admin = userMapper.selectById(1L);
         for (Article a : list) setAuthor(a, admin);
         injectCommentCount(list);
@@ -187,6 +185,7 @@ public class ArticleService {
     @Transactional
     @CacheEvict(value = "articles", allEntries = true)
     public Article save(ArticleDTO dto) {
+        validate(dto);
         if (!StringUtils.hasText(dto.getSlug())) dto.setSlug(toSlug(dto.getTitle()));
         Long n = articleMapper.selectCount(new LambdaQueryWrapper<Article>()
                 .eq(Article::getSlug, dto.getSlug()));
@@ -205,11 +204,18 @@ public class ArticleService {
     @CacheEvict(value = "articles", allEntries = true)
     public Article update(ArticleDTO dto) {
         if (dto.getId() == null) throw new BizException("id 必填");
+        Article previous = articleMapper.selectById(dto.getId());
+        if (previous == null) throw new BizException(404, "文章不存在");
+        if (!StringUtils.hasText(dto.getSlug())) dto.setSlug(previous.getSlug());
+        validate(dto);
         Long n = articleMapper.selectCount(new LambdaQueryWrapper<Article>()
                 .eq(Article::getSlug, dto.getSlug()).ne(Article::getId, dto.getId()));
         if (n != null && n > 0) throw new BizException("slug 已存在");
         Article a = new Article();
         BeanUtils.copyProperties(dto, a);
+        if (a.getStatus() == null) a.setStatus(previous.getStatus());
+        if (a.getPublishTime() == null) a.setPublishTime(previous.getPublishTime());
+        if (Integer.valueOf(1).equals(a.getStatus()) && a.getPublishTime() == null) a.setPublishTime(LocalDateTime.now());
         articleMapper.updateById(a);
         syncTags(dto.getId(), dto.getTagIds());
         return detailById(dto.getId());
@@ -233,7 +239,10 @@ public class ArticleService {
         Article a = new Article();
         a.setId(id);
         a.setStatus(status);
-        if (status == 1) a.setPublishTime(LocalDateTime.now());
+        if (status == null || status < 0 || status > 2) throw new BizException("文章状态无效");
+        Article previous = articleMapper.selectById(id);
+        if (previous == null) throw new BizException(404, "文章不存在");
+        if (status == 1 && previous.getPublishTime() == null) a.setPublishTime(LocalDateTime.now());
         articleMapper.updateById(a);
     }
 
@@ -279,7 +288,7 @@ public class ArticleService {
     private void syncTags(Long articleId, List<Long> tagIds) {
         articleTagMapper.deleteByArticle(articleId);
         if (tagIds == null || tagIds.isEmpty()) return;
-        for (Long tid : tagIds) {
+        for (Long tid : new java.util.LinkedHashSet<>(tagIds)) {
             ArticleTag at = new ArticleTag();
             at.setArticleId(articleId);
             at.setTagId(tid);
@@ -301,17 +310,10 @@ public class ArticleService {
         return (slug.length() > 50 ? slug.substring(0, 50) : slug) + "-" + ts;
     }
 
-    public List<Article> listAllPublished() {
-        return articleMapper.selectList(new LambdaQueryWrapper<Article>()
-                .eq(Article::getStatus, 1)
-                .orderByDesc(Article::getPublishTime));
-    }
-
     public List<Article> listLatest(int limit) {
-        List<Article> list = articleMapper.selectList(new LambdaQueryWrapper<Article>()
-                .eq(Article::getStatus, 1)
+        List<Article> list = articleMapper.selectList(ArticleVisibility.summaries()
                 .orderByDesc(Article::getPublishTime)
-                .last("LIMIT " + Math.max(1, limit)));
+                .last("LIMIT " + Math.max(1, Math.min(limit, 100))));
         User admin = userMapper.selectById(1L);
         for (Article a : list) setAuthor(a, admin);
         injectCommentCount(list);
@@ -319,8 +321,7 @@ public class ArticleService {
     }
 
     public long countPublished() {
-        return articleMapper.selectCount(new LambdaQueryWrapper<Article>()
-                .eq(Article::getStatus, 1));
+        return articleMapper.selectCount(ArticleVisibility.query());
     }
 
     public long sumViews() {
@@ -331,24 +332,45 @@ public class ArticleService {
     public Page<Article> pageByCategorySlug(String slug, long page, long size) {
         Category c = categoryMapper.selectOne(new LambdaQueryWrapper<Category>()
                 .eq(Category::getSlug, slug));
-        if (c == null) return Page.of(page, size);
-        return articleMapper.selectPage(Page.of(page, size),
-                new LambdaQueryWrapper<Article>()
-                        .eq(Article::getStatus, 1)
+        if (c == null) return Page.of(Math.max(1, page), Math.max(1, Math.min(size, 100)));
+        return articleMapper.selectPage(Page.of(Math.max(1, page), Math.max(1, Math.min(size, 100))),
+                ArticleVisibility.summaries()
                         .eq(Article::getCategoryId, c.getId())
                         .orderByDesc(Article::getPublishTime));
     }
 
     public Page<Article> pageByTagSlug(String slug, long page, long size) {
         Tag t = tagMapper.selectOne(new LambdaQueryWrapper<Tag>().eq(Tag::getSlug, slug));
-        if (t == null) return Page.of(page, size);
+        if (t == null) return Page.of(Math.max(1, page), Math.max(1, Math.min(size, 100)));
         List<Long> articleIds = tagRelationMapper.findArticleIdsByTag(t.getId());
-        if (articleIds.isEmpty()) return Page.of(page, size);
-        return articleMapper.selectPage(Page.of(page, size),
-                new LambdaQueryWrapper<Article>()
+        if (articleIds.isEmpty()) return Page.of(Math.max(1, page), Math.max(1, Math.min(size, 100)));
+        return articleMapper.selectPage(Page.of(Math.max(1, page), Math.max(1, Math.min(size, 100))),
+                ArticleVisibility.summaries()
                         .in(Article::getId, articleIds)
-                        .eq(Article::getStatus, 1)
                         .orderByDesc(Article::getPublishTime));
+    }
+
+    public void validate(ArticleDTO dto) {
+        if (dto == null) throw new BizException("文章参数不能为空");
+        var violations = validator.validate(dto);
+        if (!violations.isEmpty()) throw new BizException(violations.iterator().next().getMessage());
+        if (dto.getCategoryId() != null && categoryMapper.selectById(dto.getCategoryId()) == null)
+            throw new BizException("分类不存在");
+        if (dto.getTagIds() != null && !dto.getTagIds().isEmpty()) {
+            var ids = new java.util.HashSet<>(dto.getTagIds());
+            if (tagMapper.selectCount(new LambdaQueryWrapper<Tag>().in(Tag::getId, ids)) != ids.size())
+                throw new BizException("标签不存在");
+        }
+    }
+
+    private LocalDateTime monthStart(String month) {
+        try { return java.time.YearMonth.parse(month).atDay(1).atStartOfDay(); }
+        catch (java.time.DateTimeException e) { throw new BizException("月份格式无效"); }
+    }
+
+    public Page<Article> archivePage(long page, long size) {
+        return articleMapper.selectPage(Page.of(Math.max(1, page), Math.max(1, Math.min(size, 100))),
+                ArticleVisibility.summaries().orderByDesc(Article::getPublishTime).orderByDesc(Article::getId));
     }
 
     private void decorate(Article a) {
@@ -383,14 +405,9 @@ public class ArticleService {
     private void injectCommentCount(List<Article> articles) {
         if (articles == null || articles.isEmpty()) return;
         List<Long> ids = articles.stream().map(Article::getId).collect(Collectors.toList());
-        // 一次查出所有文章的评论数：按 articleId 分组，只统计 status=1(已审核)
-        List<Comment> approved = commentMapper.selectList(
-                new LambdaQueryWrapper<Comment>()
-                        .in(Comment::getArticleId, ids)
-                        .eq(Comment::getStatus, 1)
-                        .select(Comment::getArticleId));
-        Map<Long, Long> countMap = approved.stream()
-                .collect(Collectors.groupingBy(Comment::getArticleId, Collectors.counting()));
+        Map<Long, Long> countMap = commentMapper.countApprovedByArticles(ids).stream()
+                .collect(Collectors.toMap(com.blog.vo.ArticleCommentCount::getArticleId,
+                        com.blog.vo.ArticleCommentCount::getCount));
         for (Article a : articles) {
             a.setCommentCount(countMap.getOrDefault(a.getId(), 0L));
         }

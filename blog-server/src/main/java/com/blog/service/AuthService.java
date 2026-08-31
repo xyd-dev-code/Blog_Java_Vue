@@ -69,7 +69,7 @@ public class AuthService {
         if (!encoder.matches(dto.getPassword(), u.getPassword())) {
             throw new BizException(401, "用户名或密码错误");
         }
-        String token = jwtUtil.generate(u.getId(), u.getUsername(), u.getRole());
+        String token = jwtUtil.generate(u);
         Map<String, Object> data = new HashMap<>();
         data.put("token", token);
         data.put("user", sanitize(u));
@@ -79,20 +79,14 @@ public class AuthService {
 
     /**
      * 登出:把当前 token 的 jti 加进黑名单直到自然过期。
-     * 单实例内存级 — 进程重启会丢黑名单,需要持久化时换 Redis SET。
+     * 撤销记录持久化至数据库，重启及多实例均生效。
      */
     public void logout(String token) {
         if (token == null || token.isBlank()) return;
-        try {
-            Claims c = jwtUtil.parse(token);
-            String jti = c.getId();
-            long expMs = c.getExpiration() == null ? 0L : c.getExpiration().getTime();
-            if (jti != null) {
-                blacklist.revoke(jti, expMs);
-            }
-        } catch (Exception ignore) {
-            // token 本身无效也没关系,前端清掉就行
-        }
+        Claims claims;
+        try { claims = jwtUtil.parse(token); }
+        catch (io.jsonwebtoken.JwtException | IllegalArgumentException ignored) { return; }
+        blacklist.revoke(claims.getId(), claims.getExpiration().getTime());
     }
 
     public User me(LoginUser u) {
@@ -103,7 +97,7 @@ public class AuthService {
     }
 
     /**
-     * 修改密码:校验旧密码、更新 BCrypt、撤销当前 token 的 jti(防旧 token 仍可用)。
+     * 修改密码:更新 BCrypt 后，所有旧 JWT 的凭据版本立即失效。
      * 调用方需把当前请求的 Authorization Bearer token 传进来,用于 revoke。
      */
     public void changePassword(LoginUser u, com.blog.dto.ChangePasswordDTO dto, String currentToken) {
@@ -126,7 +120,9 @@ public class AuthService {
         User upd = new User();
         upd.setId(user.getId());
         upd.setPassword(encoder.encode(dto.getNewPassword()));
-        userMapper.updateById(upd);
+        int changed = userMapper.update(upd, new com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper<User>()
+                .eq(User::getId, user.getId()).eq(User::getPassword, user.getPassword()));
+        if (changed != 1) throw new BizException(409, "密码已发生变更，请重新登录");
         // 撤销当前 token 的 jti:即便前端没 logout,旧 token 也不能再访问
         if (currentToken != null && !currentToken.isBlank()) {
             try {

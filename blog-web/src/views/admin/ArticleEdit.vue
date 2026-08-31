@@ -84,6 +84,8 @@
         </el-form-item>
         <el-form-item label="正文">
           <MdEditor
+          :sanitize="sanitizeMarkdown"
+          :sanitize-mermaid="sanitizeDiagram"
             v-model="markdown"
             v-bind="editorConfig"
             style="min-height: 700px;"
@@ -117,9 +119,10 @@ import { useWuxiaCopy } from '@/composables/useWuxiaCopy'
 const { wx } = useWuxiaCopy()
 
 import { ref, reactive, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRoute, useRouter, onBeforeRouteLeave, onBeforeRouteUpdate } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { MdEditor } from 'md-editor-v3'
+import { sanitizeMarkdown, sanitizeDiagram } from '@/utils/markdownSecurity'
 import 'md-editor-v3/lib/style.css'
 import { adminArticleById, adminCreateArticle, adminUpdateArticle, adminUploadBase64 } from '@/api/admin'
 import { categoriesAll, tagsAll } from '@/api/front'
@@ -186,6 +189,9 @@ const currentSnapshot = () => JSON.stringify({
   tagIds: [...(form.tagIds || [])].sort((a, b) => Number(a) - Number(b)),
   coverImage: form.coverImage,
   summary: form.summary,
+  isTop: form.isTop,
+  isFeatured: form.isFeatured,
+  allowComment: form.allowComment,
   content: markdown.value
 })
 
@@ -200,6 +206,7 @@ watch(() => form.categoryId, recomputeDirty)
 watch(() => form.tagIds, recomputeDirty, { deep: true })
 watch(() => form.coverImage, recomputeDirty)
 watch(() => form.summary, recomputeDirty)
+watch(() => [form.isTop, form.isFeatured, form.allowComment], recomputeDirty)
 
 // 浏览器 beforeunload 提示(关闭/刷新页时)
 const beforeUnloadHandler = (e) => {
@@ -219,9 +226,9 @@ const confirmLeave = async () => {
     return false
   }
 }
-const goBack = async () => {
-  if (await confirmLeave()) router.push('/admin/articles')
-}
+onBeforeRouteLeave(confirmLeave)
+onBeforeRouteUpdate(confirmLeave)
+const goBack = () => router.push('/admin/articles')
 
 const editorConfig = {
   theme: 'light',
@@ -257,6 +264,7 @@ const editorConfig = {
 // =============================
 
 const save = async (status) => {
+  if (loadingArticle.value || saving.value) return
   if (!form.title.trim()) return ElMessage.warning('请填写标题')
   if (!markdown.value.trim()) return ElMessage.warning('请填写正文')
 
@@ -307,39 +315,42 @@ const onCoverFileChange = async (e) => {
 // 生命周期
 // =============================
 
-onMounted(async () => {
+let loadGeneration = 0
+const loadingArticle = ref(false)
+const loadArticle = async () => {
+  const generation = ++loadGeneration
+  loadingArticle.value = true
+  baselineSnapshot.value = ''
+  dirty.value = false
+  for (const key of Object.keys(form)) delete form[key]
+  Object.assign(form, { title: '', categoryId: null, tagIds: [], coverImage: '', summary: '', isTop: 0, isFeatured: 0, allowComment: 1 })
+  markdown.value = ''
   try {
-    categories.value = (await categoriesAll()).data || []
-    tags.value = (await tagsAll()).data || []
-  } catch (_) {}
-
-  if (isEdit.value) {
-    // 编辑模式下也校验一次 id,防止 /articles//edit 这种退化路径进入分支后崩
-    if (editorId.value === null) {
-      ElMessage.error('无效的文章 id')
-      router.replace('/admin/articles')
-      return
+    if (editorId.value !== null) {
+      const { data: article } = await adminArticleById(editorId.value)
+      if (generation !== loadGeneration) return
+      Object.assign(form, { ...article, tagIds: (article.tags || []).map(t => t.id) })
+      markdown.value = article.content || ''
     }
-    try {
-      const resp = await adminArticleById(editorId.value)
-      const article = resp.data
-      Object.assign(form, {
-        ...article,
-        tagIds: (article.tags || []).map(t => t.id)
-      })
-      if (article.content) {
-        markdown.value = article.content
-      }
-    } catch (_) {}
+    await nextTick()
+    if (generation === loadGeneration) baselineSnapshot.value = currentSnapshot()
+  } catch (_) {
+    // An unreadable article must not be overwritten with the empty fallback form.
+    if (generation === loadGeneration) router.replace('/admin/articles')
+  } finally {
+    if (generation === loadGeneration) loadingArticle.value = false
   }
-
-  // 装载完成后再记录 baseline,避免组件初始化触发的写入误判为"脏"
-  await nextTick()
-  baselineSnapshot.value = currentSnapshot()
+}
+watch(editorId, loadArticle, { immediate: true })
+onMounted(async () => {
+  const [categoryResult, tagResult] = await Promise.allSettled([categoriesAll(), tagsAll()])
+  if (categoryResult.status === 'fulfilled') categories.value = categoryResult.value.data || []
+  if (tagResult.status === 'fulfilled') tags.value = tagResult.value.data || []
 })
 
 window.addEventListener('beforeunload', beforeUnloadHandler)
 onBeforeUnmount(() => {
+  loadGeneration++
   window.removeEventListener('beforeunload', beforeUnloadHandler)
 })
 </script>

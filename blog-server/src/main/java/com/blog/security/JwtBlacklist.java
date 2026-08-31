@@ -1,45 +1,28 @@
 package com.blog.security;
 
-import io.jsonwebtoken.Claims;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import org.springframework.dao.DuplicateKeyException;
 
-import java.util.concurrent.ConcurrentHashMap;
-
-/**
- * JWT 黑名单 — 内存级,够单实例。
- *
- * <p>logout 时把当前 token 的 jti(或 exp)放进来,JwtAuthFilter 解析时查一次。
- * 进程重启会丢黑名单,这是已知 trade-off(单实例部署 OK;
- * 多实例要换 Redis SET,带 EXPIRE)。</p>
- */
+/** Persistent revocations survive restarts and apply across application instances. */
 @Component
 public class JwtBlacklist {
-
-    /** key = jti 或 token hash,value = 到期时间(毫秒),过期自动清理 */
-    private final ConcurrentHashMap<String, Long> revoked = new ConcurrentHashMap<>();
-
-    /**
-     * 把 token 加入黑名单直到它自然过期。
-     * 由 AuthService.logout 调用。
-     */
-    public void revoke(String jtiOrToken, long expireAtMillis) {
-        if (jtiOrToken == null || jtiOrToken.isBlank()) return;
-        revoked.put(jtiOrToken, expireAtMillis);
+    private final JdbcTemplate jdbc;
+    public JwtBlacklist(JdbcTemplate jdbc) { this.jdbc = jdbc; }
+    public void revoke(String jti, long expiresAt) {
+        if (jti == null || jti.isBlank() || expiresAt <= System.currentTimeMillis()) return;
+        try { jdbc.update("INSERT INTO jwt_revocation(jti, expires_at) VALUES (?, ?)", jti, expiresAt); }
+        catch (DuplicateKeyException ignored) { /* Already revoked. */ }
     }
-
-    public boolean isRevoked(String jtiOrToken) {
-        if (jtiOrToken == null) return false;
-        Long exp = revoked.get(jtiOrToken);
-        if (exp == null) return false;
-        if (exp < System.currentTimeMillis()) {
-            revoked.remove(jtiOrToken);
-            return false;
-        }
-        return true;
+    public boolean isRevoked(String jti) {
+        if (jti == null) return true;
+        return jdbc.queryForObject("SELECT COUNT(*) FROM jwt_revocation WHERE jti = ? AND expires_at > ?",
+                Long.class, jti, System.currentTimeMillis()) > 0;
     }
-
-    /** 维护用,定期调用清掉过期项。当前依赖惰性删除,足够。 */
-    public int size() {
-        return revoked.size();
+    @Scheduled(fixedDelay = 300000)
+    public void evictExpired() {
+        jdbc.update("DELETE FROM jwt_revocation WHERE expires_at <= ?", System.currentTimeMillis());
     }
+    public int size() { return jdbc.queryForObject("SELECT COUNT(*) FROM jwt_revocation", Integer.class); }
 }

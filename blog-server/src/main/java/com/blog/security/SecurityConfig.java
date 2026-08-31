@@ -5,8 +5,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -102,6 +100,9 @@ public class SecurityConfig {
                     ).permitAll()
                     .requestMatchers(HttpMethod.POST,
                         "/api/v1/comments",
+                        "/api/v1/comments/*/like",
+                        "/api/v1/comments/*/report",
+                        "/api/v1/tools/*/click",
                         "/api/v1/friend-links/apply",
                         "/api/v1/upload/avatar",
                         "/api/v1/share/**",

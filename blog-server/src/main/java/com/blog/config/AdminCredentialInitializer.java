@@ -15,7 +15,7 @@ import org.springframework.stereotype.Component;
 /**
  * 用一次性环境变量初始化新库管理员密码。
  *
- * <p>init.sql 不再包含任何可登录的默认密码。只有当数据库密码仍为禁用标记时，
+ * <p>init.sql 不再包含任何可登录的默认密码。仅在账号尚不存在或数据库密码仍为禁用标记时，
  * 本初始化器才会读取 BLOG_ADMIN_INITIAL_PASSWORD、写入 BCrypt 摘要；已有密码永不覆盖。</p>
  */
 @Component
@@ -45,7 +45,7 @@ public class AdminCredentialInitializer implements ApplicationRunner {
         User admin = userMapper.selectOne(new LambdaQueryWrapper<User>()
                 .eq(User::getUsername, username)
                 .last("LIMIT 1"));
-        if (admin == null || !DISABLED_PASSWORD.equals(admin.getPassword())) {
+        if (admin != null && !DISABLED_PASSWORD.equals(admin.getPassword())) {
             return;
         }
 
@@ -55,6 +55,18 @@ public class AdminCredentialInitializer implements ApplicationRunner {
         }
         if (initialPassword.length() < 12) {
             throw new IllegalStateException("BLOG_ADMIN_INITIAL_PASSWORD 至少需要 12 个字符");
+        }
+
+        if (admin == null) {
+            User created = new User();
+            created.setUsername(username);
+            created.setNickname(username);
+            created.setPassword(passwordEncoder.encode(initialPassword));
+            created.setRole("ADMIN");
+            created.setStatus(1);
+            userMapper.insert(created);
+            log.info("[AdminBootstrap] 新库管理员已初始化，请移除一次性初始密码环境变量。");
+            return;
         }
 
         User update = new User();

@@ -12,6 +12,9 @@ public class Comment {
     @TableId(type = IdType.AUTO)
     private Long id;
     private Long articleId;
+    private String targetType;
+    @com.baomidou.mybatisplus.annotation.TableLogic
+    private Integer deleted;
     private Long parentId;
     private String nickname;
     private String email;
@@ -34,6 +37,10 @@ public class Comment {
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
     public Long getArticleId() { return articleId; }
+    public String getTargetType() { return targetType; }
+    public void setTargetType(String targetType) { this.targetType = targetType; }
+    public Integer getDeleted() { return deleted; }
+    public void setDeleted(Integer deleted) { this.deleted = deleted; }
     public void setArticleId(Long articleId) { this.articleId = articleId; }
     public Long getParentId() { return parentId; }
     public void setParentId(Long parentId) { this.parentId = parentId; }

@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
  *
  * <p>设计要点:</p>
  * <ul>
- *   <li>去重靠各表 notified 标记：扫描 status=正常/已发布 且 notified=0 的记录，推送后置 1，避免重复推送</li>
+ *   <li>按内容及收件人持久化投递状态，仅重试失败项；notified 表示该内容的全部投递已结束</li>
  *   <li>仅已确认(status=1)订阅者纳入接收名单（双重确认未完成者不收）</li>
  *   <li>邮件含更新摘要 + 查看链接 + 退订链接</li>
  *   <li>mailEnabled=false 时<b>不标记</b> notified，待 SMTP 启用后自动补推，避免漏发</li>
@@ -42,6 +42,7 @@ public class NotifyService {
     private final ToolMapper toolMapper;
     private final EmailSubscriptionMapper subMapper;
     private final MailService mailService;
+    private final NotificationDeliveryService deliveryService;
 
     private final boolean mailEnabled;
     private final String siteBaseUrl;
@@ -55,6 +56,7 @@ public class NotifyService {
                          ToolMapper toolMapper,
                          EmailSubscriptionMapper subMapper,
                          MailService mailService,
+                         NotificationDeliveryService deliveryService,
                          @Value("${blog.mail.enabled:false}") boolean mailEnabled,
                          @Value("${blog.notify.base-url:}") String siteBaseUrl,
                          @Value("${blog.subscribe.site-name:MyBlog}") String siteName) {
@@ -63,6 +65,7 @@ public class NotifyService {
         this.toolMapper = toolMapper;
         this.subMapper = subMapper;
         this.mailService = mailService;
+        this.deliveryService = deliveryService;
         this.mailEnabled = mailEnabled;
         this.siteBaseUrl = siteBaseUrl;
         this.siteName = siteName;
@@ -101,16 +104,15 @@ public class NotifyService {
     }
 
     private int notifyArticles(String base, List<EmailSubscription> subs) {
-        List<Article> list = articleMapper.selectList(new LambdaQueryWrapper<Article>()
-                .eq(Article::getStatus, ACTIVE)
+        List<Article> list = articleMapper.selectList(ArticleVisibility.summaries()
                 .eq(Article::getNotified, 0)
                 .eq(Article::getDeleted, 0)
-                .orderByAsc(Article::getPublishTime));
+                .orderByAsc(Article::getPublishTime).last("LIMIT 25"));
         if (list.isEmpty()) return 0;
         if (subs.isEmpty()) { markArticles(list); return 0; }
         String unsub = base + "/api/v1/subscribe/unsubscribe";
-        boolean allSent = true;
         for (Article a : list) {
+            boolean allSent = true;
             String slug = a.getSlug() != null && !a.getSlug().isBlank() ? a.getSlug() : String.valueOf(a.getId());
             String url = base + "/articles/" + slug;
             String summary = a.getSummary() != null ? a.getSummary() : "";
@@ -120,14 +122,10 @@ public class NotifyService {
                         + "摘要：\n" + summary + "\n\n查看：" + url
                         + "\n退订：" + unsub + "?token=" + s.getToken();
                 String html = buildHtml("新文章发布", a.getTitle(), summary, url, "阅读全文", s.getToken(), unsub);
-                if (!mailService.sendSync(s.getEmail(), subject, text, html)) allSent = false;
+                if (!deliveryService.deliver("ARTICLE", a.getId(), s.getId(),
+                        () -> !stillSubscribed(s.getId()) || mailService.sendSync(s.getEmail(), subject, text, html))) allSent = false;
             }
-        }
-        // 仅当全部发送成功才标记 notified=1；否则保留 notified=0,待下次调度重试,避免 SMTP 抖动导致邮件永久丢失
-        if (allSent) {
-            markArticles(list);
-        } else {
-            log.warn("[Notify] 文章推送存在发送失败,保留 notified=0 待下次重试(共{}篇)", list.size());
+            if (allSent) markArticles(List.of(a));
         }
         return list.size() * subs.size();
     }
@@ -137,13 +135,13 @@ public class NotifyService {
                 .eq(Project::getStatus, ACTIVE)
                 .eq(Project::getNotified, 0)
                 .eq(Project::getDeleted, 0)
-                .orderByAsc(Project::getCreateTime));
+                .orderByAsc(Project::getCreateTime).last("LIMIT 25"));
         if (list.isEmpty()) return 0;
         if (subs.isEmpty()) { markProjects(list); return 0; }
         String unsub = base + "/api/v1/subscribe/unsubscribe";
         String url = base + "/projects";
-        boolean allSent = true;
         for (Project p : list) {
+            boolean allSent = true;
             String summary = p.getDescription() != null ? p.getDescription() : "";
             for (EmailSubscription s : subs) {
                 String subject = "【" + siteName + "】新项目上线：" + p.getName();
@@ -151,13 +149,10 @@ public class NotifyService {
                         + "简介：\n" + summary + "\n\n查看：" + url
                         + "\n退订：" + unsub + "?token=" + s.getToken();
                 String html = buildHtml("新项目上线", p.getName(), summary, url, "查看项目", s.getToken(), unsub);
-                if (!mailService.sendSync(s.getEmail(), subject, text, html)) allSent = false;
+                if (!deliveryService.deliver("PROJECT", p.getId(), s.getId(),
+                        () -> !stillSubscribed(s.getId()) || mailService.sendSync(s.getEmail(), subject, text, html))) allSent = false;
             }
-        }
-        if (allSent) {
-            markProjects(list);
-        } else {
-            log.warn("[Notify] 项目推送存在发送失败,保留 notified=0 待下次重试(共{}个)", list.size());
+            if (allSent) markProjects(List.of(p));
         }
         return list.size() * subs.size();
     }
@@ -167,13 +162,13 @@ public class NotifyService {
                 .eq(Tool::getStatus, ACTIVE)
                 .eq(Tool::getNotified, 0)
                 .eq(Tool::getDeleted, 0)
-                .orderByAsc(Tool::getCreateTime));
+                .orderByAsc(Tool::getCreateTime).last("LIMIT 25"));
         if (list.isEmpty()) return 0;
         if (subs.isEmpty()) { markTools(list); return 0; }
         String unsub = base + "/api/v1/subscribe/unsubscribe";
         String url = base + "/tools";
-        boolean allSent = true;
         for (Tool tl : list) {
+            boolean allSent = true;
             String summary = tl.getDescription() != null ? tl.getDescription() : "";
             for (EmailSubscription s : subs) {
                 String subject = "【" + siteName + "】新工具上线：" + tl.getName();
@@ -181,13 +176,10 @@ public class NotifyService {
                         + "简介：\n" + summary + "\n\n查看：" + url
                         + "\n退订：" + unsub + "?token=" + s.getToken();
                 String html = buildHtml("新工具上线", tl.getName(), summary, url, "打开工具", s.getToken(), unsub);
-                if (!mailService.sendSync(s.getEmail(), subject, text, html)) allSent = false;
+                if (!deliveryService.deliver("TOOL", tl.getId(), s.getId(),
+                        () -> !stillSubscribed(s.getId()) || mailService.sendSync(s.getEmail(), subject, text, html))) allSent = false;
             }
-        }
-        if (allSent) {
-            markTools(list);
-        } else {
-            log.warn("[Notify] 工具推送存在发送失败,保留 notified=0 待下次重试(共{}个)", list.size());
+            if (allSent) markTools(List.of(tl));
         }
         return list.size() * subs.size();
     }
@@ -208,6 +200,11 @@ public class NotifyService {
         List<Long> ids = list.stream().map(Tool::getId).collect(Collectors.toList());
         toolMapper.update(null, new LambdaUpdateWrapper<Tool>()
                 .in(Tool::getId, ids).set(Tool::getNotified, 1));
+    }
+
+    private boolean stillSubscribed(Long id) {
+        EmailSubscription current = subMapper.selectById(id);
+        return current != null && Integer.valueOf(1).equals(current.getStatus());
     }
 
     private String buildHtml(String badge, String title, String summary, String url,

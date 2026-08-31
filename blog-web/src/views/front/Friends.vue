@@ -53,7 +53,9 @@
         >
           <header class="fg-head">
             <div class="fg-head-left">
-              <span class="fg-icon">{{ groupIcon(g.name) }}</span>
+              <el-icon class="fg-icon" aria-hidden="true">
+                <component :is="groupIcon(g.name)" />
+              </el-icon>
               <h3 class="fg-title">{{ g.name }}</h3>
               <span class="fg-count">{{ g.items.length }}</span>
             </div>
@@ -220,7 +222,7 @@ import { useWuxiaCopy } from '@/composables/useWuxiaCopy'
 const { wx } = useWuxiaCopy()
 
 import { ref, reactive, computed, onMounted, onBeforeUnmount } from 'vue'
-import { Link } from '@element-plus/icons-vue'
+import { Connection, Link, Star, User } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { friendLinks as fetchFriendLinks, applyFriendLink } from '@/api/front'
 import HeroFriends from '@/components/HeroFriends.vue'
@@ -292,10 +294,10 @@ const groups = computed(() => {
 })
 
 const groupIcon = (name) => {
-  if (name === '好友') return '♥'
-  if (name === '网友') return '🌐'
-  if (name === '推荐' || name === '置顶') return '✦'
-  return '◆'
+  if (name === '好友') return User
+  if (name === '网友') return Connection
+  if (name === '推荐' || name === '置顶') return Star
+  return Link
 }
 
 const groupClass = (name) => {
@@ -654,6 +656,8 @@ const submitApply = async () => {
   gap: 10px;
 }
 .fg-icon {
+  flex-shrink: 0;
+  align-self: center;
   font-size: 20px;
   color: var(--c-autumn-700);
   line-height: 1;

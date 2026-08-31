@@ -1,6 +1,6 @@
 <template>
   <div class="archives-page">
-    <SkyPageHead title="文章归档" :subtitle="`共 ${articles.length} 篇 · 按月份整理`" />
+    <SkyPageHead title="文章归档" :subtitle="`共 ${total} 篇 · 按月份整理`" />
 
     <div class="container-narrow page-body">
       <div class="timeline">
@@ -12,13 +12,14 @@
           </div>
           <ul class="tl-list">
             <li v-for="a in group" :key="a.id" @click="$router.push(`/articles/${a.slug}`)">
-              <span class="tl-day">{{ fmtDate(a.createTime, 'DD') }}</span>
+              <span class="tl-day">{{ fmtDate(a.publishTime || a.createTime, 'DD') }}</span>
               <span class="tl-title">{{ a.title }}</span>
               <span v-if="a.categoryName" class="tl-cat">· {{ a.categoryName }}</span>
               <span class="tl-arrow">→</span>
             </li>
           </ul>
         </div>
+        <el-button v-if="articles.length < total" :loading="loading" @click="loadMore">加载更多文章</el-button>
         <el-empty v-if="!articles.length" :description="wx('还没有文章')" />
       </div>
     </div>
@@ -35,20 +36,28 @@ import { fmtDate } from '@/utils/format'
 import SkyPageHead from '@/components/SkyPageHead.vue'
 
 const articles = ref([])
+const total = ref(0)
+const page = ref(1)
+const loading = ref(false)
 
-onMounted(async () => {
+const loadMore = async () => {
+  if (loading.value) return
+  loading.value = true
   try {
-    const resp = await archives()
-    // 后端返回 { months, articles }，兼容直接数组或 { records }
-    const raw = resp.data
-    articles.value = raw?.articles || raw?.records || (Array.isArray(raw) ? raw : [])
-  } catch (_) {}
-})
+    const resp = await archives({ page: page.value, size: 50 })
+    articles.value.push(...(resp.data?.articles || []))
+    total.value = resp.data?.total || 0
+    page.value += 1
+  } catch (_) {
+    // The request interceptor reports failures; keep the current page for retry.
+  } finally { loading.value = false }
+}
+onMounted(() => loadMore().catch(() => {}))
 
 const grouped = computed(() => {
   const map = {}
   for (const a of articles.value) {
-    const ym = (a.createTime || '').slice(0, 7)
+    const ym = (a.publishTime || a.createTime || '').slice(0, 7)
     if (!map[ym]) map[ym] = []
     map[ym].push(a)
   }
