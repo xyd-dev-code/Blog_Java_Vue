@@ -14,7 +14,12 @@
  */
 defineProps({ count: { type: Number, default: 14 } })
 
-const hues = ['rgba(125,211,252,', 'rgba(251,191,36,', 'rgba(167,243,208,', 'rgba(56,189,248,']
+const hues = [
+  'rgba(var(--theme-primary-light-rgb),',
+  'rgba(var(--theme-accent-rgb),',
+  'rgba(var(--theme-mint-rgb),',
+  'rgba(var(--theme-primary-rgb),',
+]
 const rand = (i, mod) => ((i * 173 + 41) % (mod * 10)) / 10
 const specks = Array.from({ length: 16 }, (_, i) => {
   const hue = hues[i % hues.length]

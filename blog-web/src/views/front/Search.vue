@@ -1,20 +1,20 @@
 <template>
   <div class="search-page">
-    <HeroSearch :title="'搜索结果'" :subtitle="kw ? subtitleText : '输入关键词开始探索'" />
+    <HeroSearch title="搜索结果" :subtitle="kw ? subtitleText : '输入关键词开始探索'" />
 
     <div class="container page-body">
       <!-- 空态：未输入关键词 -->
-      <el-empty v-if="!kw" description="请输入关键词以搜索站内内容" :image-size="80" />
+      <el-empty v-if="!kw" :description="wx('请输入关键词以搜索站内内容')" :image-size="80" />
 
       <!-- 已搜索但全空 -->
-      <el-empty v-else-if="!loading && grandTotal === 0" description="没有找到相关内容，换个关键词试试" :image-size="80" />
+      <el-empty v-else-if="!loading && grandTotal === 0" :description="wx('没有找到相关内容，换个关键词试试')" :image-size="80" />
 
       <template v-else>
         <!-- 文章 -->
         <section v-if="articleList.length" class="search-section">
           <header class="ss-head">
             <span class="ss-icon ss-icon-article">📰</span>
-            <h2 class="ss-title">文章</h2>
+            <h2 class="ss-title">{{ wx('文章') }}</h2>
             <span class="ss-count">{{ articleList.length }} 条</span>
           </header>
           <div class="search-result-grid">
@@ -32,7 +32,7 @@
         <section v-if="projectList.length" class="search-section">
           <header class="ss-head">
             <span class="ss-icon ss-icon-project">🚀</span>
-            <h2 class="ss-title">项目</h2>
+            <h2 class="ss-title">{{ wx('项目') }}</h2>
             <span class="ss-count">{{ projectList.length }} 条</span>
           </header>
           <div class="search-card-grid search-card-grid--projects">
@@ -49,7 +49,7 @@
         <section v-if="toolList.length" class="search-section">
           <header class="ss-head">
             <span class="ss-icon ss-icon-tool">🔧</span>
-            <h2 class="ss-title">工具</h2>
+            <h2 class="ss-title">{{ wx('工具') }}</h2>
             <span class="ss-count">{{ toolList.length }} 条</span>
           </header>
           <div class="search-card-grid search-card-grid--tools">
@@ -69,7 +69,7 @@
         <section v-if="friendList.length" class="search-section">
           <header class="ss-head">
             <span class="ss-icon ss-icon-friend">🔗</span>
-            <h2 class="ss-title">友链</h2>
+            <h2 class="ss-title">{{ wx('友链') }}</h2>
             <span class="ss-count">{{ friendList.length }} 条</span>
           </header>
           <div class="search-card-grid search-card-grid--friends">
@@ -90,7 +90,7 @@
         <section v-if="commentList.length" class="search-section">
           <header class="ss-head">
             <span class="ss-icon ss-icon-comment">💬</span>
-            <h2 class="ss-title">留言</h2>
+            <h2 class="ss-title">{{ wx('留言') }}</h2>
             <span class="ss-count">{{ commentList.length }} 条</span>
           </header>
           <div class="search-comment-grid">
@@ -114,6 +114,9 @@
 </template>
 
 <script setup>
+import { useWuxiaCopy } from '@/composables/useWuxiaCopy'
+const { wx } = useWuxiaCopy()
+
 import { ref, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
@@ -305,7 +308,7 @@ watch(() => route.query.kw, (v) => {
   align-items: center;
   gap: 10px;
   padding-bottom: 8px;
-  border-bottom: 1px dashed rgba(125, 211, 252, 0.45);
+  border-bottom: 1px dashed rgba(var(--theme-primary-light-rgb), 0.45);
 }
 .ss-icon {
   width: 30px;
@@ -315,14 +318,14 @@ watch(() => route.query.kw, (v) => {
   justify-content: center;
   border-radius: 8px;
   font-size: 16px;
-  color: #fff;
-  box-shadow: 0 2px 8px rgba(14, 165, 233, 0.2);
+  color: var(--theme-on-primary);
+  box-shadow: 0 2px 8px rgba(var(--theme-primary-strong-rgb), 0.2);
 }
-.ss-icon-article  { background: linear-gradient(135deg, #38bdf8, #6366f1); }
-.ss-icon-project  { background: linear-gradient(135deg, #a855f7, #ec4899); }
-.ss-icon-tool     { background: linear-gradient(135deg, #14b8a6, #0ea5e9); }
-.ss-icon-friend   { background: linear-gradient(135deg, #f59e0b, #fbbf24); }
-.ss-icon-comment  { background: linear-gradient(135deg, #f43f5e, #ec4899); }
+.ss-icon-article  { background: linear-gradient(135deg, var(--c-botany-500), var(--c-indigo)); }
+.ss-icon-project  { background: linear-gradient(135deg, var(--c-plum-500), var(--c-rouge-500)); }
+.ss-icon-tool     { background: linear-gradient(135deg, var(--c-teal), var(--c-botany-700)); }
+.ss-icon-friend   { background: linear-gradient(135deg, var(--c-autumn-700), var(--c-autumn-500)); }
+.ss-icon-comment  { background: linear-gradient(135deg, var(--c-rose), var(--c-rouge-500)); }
 .ss-title {
   margin: 0;
   font-size: 18px;
@@ -396,10 +399,10 @@ watch(() => route.query.kw, (v) => {
   font-size: 13px;
   color: var(--c-ink-soft);
   padding-top: 12px;
-  border-top: 1px dashed rgba(125, 211, 252, 0.4);
+  border-top: 1px dashed rgba(var(--theme-primary-light-rgb), 0.4);
 }
 .search-grand b {
-  color: #0ea5e9;
+  color: var(--c-botany-700);
   font-weight: 600;
 }
 

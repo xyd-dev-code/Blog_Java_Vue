@@ -3,9 +3,9 @@
     <el-card>
       <template #header>
         <div class="header-bar">
-          <span>文章列表</span>
+          <span>{{ wx('文章列表') }}</span>
           <div class="actions">
-            <el-input v-model="query.keyword" placeholder="搜索标题" clearable inputmode="search"
+            <el-input v-model="query.keyword" :placeholder="wx('搜索标题')" clearable inputmode="search"
               class="search-input" @keyup.enter="reload" />
             <el-select v-model="query.status" placeholder="状态" clearable
               class="status-select" @change="reload">
@@ -14,7 +14,7 @@
             </el-select>
             <el-button type="primary" @click="$router.push('/admin/articles/new')">
               <el-icon><Plus /></el-icon>
-              <span class="btn-text">新建文章</span>
+              <span class="btn-text">{{ wx('新建文章') }}</span>
             </el-button>
             <el-dropdown trigger="click" @command="onExportAll">
               <el-button :loading="exporting">
@@ -160,7 +160,7 @@
             <el-button size="small" type="danger" @click="remove(row)">删除</el-button>
           </div>
         </div>
-        <el-empty v-if="!loading && !list.length" description="暂无文章" />
+        <el-empty v-if="!loading && !list.length" :description="wx('暂无文章')" />
       </div>
 
       <div class="footer-bar">
@@ -204,6 +204,9 @@
 </template>
 
 <script setup>
+import { useWuxiaCopy } from '@/composables/useWuxiaCopy'
+const { wx } = useWuxiaCopy()
+
 import { ref, reactive, onMounted } from 'vue'
 import { Plus, Download, Upload, ArrowDown } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
@@ -416,7 +419,7 @@ onMounted(reload)
   border-radius: 12px;
   padding: 14px 16px;
   margin-bottom: 12px;
-  background: #fff;
+  background: var(--c-paper);
 }
 .art-card-head { cursor: pointer; }
 .art-card-title {

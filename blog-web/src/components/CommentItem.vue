@@ -13,7 +13,7 @@
       <!-- 精选留言徽章 -->
       <div v-if="featured" class="ci-featured-tag">
         <el-icon><Star /></el-icon>
-        <span>精选留言</span>
+        <span>{{ wx('精选留言') }}</span>
       </div>
 
       <!-- 头部 -->
@@ -32,7 +32,7 @@
         <div class="ci-meta">
           <div class="ci-name">
             {{ comment.nickname }}
-            <span v-if="comment.isAdmin" class="ci-admin">博主</span>
+            <span v-if="comment.isAdmin" class="ci-admin">{{ wx('博主') }}</span>
           </div>
           <div class="ci-time">{{ fromNow(comment.createTime) }}</div>
         </div>
@@ -101,6 +101,9 @@
 </template>
 
 <script setup>
+import { useWuxiaCopy } from '@/composables/useWuxiaCopy'
+const { wx } = useWuxiaCopy()
+
 import { computed, ref, watch } from 'vue'
 import { TopLeft, Loading, Pointer, Star, WarnTriangleFilled, ArrowDown, ArrowUp } from '@element-plus/icons-vue'
 import { fromNow, renderComment } from '@/utils/format'
@@ -194,22 +197,28 @@ const hashStr = (s) => {
 }
 
 const avatarColor = computed(() => {
-  const avColors = ['#38bdf8', '#0ea5e9', '#22d3ee', '#a78bfa', '#34d399', '#fb7185', '#818cf8']
+  const avColors = [
+    'var(--c-botany-500)', 'var(--c-botany-700)', 'var(--c-cyan-500)',
+    'var(--c-plum-300)', 'var(--c-emerald-400)', 'var(--c-rose-400)', 'var(--c-indigo-400)',
+  ]
   return avColors[Math.abs(hashStr(props.comment.nickname)) % avColors.length]
 })
 
 const pinColor = computed(() => {
-  const c = ['#fbbf24', '#f59e0b', '#0ea5e9', '#38bdf8', '#22d3ee', '#a78bfa']
+  const c = [
+    'var(--c-autumn-500)', 'var(--c-autumn-700)', 'var(--c-botany-700)',
+    'var(--c-botany-500)', 'var(--c-cyan-500)', 'var(--c-plum-300)',
+  ]
   return c[Math.abs(hashStr(props.comment.nickname)) % c.length]
 })
 
 const cardStyle = computed(() => {
   if (props.variant !== 'sticky') return {}
   const pastelColors = [
-    '#fef9e7', '#fef3c7', '#f0f9ff', '#e0f2fe',
-    '#f0fdf4', '#dcfce7', '#fef2f2', '#fee2e2',
-    '#f5f3ff', '#ede9fe', '#fff7ed', '#ffedd5',
-    '#ecfeff', '#cffafe', '#fdf2f8', '#fce7f3',
+    'var(--c-note-yellow)', 'var(--c-autumn-100)', 'var(--c-botany-50)', 'var(--c-botany-100)',
+    'var(--c-note-green)', 'var(--c-note-green-strong)', 'var(--c-danger-soft)', 'var(--c-note-red)',
+    'var(--c-note-plum)', 'var(--c-plum-100)', 'var(--c-warning-soft)', 'var(--c-note-orange)',
+    'var(--c-cyan-50)', 'var(--c-cyan-100)', 'var(--c-note-pink)', 'var(--c-note-pink-strong)',
   ]
   const idx = Math.abs(hashStr(props.comment.nickname)) % pastelColors.length
   return { backgroundColor: pastelColors[idx] }
@@ -232,13 +241,13 @@ const firstLetter = (name) => {
   align-items: center;
   gap: 4px;
   padding: 4px 12px;
-  background: linear-gradient(135deg, #fbbf24, #f59e0b);
-  color: #fff;
+  background: linear-gradient(135deg, var(--c-autumn-500), var(--c-autumn-700));
+  color: var(--theme-on-primary);
   border-radius: 999px;
   font-size: 12px;
   font-weight: 500;
   letter-spacing: 0.05em;
-  box-shadow: 0 2px 6px rgba(245, 158, 11, 0.3);
+  box-shadow: 0 2px 6px rgba(var(--theme-accent-strong-rgb), 0.3);
   z-index: 2;
 }
 .ci-featured-tag .el-icon { font-size: 12px; }
@@ -251,7 +260,7 @@ const firstLetter = (name) => {
 .comment-item.is-pending:hover { opacity: 0.85; }
 .ci-pending-tag {
   display: inline-flex; align-items: center; gap: 4px; margin-top: 8px;
-  font-size: 12px; color: var(--c-autumn-500, #c87d3e); font-style: italic;
+  font-size: 12px; color: var(--c-autumn-500); font-style: italic;
 }
 .ci-pending-tag .el-icon { animation: spin 1.4s linear infinite; }
 @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
@@ -288,8 +297,8 @@ const firstLetter = (name) => {
 /* ============================== 图钉 ============================== */
 .ci-pin {
   position: absolute; top: -6px; left: 50%; transform: translateX(-50%);
-  width: 12px; height: 12px; border-radius: 50%; border: 2px solid; background: #fff;
-  z-index: 2; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+  width: 12px; height: 12px; border-radius: 50%; border: 2px solid; background: var(--c-paper);
+  z-index: 2; box-shadow: 0 1px 2px rgba(var(--theme-black-rgb), 0.15);
   &::after { content: ''; position: absolute; top: 2px; left: 2px; right: 2px; bottom: 2px; border-radius: 50%; background: inherit; opacity: 0.5; }
 }
 .comment-item.is-reply .ci-pin { display: none; }
@@ -305,7 +314,7 @@ const firstLetter = (name) => {
   background: var(--c-line-soft);  /* img 加载中:浅灰占位 */
   img, .ci-av-fallback {
     width: 36px; height: 36px; border-radius: 50%; object-fit: cover;
-    display: flex; align-items: center; justify-content: center; color: #fff;
+    display: flex; align-items: center; justify-content: center; color: var(--theme-on-primary);
     font-size: 13px; font-weight: 600;
   }
   .ci-av-img {
@@ -320,7 +329,7 @@ const firstLetter = (name) => {
 .ci-meta { flex: 1; min-width: 0; }
 .ci-name { font-size: 13px; font-weight: 600; color: var(--c-ink); display: flex; align-items: center; gap: 6px; }
 .comment-item.is-reply .ci-name { font-size: 12px; }
-.ci-admin { font-size: 12px; padding: 1px 6px; background: linear-gradient(135deg, var(--c-botany-500), var(--c-botany-700)); color: #fff; border-radius: 999px; font-weight: 500; }
+.ci-admin { font-size: 12px; padding: 1px 6px; background: linear-gradient(135deg, var(--c-botany-500), var(--c-botany-700)); color: var(--theme-on-primary); border-radius: 999px; font-weight: 500; }
 .ci-time { font-size: 12px; color: var(--c-ink-300); margin-top: 2px; }
 
 /* ============================== 回复对象 ============================== */
@@ -353,7 +362,7 @@ const firstLetter = (name) => {
 /* ============================== 便签/文章模式回复按钮 ============================== */
 .ci-reply-btn {
   font-size: 12px; color: var(--c-ink-300); cursor: pointer; display: inline-flex; align-items: center; gap: 3px;
-  user-select: none; transition: color 0.2s; margin-top: 10px; padding-top: 8px; border-top: 1px dashed rgba(0,0,0,0.08);
+  user-select: none; transition: color 0.2s; margin-top: 10px; padding-top: 8px; border-top: 1px dashed rgba(var(--theme-black-rgb), 0.08);
   &:hover { color: var(--c-botany-500); }
   .el-icon { font-size: 12px; }
 }

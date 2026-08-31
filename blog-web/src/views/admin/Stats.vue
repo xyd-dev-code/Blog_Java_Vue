@@ -4,7 +4,7 @@
       <template #header>
         <div class="header-bar">
           <span>
-            访问统计
+            {{ wx('访问统计') }}
             <el-tag size="small" type="info" style="margin-left: 8px">
               {{ stats.date || today }}
             </el-tag>
@@ -85,7 +85,7 @@
             <template #header><span>设备类型</span></template>
             <div class="pie-chart-wrap">
               <div ref="deviceChartRef" class="pie-chart" />
-              <div v-if="!hasDeviceData" class="pie-empty">暂无访问数据</div>
+              <div v-if="!hasDeviceData" class="pie-empty">{{ wx('暂无访问数据') }}</div>
             </div>
           </el-card>
         </el-col>
@@ -97,7 +97,7 @@
             <template #header><span>操作系统</span></template>
             <div class="pie-chart-wrap">
               <div ref="osChartRef" class="pie-chart" />
-              <div v-if="!hasOsData" class="pie-empty">暂无访问数据</div>
+              <div v-if="!hasOsData" class="pie-empty">{{ wx('暂无访问数据') }}</div>
             </div>
           </el-card>
         </el-col>
@@ -106,7 +106,7 @@
             <template #header><span>浏览器</span></template>
             <div class="pie-chart-wrap">
               <div ref="browserChartRef" class="pie-chart" />
-              <div v-if="!hasBrowserData" class="pie-empty">暂无访问数据</div>
+              <div v-if="!hasBrowserData" class="pie-empty">{{ wx('暂无访问数据') }}</div>
             </div>
           </el-card>
         </el-col>
@@ -115,7 +115,7 @@
             <template #header><span>访客省份</span></template>
             <div class="pie-chart-wrap">
               <div ref="provinceChartRef" class="pie-chart" />
-              <div v-if="!hasProvinceData" class="pie-empty">暂无访问数据</div>
+              <div v-if="!hasProvinceData" class="pie-empty">{{ wx('暂无访问数据') }}</div>
             </div>
           </el-card>
         </el-col>
@@ -219,10 +219,14 @@
 </template>
 
 <script setup>
+import { useWuxiaCopy } from '@/composables/useWuxiaCopy'
+const { wx } = useWuxiaCopy()
+
 import { ref, reactive, onMounted, onUnmounted, computed, nextTick, watch } from 'vue'
 import { Refresh, ArrowRight } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { adminStatsToday, adminStatsLogs } from '@/api/admin'
+import { resolveThemeToken, resolveThemeTokens, subscribeThemeChange } from '@/utils/theme'
 // 按需引入 ECharts，仅引入饼图与必要组件以控制体积
 import * as echarts from 'echarts/core'
 import { PieChart } from 'echarts/charts'
@@ -231,10 +235,9 @@ import { CanvasRenderer } from 'echarts/renderers'
 
 echarts.use([PieChart, TitleComponent, TooltipComponent, LegendComponent, CanvasRenderer])
 
-// 晴天主题调色板：botany 蓝主调 + 暖橙辅色，按数据项依次取色
-const PIE_PALETTE = [
-  '#38bdf8', '#fbbf24', '#22d3ee', '#0ea5e9', '#f97316',
-  '#06b6d4', '#0284c7', '#f59e0b', '#67e8f9', '#84cc16'
+const PIE_PALETTE_TOKENS = [
+  '--c-botany-500', '--c-autumn-500', '--c-cyan-500', '--c-botany-700', '--c-orange-500',
+  '--c-cyan-700', '--c-botany-800', '--c-autumn-700', '--c-cyan-300', '--c-lime-500',
 ]
 
 const buildPieData = (map, nameFmt = (x) => x) => {
@@ -257,19 +260,19 @@ const pieOption = (data) => {
   if (!hasData) return {}
   return {
     tooltip: { trigger: 'item', formatter: ({ name, value, percent }) => `${name}<br/>${value} 次 (${percent}%)` },
-    legend: { bottom: 0, type: 'scroll', textStyle: { fontSize: 12, color: 'var(--c-ink-soft)' } },
-    color: PIE_PALETTE,
+    legend: { bottom: 0, type: 'scroll', textStyle: { fontSize: 12, color: resolveThemeToken('--c-ink-soft') } },
+    color: resolveThemeTokens(PIE_PALETTE_TOKENS),
     series: [{
       name: '占比',
       type: 'pie',
       radius: '62%',
       center: ['50%', '46%'],
       avoidLabelOverlap: true,
-      itemStyle: { borderRadius: 4, borderColor: '#fff', borderWidth: 2 },
+      itemStyle: { borderRadius: 4, borderColor: resolveThemeToken('--c-paper'), borderWidth: 2 },
       label: {
         formatter: ({ name, percent }) => `${name}\n${percent}%`,
         fontSize: 12,
-        color: 'var(--c-ink)'
+        color: resolveThemeToken('--c-ink')
       },
       labelLine: { length: 8, length2: 8 },
       data
@@ -333,6 +336,7 @@ const resizeCharts = () => {
 }
 // resize 防抖：ECharts resize 涉及重新布局，连续 resize 合并到 150ms 后只执行一次
 let resizeTimer = null
+let unsubscribeTheme = null
 const onResize = () => {
   if (resizeTimer) clearTimeout(resizeTimer)
   resizeTimer = setTimeout(resizeCharts, 150)
@@ -550,6 +554,7 @@ onMounted(async () => {
   browserChart = initChart(browserChartRef.value, buildPieData(stats.byBrowser))
   provinceChart = initChart(provinceChartRef.value, buildPieData(stats.byProvince, formatProvince))
   window.addEventListener('resize', onResize)
+  unsubscribeTheme = subscribeThemeChange(() => nextTick(renderCharts))
   loadAll()
   onAutoRefreshChange(autoRefresh.value)
 })
@@ -557,6 +562,7 @@ onMounted(async () => {
 onUnmounted(() => {
   if (refreshTimer) clearInterval(refreshTimer)
   window.removeEventListener('resize', onResize)
+  unsubscribeTheme?.()
   if (resizeTimer) clearTimeout(resizeTimer)
   chartObservers.forEach((ro) => ro.disconnect())
   chartObservers.length = 0
@@ -611,10 +617,10 @@ onUnmounted(() => {
   height: 100%;
   background: var(--c-autumn-500);
 }
-.kpi-pv::before    { background: linear-gradient(180deg, #ff7e5f, #feb47b); }
-.kpi-uv::before    { background: linear-gradient(180deg, #43cea2, #185a9d); }
-.kpi-peak::before  { background: linear-gradient(180deg, #ff9966, #ff5e62); }
-.kpi-refresh::before { background: linear-gradient(180deg, #614385, #516395); }
+.kpi-pv::before    { background: linear-gradient(180deg, var(--c-chart-1), var(--c-chart-2)); }
+.kpi-uv::before    { background: linear-gradient(180deg, var(--c-chart-3), var(--c-chart-4)); }
+.kpi-peak::before  { background: linear-gradient(180deg, var(--c-chart-5), var(--c-chart-6)); }
+.kpi-refresh::before { background: linear-gradient(180deg, var(--c-chart-7), var(--c-chart-8)); }
 .kpi-label { font-size: 13px; color: var(--c-ink-soft); }
 .kpi-value { font-size: 30px; font-weight: 700; line-height: 1.1; color: var(--c-ink); font-variant-numeric: tabular-nums; }
 .kpi-sub { font-size: 12px; color: var(--c-ink-soft); }
@@ -642,7 +648,7 @@ onUnmounted(() => {
 .hour-bar {
   width: 100%;
   max-width: 28px;
-  background: linear-gradient(180deg, var(--c-autumn-400, #e8a87c), var(--c-autumn-600, #a85d3a));
+  background: linear-gradient(180deg, var(--c-autumn-400, var(--c-chart-9)), var(--c-autumn-600, var(--c-chart-10)));
   border-radius: 4px 4px 0 0;
   display: flex;
   align-items: flex-start;
@@ -653,7 +659,7 @@ onUnmounted(() => {
 }
 .hour-num {
   font-size: 12px;
-  color: #fff;
+  color: var(--theme-on-primary);
   font-variant-numeric: tabular-nums;
   transform: scale(0.85);
 }
@@ -678,7 +684,7 @@ onUnmounted(() => {
   font-size: 14px;
   font-weight: 500;
   color: var(--c-ink);
-  background: #ffffff;
+  background: var(--c-paper);
   pointer-events: none;
 }
 
@@ -720,10 +726,10 @@ onUnmounted(() => {
   border-radius: var(--radius-sm, 6px);
 }
 .group-header:hover {
-  background-color: rgba(56, 189, 248, 0.06);
+  background-color: rgba(var(--theme-primary-rgb), 0.06);
 }
 .group-header.is-expanded {
-  background-color: rgba(56, 189, 248, 0.04);
+  background-color: rgba(var(--theme-primary-rgb), 0.04);
 }
 .gh-toggle {
   display: flex;
@@ -774,7 +780,7 @@ onUnmounted(() => {
   transition: background-color .1s ease;
 }
 .detail-row:hover {
-  background-color: rgba(0, 0, 0, 0.02);
+  background-color: rgba(var(--theme-black-rgb), 0.02);
 }
 .dr-index {
   width: 28px;

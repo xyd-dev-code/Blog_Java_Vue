@@ -3,8 +3,8 @@
     <el-card>
       <template #header>
         <div class="header-bar">
-          <span>标签管理</span>
-          <el-button type="primary" @click="openForm()"><el-icon><Plus /></el-icon> 新建标签</el-button>
+          <span>{{ wx('标签管理') }}</span>
+          <el-button type="primary" @click="openForm()"><el-icon><Plus /></el-icon> {{ wx('新建标签') }}</el-button>
         </div>
       </template>
       <div class="toolbar">
@@ -43,7 +43,7 @@
       />
     </el-card>
 
-    <el-dialog v-model="dlg" :title="form.id ? '编辑标签' : '新建标签'" width="min(420px, 92vw)">
+    <el-dialog v-model="dlg" :title="form.id ? wx('编辑标签') : wx('新建标签')" width="min(420px, 92vw)">
       <el-form :model="form" label-width="80px">
         <el-form-item label="名称" required><el-input v-model="form.name" /></el-form-item>
         <el-form-item label="Slug"><el-input v-model="form.slug" placeholder="留空自动生成" /></el-form-item>
@@ -57,6 +57,9 @@
 </template>
 
 <script setup>
+import { useWuxiaCopy } from '@/composables/useWuxiaCopy'
+const { wx } = useWuxiaCopy()
+
 import { ref, reactive, onMounted } from 'vue'
 import { Plus } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'

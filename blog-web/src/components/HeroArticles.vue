@@ -21,7 +21,7 @@
     <div class="container ha-inner">
       <p class="ha-eyebrow">articles</p>
       <h1 class="ha-title">
-        {{ title }}<span class="ha-cursor">|</span>
+        <WuxiaHeadingLettering :text="title" /><span class="ha-cursor">|</span>
       </h1>
       <p class="ha-sub" v-if="subtitle">{{ subtitle }}</p>
     </div>
@@ -29,6 +29,7 @@
 </template>
 
 <script setup>
+import WuxiaHeadingLettering from '@/components/WuxiaHeadingLettering.vue'
 import GodRays from '@/components/effects/GodRays.vue'
 defineProps({
   title: { type: String, required: true },
@@ -44,8 +45,8 @@ defineProps({
   /* 不铺不透明底色——让全局天空渐变透上来实现一体感；
      只留极淡的 alpha 光斑作为装饰 */
   background:
-    radial-gradient(ellipse 120% 80% at 50% -10%, rgba(56,189,248,0.08) 0%, transparent 60%),
-    radial-gradient(ellipse 60% 50% at 20% 80%, rgba(251,191,36,0.04) 0%, transparent 50%);
+    radial-gradient(ellipse 120% 80% at 50% -10%, rgba(var(--theme-primary-rgb), 0.08) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 20% 80%, rgba(var(--theme-accent-rgb), 0.04) 0%, transparent 50%);
   padding: 36px 0 24px;
   text-align: center;
   margin-bottom: 16px;
@@ -62,7 +63,7 @@ defineProps({
   top: -30%;
   width: 1px;
   height: 160%;
-  background: linear-gradient(180deg, transparent 0%, rgba(56,189,248,0.25) 30%, rgba(56,189,248,0.15) 60%, transparent 100%);
+  background: linear-gradient(180deg, transparent 0%, rgba(var(--theme-primary-rgb), 0.25) 30%, rgba(var(--theme-primary-rgb), 0.15) 60%, transparent 100%);
   transform: rotate(5deg);
   pointer-events: none;
 }
@@ -79,9 +80,9 @@ defineProps({
   position: absolute;
   width: 20px;
   height: 26px;
-  background: rgba(255,255,255,0.55);
+  background: rgba(var(--theme-paper-rgb), 0.55);
   border-radius: 2px 8px 2px 8px;
-  box-shadow: 0 2px 8px rgba(56,189,248,0.1);
+  box-shadow: 0 2px 8px rgba(var(--theme-primary-rgb), 0.1);
   pointer-events: none;
   animation: page-fall linear infinite;
 }
@@ -111,7 +112,7 @@ defineProps({
   width: 120px;
   height: 120px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(251,191,36,0.2) 0%, rgba(251,191,36,0.05) 50%, transparent 70%);
+  background: radial-gradient(circle, rgba(var(--theme-accent-rgb), 0.2) 0%, rgba(var(--theme-accent-rgb), 0.05) 50%, transparent 70%);
   filter: blur(15px);
   pointer-events: none;
   animation: float 8s ease-in-out infinite;

@@ -64,7 +64,9 @@ public class AdminSiteController {
             // 关于页原有技术栈配置
             "aboutSkills",
             // 天气卡：博主所在城市（访客定位失败时的兜底）
-            "weatherCity", "weatherLat", "weatherLon"
+            "weatherCity", "weatherLat", "weatherLon",
+            // 网站主题（站点级，仅管理员可保存）
+            "siteTheme"
     );
 
     public AdminSiteController(SiteConfigService siteConfigService) {
@@ -97,6 +99,9 @@ public class AdminSiteController {
             if (key.length() > 100) throw new BizException("配置 key 过长");
             String v = e.getValue();
             if (v != null && v.length() > 5000) throw new BizException("配置 value 过长: " + key);
+            if ("siteTheme".equals(key) && !SiteConfigService.isSupportedSiteTheme(v)) {
+                throw new BizException("不支持的网站主题: " + v);
+            }
             // URL 类 key 强制 https?:// + 公网 IP(纵深防御,SiteController.favicon 已二次校验)
             if (isUrlKey(key)) {
                 if (v != null && !v.isBlank()) {

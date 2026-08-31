@@ -92,14 +92,14 @@ onBeforeUnmount(() => {
   width: var(--w, 180px);
   height: calc(var(--w, 180px) * 0.30);
   border-radius: 999px;
-  background: #fff;
+  background: var(--c-paper);
   will-change: transform;
 
   &::before,
   &::after {
     content: '';
     position: absolute;
-    background: #fff;
+    background: var(--c-paper);
     border-radius: 50%;
   }
   /* 左侧高鼓包 */
@@ -127,12 +127,12 @@ onBeforeUnmount(() => {
 .pc-mid {
   opacity: 0.62;
   filter: blur(1px);
-  box-shadow: 0 10px 26px rgba(125, 211, 252, 0.14);
+  box-shadow: 0 10px 26px rgba(var(--theme-primary-light-rgb), 0.14);
 }
 /* 近景：清晰、有投影 */
 .pc-near {
   opacity: 0.78;
-  filter: drop-shadow(0 12px 28px rgba(125, 211, 252, 0.20));
+  filter: drop-shadow(0 12px 28px rgba(var(--theme-primary-light-rgb), 0.20));
 }
 
 /* 移动端减少云朵数量，避免遮挡与性能损耗 */

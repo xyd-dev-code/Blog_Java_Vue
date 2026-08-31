@@ -8,7 +8,7 @@
         <span class="loader-dot"></span>
         <span class="loader-dot"></span>
         <span class="loader-dot"></span>
-        <span>正在召唤远方的朋友…</span>
+        <span>{{ wx('正在召唤远方的朋友…') }}</span>
       </div>
 
       <!-- 召唤卡（晴空 v2 渐变描边） -->
@@ -25,20 +25,20 @@
         </div>
         <div class="fh-left">
           <span class="section-eyebrow">friends wanted</span>
-          <h2 class="fh-title">欢迎互换友链 <span class="fh-title-spark">✦</span></h2>
+          <h2 class="fh-title">{{ wx('欢迎互换友链') }} <span class="fh-title-spark">✦</span></h2>
           <p class="fh-desc">
-            如果你的博客也写点代码、记点生活，欢迎留言交换。
-            <br />愿这条风，把有趣的灵魂串在一起。
+            {{ wx('如果你的博客也写点代码、记点生活，欢迎留言交换。') }}
+            <br />{{ wx('愿这条风，把有趣的灵魂串在一起。') }}
           </p>
         </div>
         <div class="fh-right">
           <div class="fh-stat">
             <span class="fh-stat-num">{{ published.length }}</span>
-            <span class="fh-stat-label">位朋友</span>
+            <span class="fh-stat-label">{{ wx('位朋友') }}</span>
           </div>
           <button class="fh-apply-btn" v-magnetic="{ strength: 5 }" @click="openApplyDialog">
             <el-icon><Link /></el-icon>
-            <span>申请友链</span>
+            <span>{{ wx('申请友链') }}</span>
           </button>
         </div>
       </GradientBorderCard>
@@ -98,7 +98,7 @@
                   </div>
                 </div>
                 <p v-if="f.description" class="desc">{{ f.description }}</p>
-                <p v-else class="desc desc-empty">这位朋友比较低调，暂无简介～</p>
+                <p v-else class="desc desc-empty">{{ wx('这位朋友比较低调，暂无简介～') }}</p>
 
                 <div class="fc-foot">
                   <span class="fc-tag">
@@ -130,7 +130,7 @@
                   </svg>
                 </span>
                 <p class="ph-text">虚位以待</p>
-                <p class="ph-sub">下一位朋友，会是你吗？</p>
+                <p class="ph-sub">{{ wx('下一位朋友，会是你吗？') }}</p>
               </div>
             </div>
           </div>
@@ -145,11 +145,11 @@
           <span class="es-cloud es-cloud-2"></span>
           <div class="es-hill"></div>
         </div>
-        <h3 class="empty-title">这片晴空下还没有友链</h3>
-        <p class="empty-sub">换种方式遇见：发起一次申请，把有趣的灵魂串起来。</p>
+        <h3 class="empty-title">{{ wx('这片晴空下还没有友链') }}</h3>
+        <p class="empty-sub">{{ wx('换种方式遇见：发起一次申请，把有趣的灵魂串起来。') }}</p>
         <button class="fh-apply-btn fh-apply-btn-lg" v-magnetic="{ strength: 6 }" @click="openApplyDialog">
           <el-icon><Link /></el-icon>
-          <span>申请成为第一位朋友</span>
+          <span>{{ wx('申请成为第一位朋友') }}</span>
         </button>
       </div>
 
@@ -161,8 +161,8 @@
         </div>
         <div class="invite-quote">「</div>
         <p class="invite-text">
-          愿这条风，把有趣的灵魂串在一起。<br />
-          <span class="invite-hint">点击召唤卡里的「申请友链」即可加入</span>
+          {{ wx('愿这条风，把有趣的灵魂串在一起。') }}<br />
+          <span class="invite-hint">{{ wx('点击召唤卡里的「申请友链」即可加入') }}</span>
         </p>
         <div class="invite-quote invite-quote-r">」</div>
       </div>
@@ -171,7 +171,7 @@
     <!-- 申请友链弹窗 -->
     <el-dialog
       v-model="applyDialogVisible"
-      title="申请友链"
+      :title="wx('申请友链')"
       width="min(520px, 92vw)"
       :close-on-click-modal="false"
       :append-to-body="false"
@@ -185,7 +185,7 @@
         @submit.prevent
       >
         <el-form-item label="站点名称" prop="name">
-          <el-input v-model="applyForm.name" placeholder="你的博客名称" maxlength="50" />
+          <el-input v-model="applyForm.name" :placeholder="wx('你的博客名称')" maxlength="50" />
         </el-form-item>
         <el-form-item label="站点链接" prop="url">
           <el-input v-model="applyForm.url" placeholder="https://" maxlength="200" />
@@ -198,7 +198,7 @@
             v-model="applyForm.description"
             type="textarea"
             :rows="3"
-            placeholder="简单介绍一下你的博客（最多 200 字）"
+            :placeholder="wx('简单介绍一下你的博客（最多 200 字）')"
             maxlength="200"
             show-word-limit
           />
@@ -209,13 +209,16 @@
       </el-form>
       <template #footer>
         <el-button @click="applyDialogVisible = false">取消</el-button>
-        <el-button type="primary" :loading="applying" @click="submitApply">提交申请</el-button>
+        <el-button type="primary" :loading="applying" @click="submitApply">{{ wx('提交申请') }}</el-button>
       </template>
     </el-dialog>
   </div>
 </template>
 
 <script setup>
+import { useWuxiaCopy } from '@/composables/useWuxiaCopy'
+const { wx } = useWuxiaCopy()
+
 import { ref, reactive, computed, onMounted, onBeforeUnmount } from 'vue'
 import { Link } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
@@ -387,7 +390,7 @@ const submitApply = async () => {
       description: applyForm.description,
       email: applyForm.email || undefined
     })
-    ElMessage.success('友链申请已提交，审核通过后将展示在友链页面')
+    ElMessage.success(wx('友链申请已提交，审核通过后将展示在友链页面'))
     applyDialogVisible.value = false
   } catch (e) {
     // 错误已在拦截器中统一处理
@@ -433,9 +436,9 @@ const submitApply = async () => {
   gap: 20px;
   flex-wrap: wrap;
   background:
-    radial-gradient(ellipse 60% 70% at 0% 50%, rgba(56,189,248,0.12) 0%, transparent 60%),
-    radial-gradient(ellipse 50% 70% at 100% 0%, rgba(251,191,36,0.10) 0%, transparent 60%),
-    linear-gradient(135deg, #eaf5ff 0%, #fff7e8 100%);
+    radial-gradient(ellipse 60% 70% at 0% 50%, rgba(var(--theme-primary-rgb), 0.12) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 70% at 100% 0%, rgba(var(--theme-accent-rgb), 0.10) 0%, transparent 60%),
+    linear-gradient(135deg, var(--c-hero-cool) 0%, var(--c-hero-warm) 100%);
   margin-bottom: 14px;
   overflow: hidden;
 }
@@ -444,7 +447,7 @@ const submitApply = async () => {
 .fh-decor { position: absolute; inset: 0; pointer-events: none; }
 .fh-cloud {
   position: absolute;
-  background: rgba(255,255,255,0.6);
+  background: rgba(var(--theme-paper-rgb), 0.6);
   border-radius: 100px;
   filter: blur(2px);
   animation: cloud-drift 18s linear infinite;
@@ -464,20 +467,20 @@ const submitApply = async () => {
   font-size: 12px;
   letter-spacing: 0.22em;
   text-transform: uppercase;
-  color: #06b6d4;
+  color: var(--c-cyan-700);
   font-weight: 600;
   margin-bottom: 10px;
   padding: 3px 10px;
   border-radius: 999px;
-  background: rgba(6, 182, 212, 0.08);
-  border: 1px solid rgba(6, 182, 212, 0.18);
+  background: rgba(var(--theme-cyan-strong-rgb), 0.08);
+  border: 1px solid rgba(var(--theme-cyan-strong-rgb), 0.18);
 }
 .fh-title {
   font-family: var(--font-serif);
   font-size: 26px;
   font-weight: 600;
   margin: 0 0 8px;
-  background: linear-gradient(135deg, #0369a1 0%, #38bdf8 55%, #f59e0b 100%);
+  background: linear-gradient(135deg, var(--c-botany-900) 0%, var(--c-botany-500) 55%, var(--c-autumn-700) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
           background-clip: text;
@@ -489,8 +492,8 @@ const submitApply = async () => {
   font-size: 22px;
   -webkit-text-fill-color: initial;
   background: none;
-  color: #fbbf24;
-  filter: drop-shadow(0 0 6px rgba(251,191,36,0.45));
+  color: var(--c-autumn-500);
+  filter: drop-shadow(0 0 6px rgba(var(--theme-accent-rgb), 0.45));
   animation: twinkle 3s ease-in-out infinite;
 }
 @keyframes twinkle {
@@ -519,7 +522,7 @@ const submitApply = async () => {
   font-size: 42px;
   font-weight: 700;
   line-height: 1;
-  background: linear-gradient(135deg, #38bdf8, #fbbf24);
+  background: linear-gradient(135deg, var(--c-botany-500), var(--c-autumn-500));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
           background-clip: text;
@@ -540,18 +543,18 @@ const submitApply = async () => {
   padding: 8px 20px;
   font-size: 13px;
   font-weight: 500;
-  color: #fff;
-  background: linear-gradient(135deg, #38bdf8, #0ea5e9);
+  color: var(--theme-on-primary);
+  background: linear-gradient(135deg, var(--c-botany-500), var(--c-botany-700));
   border: none;
   border-radius: 999px;
   cursor: pointer;
-  box-shadow: 0 2px 10px rgba(14, 165, 233, 0.3);
+  box-shadow: 0 2px 10px rgba(var(--theme-primary-strong-rgb), 0.3);
   transition: all 0.3s ease;
   font-family: inherit;
 }
 .fh-apply-btn:hover {
   transform: translateY(-1px);
-  box-shadow: 0 6px 20px rgba(14, 165, 233, 0.4);
+  box-shadow: 0 6px 20px rgba(var(--theme-primary-strong-rgb), 0.4);
 }
 .fh-apply-btn:active { transform: translateY(0); }
 .fh-apply-btn-lg { padding: 12px 28px; font-size: 14px; }
@@ -574,8 +577,8 @@ const submitApply = async () => {
   top: 18px; right: 30px;
   width: 70px; height: 70px;
   border-radius: 50%;
-  background: radial-gradient(circle, #fde68a 0%, #fbbf24 50%, #f59e0b 100%);
-  box-shadow: 0 0 30px rgba(251,191,36,0.45);
+  background: radial-gradient(circle, var(--c-autumn-200) 0%, var(--c-autumn-500) 50%, var(--c-autumn-700) 100%);
+  box-shadow: 0 0 30px rgba(var(--theme-accent-rgb), 0.45);
   animation: sun-pulse 4s ease-in-out infinite;
 }
 @keyframes sun-pulse {
@@ -584,9 +587,9 @@ const submitApply = async () => {
 }
 .es-cloud {
   position: absolute;
-  background: rgba(255,255,255,0.85);
+  background: rgba(var(--theme-paper-rgb), 0.85);
   border-radius: 100px;
-  box-shadow: 0 4px 12px rgba(56,189,248,0.08);
+  box-shadow: 0 4px 12px rgba(var(--theme-primary-rgb), 0.08);
 }
 .es-cloud-1 {
   width: 90px; height: 22px;
@@ -602,7 +605,7 @@ const submitApply = async () => {
   position: absolute;
   bottom: 0; left: 0; right: 0;
   height: 60px;
-  background: linear-gradient(180deg, rgba(56,189,248,0.10), rgba(14,165,233,0.18));
+  background: linear-gradient(180deg, rgba(var(--theme-primary-rgb), 0.10), rgba(var(--theme-primary-strong-rgb), 0.18));
   border-radius: 50% 50% 0 0 / 80% 80% 0 0;
   transform: scaleX(1.4);
 }
@@ -642,7 +645,7 @@ const submitApply = async () => {
   left: 0; top: 50%;
   transform: translateY(-50%);
   width: 4px; height: 22px;
-  background: linear-gradient(180deg, #38bdf8, #fbbf24);
+  background: linear-gradient(180deg, var(--c-botany-500), var(--c-autumn-500));
   border-radius: 2px;
 }
 .fg-head-left {
@@ -652,7 +655,7 @@ const submitApply = async () => {
 }
 .fg-icon {
   font-size: 20px;
-  color: #f59e0b;
+  color: var(--c-autumn-700);
   line-height: 1;
 }
 .fg-title {
@@ -670,9 +673,9 @@ const submitApply = async () => {
   height: 20px;
   padding: 0 7px;
   font-size: 12px;
-  color: #0369a1;
-  background: rgba(56,189,248,0.10);
-  border: 1px solid rgba(56,189,248,0.22);
+  color: var(--c-botany-900);
+  background: rgba(var(--theme-primary-rgb), 0.10);
+  border: 1px solid rgba(var(--theme-primary-rgb), 0.22);
   border-radius: 999px;
   font-weight: 500;
 }
@@ -713,13 +716,13 @@ const submitApply = async () => {
   position: absolute;
   left: 0; bottom: 0;
   width: 0; height: 3px;
-  background: linear-gradient(90deg, #38bdf8, #fbbf24);
+  background: linear-gradient(90deg, var(--c-botany-500), var(--c-autumn-500));
   transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   border-radius: 0 3px 0 0;
 }
-.friend-card.group-friend::after { background: linear-gradient(90deg, #fbbf24, #f59e0b); }
-.friend-card.group-net::after   { background: linear-gradient(90deg, #38bdf8, #22d3ee); }
-.friend-card.group-star::after  { background: linear-gradient(90deg, #a855f7, #ec4899); }
+.friend-card.group-friend::after { background: linear-gradient(90deg, var(--c-autumn-500), var(--c-autumn-700)); }
+.friend-card.group-net::after   { background: linear-gradient(90deg, var(--c-botany-500), var(--c-cyan-500)); }
+.friend-card.group-star::after  { background: linear-gradient(90deg, var(--c-plum-500), var(--c-rouge-500)); }
 .friend-card:hover::after { width: 100%; }
 
 .fc-top {
@@ -736,7 +739,7 @@ const submitApply = async () => {
   width: 100%; height: 100%;
   border-radius: 50%;
   object-fit: cover;
-  background: #f1f5f9;
+  background: var(--c-ink-100);
   position: relative;
   z-index: 2;
   transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
@@ -745,29 +748,29 @@ const submitApply = async () => {
 .avatar-placeholder {
   display: grid;
   place-items: center;
-  background: linear-gradient(135deg, #38bdf8, #22d3ee);
-  color: #fff;
+  background: linear-gradient(135deg, var(--c-botany-500), var(--c-cyan-500));
+  color: var(--theme-on-primary);
   font-family: var(--font-serif);
   font-size: 22px;
   font-weight: 600;
 }
 .friend-card.group-friend .avatar-placeholder {
-  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+  background: linear-gradient(135deg, var(--c-autumn-500), var(--c-autumn-700));
 }
 .friend-card.group-star .avatar-placeholder {
-  background: linear-gradient(135deg, #a855f7, #ec4899);
+  background: linear-gradient(135deg, var(--c-plum-500), var(--c-rouge-500));
 }
 .fc-avatar-ring {
   position: absolute;
   inset: -3px;
   border-radius: 50%;
-  background: linear-gradient(135deg, rgba(56,189,248,0.6), rgba(251,191,36,0.6));
+  background: linear-gradient(135deg, rgba(var(--theme-primary-rgb), 0.6), rgba(var(--theme-accent-rgb), 0.6));
   z-index: 1;
   opacity: 0.55;
   transition: opacity 0.3s ease, transform 0.4s ease;
 }
-.friend-card.group-friend .fc-avatar-ring { background: linear-gradient(135deg, rgba(251,191,36,0.6), rgba(245,158,11,0.6)); }
-.friend-card.group-star .fc-avatar-ring  { background: linear-gradient(135deg, rgba(168,85,247,0.6), rgba(236,72,153,0.6)); }
+.friend-card.group-friend .fc-avatar-ring { background: linear-gradient(135deg, rgba(var(--theme-accent-rgb), 0.6), rgba(var(--theme-accent-strong-rgb), 0.6)); }
+.friend-card.group-star .fc-avatar-ring  { background: linear-gradient(135deg, rgba(var(--theme-plum-rgb), 0.6), rgba(var(--theme-rouge-rgb), 0.6)); }
 .friend-card:hover .avatar { transform: scale(1.05) rotate(-3deg); }
 .friend-card:hover .fc-avatar-ring { opacity: 1; transform: scale(1.08); }
 
@@ -786,7 +789,7 @@ const submitApply = async () => {
   align-items: center;
   gap: 6px;
 }
-.friend-card:hover .meta h4 { color: #0369a1; }
+.friend-card:hover .meta h4 { color: var(--c-botany-900); }
 .meta-badge {
   display: inline-flex;
   align-items: center;
@@ -794,9 +797,9 @@ const submitApply = async () => {
   font-family: var(--font-sans);
   font-size: 12px;
   font-weight: 500;
-  color: #b45309;
-  background: linear-gradient(135deg, rgba(251,191,36,0.18), rgba(245,158,11,0.10));
-  border: 1px solid rgba(245,158,11,0.30);
+  color: var(--c-autumn-900);
+  background: linear-gradient(135deg, rgba(var(--theme-accent-rgb), 0.18), rgba(var(--theme-accent-strong-rgb), 0.10));
+  border: 1px solid rgba(var(--theme-accent-strong-rgb), 0.30);
   border-radius: 999px;
   letter-spacing: 0.04em;
   flex-shrink: 0;
@@ -804,7 +807,7 @@ const submitApply = async () => {
 }
 .friend-card .meta .url {
   font-size: 12px;
-  color: #94a3b8;
+  color: var(--c-ink-300);
   margin: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -814,7 +817,7 @@ const submitApply = async () => {
   gap: 4px;
   transition: color 0.2s ease;
 }
-.friend-card:hover .meta .url { color: #0ea5e9; }
+.friend-card:hover .meta .url { color: var(--c-botany-700); }
 
 .desc {
   font-size: 13px;
@@ -827,7 +830,7 @@ const submitApply = async () => {
   overflow: hidden;
   min-height: 42px;
 }
-.desc-empty { color: #cbd5e1; font-style: italic; }
+.desc-empty { color: var(--c-ink-200); font-style: italic; }
 
 .fc-foot {
   display: flex;
@@ -847,13 +850,13 @@ const submitApply = async () => {
 .fc-tag-dot {
   width: 6px; height: 6px;
   border-radius: 50%;
-  background: #38bdf8;
+  background: var(--c-botany-500);
   box-shadow: 0 0 6px currentColor;
 }
-.tag-friend { background: #fbbf24; color: #f59e0b; }
-.tag-net    { background: #38bdf8; color: #0ea5e9; }
-.tag-star   { background: #a855f7; color: #a855f7; }
-.tag-misc   { background: #94a3b8; color: #64748b; }
+.tag-friend { background: var(--c-autumn-500); color: var(--c-autumn-700); }
+.tag-net    { background: var(--c-botany-500); color: var(--c-botany-700); }
+.tag-star   { background: var(--c-plum-500); color: var(--c-plum-500); }
+.tag-misc   { background: var(--c-ink-300); color: var(--c-ink-400); }
 
 .fc-arrow {
   display: inline-flex;
@@ -861,15 +864,15 @@ const submitApply = async () => {
   justify-content: center;
   width: 28px; height: 28px;
   border-radius: 50%;
-  color: #94a3b8;
-  background: rgba(148,163,184,0.08);
+  color: var(--c-ink-300);
+  background: rgba(var(--theme-neutral-muted-rgb), 0.08);
   transition: all 0.3s ease;
 }
 .friend-card:hover .fc-arrow {
-  color: #fff;
-  background: linear-gradient(135deg, #38bdf8, #0ea5e9);
+  color: var(--theme-on-primary);
+  background: linear-gradient(135deg, var(--c-botany-500), var(--c-botany-700));
   transform: translateX(2px) rotate(0deg);
-  box-shadow: 0 4px 12px rgba(14,165,233,0.3);
+  box-shadow: 0 4px 12px rgba(var(--theme-primary-strong-rgb), 0.3);
 }
 
 /* ============ 占位卡 ============ */
@@ -882,11 +885,11 @@ const submitApply = async () => {
   position: relative;
   height: 100%;
   min-height: 168px;
-  border: 2px dashed rgba(56,189,248,0.30);
+  border: 2px dashed rgba(var(--theme-primary-rgb), 0.30);
   border-radius: 18px;
   background:
     repeating-linear-gradient(45deg,
-      rgba(56,189,248,0.03) 0 6px,
+      rgba(var(--theme-primary-rgb), 0.03) 0 6px,
       transparent 6px 12px);
   display: flex;
   flex-direction: column;
@@ -898,14 +901,14 @@ const submitApply = async () => {
   transition: all 0.3s ease;
 }
 .friend-placeholder:hover {
-  border-color: rgba(56,189,248,0.55);
+  border-color: rgba(var(--theme-primary-rgb), 0.55);
   background:
     repeating-linear-gradient(45deg,
-      rgba(56,189,248,0.06) 0 6px,
+      rgba(var(--theme-primary-rgb), 0.06) 0 6px,
       transparent 6px 12px);
 }
 .ph-cloud {
-  color: rgba(56,189,248,0.35);
+  color: rgba(var(--theme-primary-rgb), 0.35);
   animation: float 6s ease-in-out infinite;
 }
 .ph-text {
@@ -917,7 +920,7 @@ const submitApply = async () => {
 }
 .ph-sub {
   font-size: 12px;
-  color: #94a3b8;
+  color: var(--c-ink-300);
   margin: 0;
   text-align: center;
 }
@@ -929,10 +932,10 @@ const submitApply = async () => {
   padding: 22px 28px;
   border-radius: 18px;
   background:
-    radial-gradient(ellipse 60% 100% at 0% 50%, rgba(56,189,248,0.10) 0%, transparent 70%),
-    radial-gradient(ellipse 60% 100% at 100% 50%, rgba(251,191,36,0.10) 0%, transparent 70%),
-    linear-gradient(135deg, rgba(255,255,255,0.9), rgba(255,255,255,0.7));
-  border: 1px solid rgba(56,189,248,0.18);
+    radial-gradient(ellipse 60% 100% at 0% 50%, rgba(var(--theme-primary-rgb), 0.10) 0%, transparent 70%),
+    radial-gradient(ellipse 60% 100% at 100% 50%, rgba(var(--theme-accent-rgb), 0.10) 0%, transparent 70%),
+    linear-gradient(135deg, rgba(var(--theme-paper-rgb), 0.9), rgba(var(--theme-paper-rgb), 0.7));
+  border: 1px solid rgba(var(--theme-primary-rgb), 0.18);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -956,20 +959,20 @@ const submitApply = async () => {
 .cta-orb-1 {
   width: 160px; height: 160px;
   top: -60px; right: 30%;
-  background: rgba(56,189,248,0.12);
+  background: rgba(var(--theme-primary-rgb), 0.12);
   animation: float 8s ease-in-out infinite;
 }
 .cta-orb-2 {
   width: 120px; height: 120px;
   bottom: -50px; right: 8%;
-  background: rgba(251,191,36,0.12);
+  background: rgba(var(--theme-accent-rgb), 0.12);
   animation: float 10s ease-in-out infinite -3s;
 }
 .invite-quote {
   font-family: var(--font-serif);
   font-size: 32px;
   line-height: 1;
-  color: rgba(56,189,248,0.5);
+  color: rgba(var(--theme-primary-rgb), 0.5);
   font-weight: 300;
   flex-shrink: 0;
   position: relative;
@@ -989,7 +992,7 @@ const submitApply = async () => {
   margin-top: 4px;
   font-family: var(--font-sans);
   font-size: 12px;
-  color: #0ea5e9;
+  color: var(--c-botany-700);
   letter-spacing: 0.06em;
 }
 

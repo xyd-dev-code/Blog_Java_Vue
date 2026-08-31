@@ -3,21 +3,21 @@
     <el-card>
       <template #header>
         <div class="card-header">
-          <span>工具管理</span>
+          <span>{{ wx('工具管理') }}</span>
           <div class="toolbar">
             <el-select v-model="filters.category" placeholder="分类" clearable style="width: 130px" @change="reload">
               <el-option v-for="c in categoryOptions" :key="c.value" :label="c.label" :value="c.value" />
             </el-select>
             <el-select v-model="filters.status" placeholder="状态" clearable style="width: 120px" @change="reload">
               <el-option label="正常" :value="1" />
-              <el-option label="维护中" :value="2" />
+              <el-option :label="wx('维护中')" :value="2" />
               <el-option label="预告" :value="3" />
               <el-option label="下线" :value="0" />
             </el-select>
             <el-input v-model="filters.keyword" placeholder="搜索名称 / slug" clearable inputmode="search" style="width: 200px"
               @keyup.enter="reload" @clear="reload" />
             <el-button @click="reload">查询</el-button>
-            <el-button type="primary" @click="openForm()"><el-icon><Plus /></el-icon> 新建工具</el-button>
+            <el-button type="primary" @click="openForm()"><el-icon><Plus /></el-icon> {{ wx('新建工具') }}</el-button>
           </div>
         </div>
       </template>
@@ -88,7 +88,7 @@
     </el-card>
 
     <!-- 新建/编辑弹窗 -->
-    <el-dialog v-model="dlg" :title="form.id ? '编辑工具' : '新建工具'" width="min(640px, 92vw)" destroy-on-close
+    <el-dialog v-model="dlg" :title="form.id ? wx('编辑工具') : wx('新建工具')" width="min(640px, 92vw)" destroy-on-close
       @close="resetForm">
       <el-form :model="form" :rules="rules" ref="formRef" label-width="80px">
         <el-form-item label="名称" prop="name">
@@ -137,7 +137,7 @@
         <el-form-item label="状态">
           <el-select v-model="form.status" placeholder="状态" style="width: 160px">
             <el-option label="正常" :value="1" />
-            <el-option label="维护中" :value="2" />
+            <el-option :label="wx('维护中')" :value="2" />
             <el-option label="预告" :value="3" />
             <el-option label="下线" :value="0" />
           </el-select>
@@ -160,6 +160,9 @@
 </template>
 
 <script setup>
+import { useWuxiaCopy } from '@/composables/useWuxiaCopy'
+const { wx } = useWuxiaCopy()
+
 import { ref, reactive, onMounted } from 'vue'
 import { Plus } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
@@ -354,8 +357,8 @@ onMounted(() => { loadCategories(); load() })
   height: 48px;
   border-radius: 10px;
   object-fit: cover;
-  border: 1px solid var(--c-line, #e2e8f0);
-  background: #f8fafc;
+  border: 1px solid var(--c-line, var(--c-line));
+  background: var(--c-ink-50);
 }
 .card-header {
   display: flex;
@@ -366,7 +369,7 @@ onMounted(() => { loadCategories(); load() })
 .card-header > span {
   font-weight: 600;
   font-size: 15px;
-  color: var(--c-ink, #1e293b);
+  color: var(--c-ink, var(--c-ink-800));
 }
 .toolbar {
   display: flex;
@@ -376,18 +379,18 @@ onMounted(() => { loadCategories(); load() })
 }
 .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 
-.sort-num { font-family: 'Consolas', monospace; color: #475569; font-size: 12px; }
-.slug { font-family: 'Consolas', 'Monaco', monospace; font-size: 12px; color: #0369a1; background: rgba(56,189,248,0.08); padding: 1px 6px; border-radius: 4px; }
+.sort-num { font-family: 'Consolas', monospace; color: var(--c-ink-500); font-size: 12px; }
+.slug { font-family: 'Consolas', 'Monaco', monospace; font-size: 12px; color: var(--c-botany-900); background: rgba(var(--theme-primary-rgb), 0.08); padding: 1px 6px; border-radius: 4px; }
 .type-ext {
   font-size: 12px; padding: 2px 8px; border-radius: 999px;
-  background: rgba(251, 191, 36, 0.15); color: #854f0b;
+  background: rgba(var(--theme-accent-rgb), 0.15); color: var(--c-autumn-950);
 }
 .type-int {
   font-size: 12px; padding: 2px 8px; border-radius: 999px;
-  background: rgba(56, 189, 248, 0.15); color: #0c4a6e;
+  background: rgba(var(--theme-primary-rgb), 0.15); color: var(--c-botany-950);
 }
-.muted { color: #94a3b8; font-size: 12px; }
-.click-num { color: #0ea5e9; font-weight: 500; font-size: 12px; }
+.muted { color: var(--c-ink-300); font-size: 12px; }
+.click-num { color: var(--c-botany-700); font-weight: 500; font-size: 12px; }
 .footer-bar {
   display: flex;
   justify-content: space-between;

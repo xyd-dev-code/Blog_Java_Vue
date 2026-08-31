@@ -10,7 +10,7 @@
  *   .tilt-card { transform-style: preserve-3d; perspective: 800px; }
  *   .tilt-card :deep(.tilt-glow) {
  *     position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
- *     background: radial-gradient(circle at var(--mx,50%) var(--my,50%), rgba(56,189,248,.12), transparent 70%);
+ *     background: radial-gradient(circle at var(--mx,50%) var(--my,50%), rgba(var(--theme-primary-rgb),.12), transparent 70%);
  *     opacity: 0; transition: opacity .3s;
  *   }
  *   .tilt-card:hover :deep(.tilt-glow) { opacity: 1; }

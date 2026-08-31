@@ -3,8 +3,8 @@
     <el-card>
       <template #header>
         <div class="header-bar">
-          <span>项目分类</span>
-          <el-button type="primary" @click="openForm()"><el-icon><Plus /></el-icon> 新建分类</el-button>
+          <span>{{ wx('项目分类') }}</span>
+          <el-button type="primary" @click="openForm()"><el-icon><Plus /></el-icon> {{ wx('新建分类') }}</el-button>
         </div>
       </template>
 
@@ -20,7 +20,7 @@
           </el-table-column>
           <el-table-column label="颜色" width="70" align="center">
             <template #default="{ row }">
-              <span class="color-dot" :style="{ background: row.color || '#94a3b8' }"></span>
+              <span class="color-dot" :style="{ background: row.color || 'var(--c-ink-300)' }"></span>
             </template>
           </el-table-column>
           <el-table-column prop="name" label="名称" min-width="130" />
@@ -61,7 +61,7 @@
       />
     </el-card>
 
-    <el-dialog v-model="dlg" :title="form.id ? '编辑分类' : '新建分类'" width="min(520px, 92vw)">
+    <el-dialog v-model="dlg" :title="form.id ? wx('编辑分类') : wx('新建分类')" width="min(520px, 92vw)">
       <el-form :model="form" label-width="80px">
         <el-form-item label="名称" required>
           <el-input v-model="form.name" placeholder="如：前端 / AI / 后端" />
@@ -77,7 +77,7 @@
             @active-change="(v) => form.color = v"
             @change="(v) => form.color = v"
           />
-          <span class="color-hint">{{ form.color || '#38bdf8' }}</span>
+          <span class="color-hint">{{ form.color || 'var(--c-botany-500)' }}</span>
         </el-form-item>
         <el-form-item label="描述">
           <el-input v-model="form.description" type="textarea" :rows="2" placeholder="分类的一句话说明" />
@@ -98,9 +98,13 @@
 </template>
 
 <script setup>
+import { useWuxiaCopy } from '@/composables/useWuxiaCopy'
+const { wx } = useWuxiaCopy()
+
 import { ref, reactive, computed, onMounted } from 'vue'
 import { Plus } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { DEFAULT_CONTENT_ACCENT } from '@/themes/registry'
 import {
   adminProjectCategories, adminCreateProjectCategory, adminUpdateProjectCategory,
   adminUpdateProjectCategoryStatus, adminDeleteProjectCategory,
@@ -115,7 +119,7 @@ const currentPage = ref(1)
 const pageSize = ref(10)
 const filters = reactive({ keyword: '' })
 
-const emptyForm = () => ({ id: null, name: '', slug: '', color: '#38bdf8', description: '', sortOrder: 0, status: 1 })
+const emptyForm = () => ({ id: null, name: '', slug: '', color: DEFAULT_CONTENT_ACCENT, description: '', sortOrder: 0, status: 1 })
 const form = reactive(emptyForm())
 const statusOn = computed({
   get: () => form.status === 1,
@@ -143,7 +147,7 @@ const openForm = (row) => {
   if (row) {
     Object.assign(form, {
       id: row.id, name: row.name, slug: row.slug,
-      color: row.color || '#38bdf8',
+      color: row.color || DEFAULT_CONTENT_ACCENT,
       description: row.description, sortOrder: row.sortOrder, status: row.status ?? 1,
     })
   }
@@ -207,7 +211,7 @@ onMounted(reload)
 .toolbar { display: flex; gap: 10px; margin-bottom: 12px; }
 .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 .pager { margin-top: 12px; justify-content: flex-end; display: flex; }
-.color-dot { display: inline-block; width: 18px; height: 18px; border-radius: 6px; box-shadow: 0 0 0 1px rgba(0,0,0,0.06); }
-.slug { font-family: 'Consolas', 'Monaco', monospace; font-size: 12px; color: #0369a1; background: rgba(56,189,248,0.08); padding: 1px 6px; border-radius: 4px; }
+.color-dot { display: inline-block; width: 18px; height: 18px; border-radius: 6px; box-shadow: 0 0 0 1px rgba(var(--theme-black-rgb), 0.06); }
+.slug { font-family: 'Consolas', 'Monaco', monospace; font-size: 12px; color: var(--c-botany-900); background: rgba(var(--theme-primary-rgb), 0.08); padding: 1px 6px; border-radius: 4px; }
 .color-hint { margin-left: 10px; font-size: 12px; color: var(--c-ink-300); font-family: 'Consolas', monospace; }
 </style>

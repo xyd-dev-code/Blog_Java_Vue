@@ -46,7 +46,7 @@
 
       <!-- ③ 技能标签云 -->
       <section class="section container-narrow reveal">
-        <h3 class="sec-title"><span class="sec-line"></span>技术栈<span class="sec-line"></span></h3>
+        <h3 class="sec-title"><span class="sec-line"></span>{{ wx('技术栈') }}<span class="sec-line"></span></h3>
         <div class="skills-cloud">
           <span class="skill-tag" v-for="sk in skills" :key="sk">{{ sk }}</span>
         </div>
@@ -54,7 +54,7 @@
 
       <!-- ④ 我的故事（CMS Markdown） -->
       <section class="section container-narrow reveal" v-if="processedMd">
-        <h3 class="sec-title"><span class="sec-line"></span>我的故事<span class="sec-line"></span></h3>
+        <h3 class="sec-title"><span class="sec-line"></span>{{ wx('我的故事') }}<span class="sec-line"></span></h3>
         <div class="story-card">
           <MdPreview
             :model-value="processedMd"
@@ -68,7 +68,7 @@
 
       <!-- ⑤ 成长轨迹时间线 -->
       <section class="section container-narrow reveal">
-        <h3 class="sec-title"><span class="sec-line"></span>成长轨迹<span class="sec-line"></span></h3>
+        <h3 class="sec-title"><span class="sec-line"></span>{{ wx('成长轨迹') }}<span class="sec-line"></span></h3>
         <div class="timeline">
           <div class="tl-item" v-for="(item, idx) in timeline" :key="idx">
             <div class="tl-dot" :class="{ active: idx === 0 }"></div>
@@ -83,13 +83,13 @@
 
       <!-- ⑥ 联系卡片 -->
       <section class="section container-narrow reveal" style="padding-bottom: 80px;">
-        <h3 class="sec-title"><span class="sec-line"></span>联系我<span class="sec-line"></span></h3>
+        <h3 class="sec-title"><span class="sec-line"></span>{{ wx('联系我') }}<span class="sec-line"></span></h3>
         <div class="contact-grid">
           <div class="contact-item card">
             <div class="ci-icon ci-email">@</div>
             <h4>邮箱</h4>
             <p>{{ siteEmail }}</p>
-            <a :href="'mailto:' + siteEmail" class="ci-link">发送邮件 &rarr;</a>
+            <a :href="'mailto:' + siteEmail" class="ci-link">{{ wx('发送邮件 →') }}</a>
           </div>
           <div class="contact-item card">
             <div class="ci-icon ci-github">
@@ -101,9 +101,9 @@
           </div>
           <div class="contact-item card sub-trigger" @click="openSubDialog" role="button" tabindex="0" @keyup.enter="openSubDialog" @keyup.space="openSubDialog">
             <div class="ci-icon ci-mail">✉</div>
-            <h4>邮箱订阅</h4>
-            <p>输入邮箱，第一时间收到新文章</p>
-            <a href="javascript:;" class="ci-link" @click.stop="openSubDialog">立即订阅 &rarr;</a>
+            <h4>{{ wx('邮箱订阅') }}</h4>
+            <p>{{ wx('输入邮箱，第一时间收到新文章') }}</p>
+            <a href="javascript:;" class="ci-link" @click.stop="openSubDialog">{{ wx('立即订阅 →') }}</a>
           </div>
         </div>
       </section>
@@ -116,12 +116,12 @@
     <!-- 邮箱订阅弹窗（与上方加载态平级，不进入 v-if 分支） -->
     <el-dialog
       v-model="subDialogVisible"
-      title="邮箱订阅"
+      :title="wx('邮箱订阅')"
       width="420px"
       class="sub-dialog"
       :close-on-click-modal="false"
     >
-      <p class="sub-dialog-desc">输入你的邮箱，新文章发布当天即可收到通知。无需注册，点确认链接即生效。</p>
+      <p class="sub-dialog-desc">{{ wx('输入你的邮箱，新文章发布当天即可收到通知。无需注册，点确认链接即生效。') }}</p>
       <el-form ref="subFormRef" :model="subForm" :rules="subRules" @submit.prevent="onSubscribe">
         <el-form-item prop="email">
           <el-input
@@ -145,6 +145,9 @@
 </template>
 
 <script setup>
+import { useWuxiaCopy } from '@/composables/useWuxiaCopy'
+const { wx } = useWuxiaCopy()
+
 import { ref, reactive, nextTick, onMounted, computed, watch } from 'vue'
 import { home, subscribeEmail } from '@/api/front'
 import { ElMessage } from 'element-plus'
@@ -377,9 +380,9 @@ function initReveal() {
   content: '';
   position: absolute; top: 0; left: 0; right: 0; height: 100px;
   background:
-    radial-gradient(ellipse 80% 100% at 20% 0%, rgba(56,189,248,0.15) 0%, transparent 60%),
-    radial-gradient(ellipse 60% 100% at 85% 10%, rgba(251,191,36,0.10) 0%, transparent 55%),
-    linear-gradient(135deg, rgba(56,189,248,0.06) 0%, rgba(125,211,252,0.04) 50%, rgba(251,191,36,0.05) 100%);
+    radial-gradient(ellipse 80% 100% at 20% 0%, rgba(var(--theme-primary-rgb), 0.15) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 100% at 85% 10%, rgba(var(--theme-accent-rgb), 0.10) 0%, transparent 55%),
+    linear-gradient(135deg, rgba(var(--theme-primary-rgb), 0.06) 0%, rgba(var(--theme-primary-light-rgb), 0.04) 50%, rgba(var(--theme-accent-rgb), 0.05) 100%);
   z-index: 0;
 }
 /* 底部彩虹描边已移除——用户不需要 */
@@ -402,10 +405,10 @@ function initReveal() {
   border-radius: 50%;
   background: conic-gradient(
     from 180deg,
-    rgba(56,189,248,0.35),
-    rgba(125,211,252,0.20),
-    rgba(251,191,36,0.30),
-    rgba(56,189,248,0.35)
+    rgba(var(--theme-primary-rgb), 0.35),
+    rgba(var(--theme-primary-light-rgb), 0.20),
+    rgba(var(--theme-accent-rgb), 0.30),
+    rgba(var(--theme-primary-rgb), 0.35)
   );
   animation: ring-spin 8s linear infinite;
   opacity: 0.7;
@@ -423,7 +426,7 @@ function initReveal() {
 .avatar {
   width: 100%; height: 100%; border-radius: 50%; object-fit: cover;
   border: 4px solid var(--c-paper);
-  box-shadow: 0 4px 24px rgba(14, 165, 233, 0.12), 0 0 0 3px var(--c-botany-100);
+  box-shadow: 0 4px 24px rgba(var(--theme-primary-strong-rgb), 0.12), 0 0 0 3px var(--c-botany-100);
   position: relative; z-index: 2;
 }
 
@@ -447,8 +450,8 @@ function initReveal() {
   svg { width: 16px; height: 16px; fill: var(--c-botany-700); }
   &:hover {
     background: var(--c-botany-500); border-color: var(--c-botany-500);
-    transform: translateY(-3px); box-shadow: 0 4px 12px rgba(14, 165, 233, .3);
-    svg { fill: #fff; }
+    transform: translateY(-3px); box-shadow: 0 4px 12px rgba(var(--theme-primary-strong-rgb), .3);
+    svg { fill: var(--c-white); }
   }
 }
 
@@ -471,8 +474,8 @@ function initReveal() {
 .stat-item:hover .stat-icon {
   background: var(--c-botany-500);
   border-color: var(--c-botany-500);
-  color: #fff;
-  box-shadow: 0 4px 14px rgba(56,189,248,0.25);
+  color: var(--theme-on-primary);
+  box-shadow: 0 4px 14px rgba(var(--theme-primary-rgb), 0.25);
 }
 .stat-num {
   font-family: var(--font-serif); font-size: 26px; font-weight: 700;
@@ -500,8 +503,8 @@ function initReveal() {
   border-radius: 999px; font-size: 14px; color: var(--c-ink-500);
   transition: all .25s ease; cursor: default;
   &:hover {
-    background: var(--c-botany-500); color: #fff; border-color: var(--c-botany-500);
-    transform: translateY(-2px); box-shadow: 0 4px 12px rgba(14, 165, 233, .25);
+    background: var(--c-botany-500); color: var(--theme-on-primary); border-color: var(--c-botany-500);
+    transform: translateY(-2px); box-shadow: 0 4px 12px rgba(var(--theme-primary-strong-rgb), .25);
   }
 }
 
@@ -547,7 +550,7 @@ function initReveal() {
   position: absolute; left: -17px; top: 6px; width: 18px; height: 18px; border-radius: 50%;
   background: var(--c-paper); border: 2px solid var(--c-botany-300); z-index: 1;
   transition: all .3s ease;
-  &.active { border-color: var(--c-botany-500); background: var(--c-botany-500); box-shadow: 0 0 0 5px rgba(56, 189, 248, .18); }
+  &.active { border-color: var(--c-botany-500); background: var(--c-botany-500); box-shadow: 0 0 0 5px rgba(var(--theme-primary-rgb), .18); }
 }
 .tl-item:hover .tl-dot { border-color: var(--c-botany-500); transform: scale(1.15); }
 .tl-card { padding: 22px 24px; transition: transform .3s ease, box-shadow .3s ease; }
@@ -566,9 +569,9 @@ function initReveal() {
   svg { width: 22px; height: 22px; }
 }
 .contact-item:hover .ci-icon { transform: scale(1.08); }
-.ci-email { background: linear-gradient(135deg, #e0f7ff, #bae6fd); color: #0369a1; }
-.ci-github { background: linear-gradient(135deg, #f1f5f9, #e2e8f0); color: var(--c-ink-700); svg { fill: var(--c-ink-700); } }
-.ci-mail { background: linear-gradient(135deg, #e0f7ff, #bae6fd); color: #0369a1; }
+.ci-email { background: linear-gradient(135deg, var(--c-primary-mist), var(--c-botany-200)); color: var(--c-botany-900); }
+.ci-github { background: linear-gradient(135deg, var(--c-ink-100), var(--c-line)); color: var(--c-ink-700); svg { fill: var(--c-ink-700); } }
+.ci-mail { background: linear-gradient(135deg, var(--c-primary-mist), var(--c-botany-200)); color: var(--c-botany-900); }
 .contact-item h4 { font-family: var(--font-serif); font-size: 17px; font-weight: 600; margin: 0 0 4px; color: var(--c-ink); }
 .contact-item p { font-size: 13px; color: var(--c-ink-soft); margin: 0 0 14px; }
 .ci-link { font-size: 13px; color: var(--c-botany-700); font-weight: 500; }
@@ -577,7 +580,7 @@ function initReveal() {
 /* 邮箱订阅卡片：点击交互（与同级 ci-link 同色，与 card hover 兼容） */
 .sub-trigger { cursor: pointer; outline: none; }
 .sub-trigger:focus-visible {
-  box-shadow: var(--shadow-pop), 0 0 0 3px rgba(56, 189, 248, 0.25);
+  box-shadow: var(--shadow-pop), 0 0 0 3px rgba(var(--theme-primary-rgb), 0.25);
 }
 
 /* 邮箱订阅弹窗（提示文案 + 行内状态） */
@@ -586,9 +589,9 @@ function initReveal() {
   margin: 0 0 14px;
 }
 .sub-dialog-msg {
-  margin: 10px 0 0; font-size: 13px; color: #dc2626; line-height: 1.5;
+  margin: 10px 0 0; font-size: 13px; color: var(--c-danger); line-height: 1.5;
 }
-.sub-dialog-msg.ok { color: #16a34a; }
+.sub-dialog-msg.ok { color: var(--c-success-strong); }
 
 /* dialog 顶部留出 fixed nav 安全距离，避免被遮 */
 .sub-dialog :deep(.el-dialog) { margin-top: 84px; }

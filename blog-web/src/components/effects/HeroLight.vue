@@ -108,8 +108,8 @@ onBeforeUnmount(() => {
   width: 320px;
   height: 320px;
   background: radial-gradient(circle,
-    rgba(255, 255, 255, 0.55) 0%,
-    rgba(251, 191, 36, 0.25) 30%,
+    rgba(var(--theme-paper-rgb), 0.55) 0%,
+    rgba(var(--theme-accent-rgb), 0.25) 30%,
     transparent 70%
   );
   top: -80px;
@@ -120,8 +120,8 @@ onBeforeUnmount(() => {
   width: 260px;
   height: 260px;
   background: radial-gradient(circle,
-    rgba(255, 255, 255, 0.5) 0%,
-    rgba(56, 189, 248, 0.3) 30%,
+    rgba(var(--theme-paper-rgb), 0.5) 0%,
+    rgba(var(--theme-primary-rgb), 0.3) 30%,
     transparent 70%
   );
   bottom: -60px;
@@ -138,9 +138,9 @@ onBeforeUnmount(() => {
     105deg,
     transparent 0%,
     transparent 35%,
-    rgba(255, 255, 255, 0.1) 48%,
-    rgba(255, 255, 255, 0.18) 50%,
-    rgba(255, 255, 255, 0.1) 52%,
+    rgba(var(--theme-paper-rgb), 0.1) 48%,
+    rgba(var(--theme-paper-rgb), 0.18) 50%,
+    rgba(var(--theme-paper-rgb), 0.1) 52%,
     transparent 65%,
     transparent 100%
   );

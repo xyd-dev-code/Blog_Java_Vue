@@ -7,7 +7,7 @@
         <img v-if="siteLogo" :src="siteLogo" class="brand-img" alt="logo" />
         <span v-else class="mark">{{ brandInitial }}</span>
         <h1>{{ siteTitle }}</h1>
-        <p>欢迎回来</p>
+        <p>{{ wx('欢迎回来') }}</p>
       </div>
       <el-form ref="formRef" :model="form" :rules="rules" @submit.prevent="submit">
         <el-form-item prop="username">
@@ -26,6 +26,9 @@
 </template>
 
 <script setup>
+import { useWuxiaCopy } from '@/composables/useWuxiaCopy'
+const { wx } = useWuxiaCopy()
+
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
@@ -41,7 +44,7 @@ const loading = ref(false)
 
 const siteTitle = computed(() => {
   const name = siteStore.info?.siteName?.trim() || ''
-  return name ? `${name} · 后台管理` : '后台管理'
+  return name ? `${name} · ${wx('后台管理')}` : wx('后台管理')
 })
 const siteLogo = computed(() => siteStore.info?.siteLogo || '')
 const brandInitial = computed(() => {
@@ -81,7 +84,7 @@ const submit = async () => {
   place-items: center;
   position: relative;
   overflow: hidden;
-  background: linear-gradient(135deg, #e0f7ff 0%, #f0f9ff 50%, #ffffff 100%);
+  background: linear-gradient(135deg, var(--c-primary-mist) 0%, var(--c-botany-50) 50%, var(--c-white) 100%);
 }
 .bg-shape {
   position: absolute;
@@ -92,13 +95,13 @@ const submit = async () => {
 }
 .s1 {
   width: 360px; height: 360px;
-  background: rgba(56, 189, 248, 0.35);
+  background: rgba(var(--theme-primary-rgb), 0.35);
   top: -120px; left: -100px;
   animation-delay: 0s;
 }
 .s2 {
   width: 300px; height: 300px;
-  background: rgba(34, 211, 238, 0.3);
+  background: rgba(var(--theme-cyan-rgb), 0.3);
   bottom: -80px; right: -80px;
   animation-delay: -5s;
 }
@@ -109,11 +112,11 @@ const submit = async () => {
 .login-card {
   position: relative;
   z-index: 1;
-  background: rgba(255, 255, 255, 0.92);
+  background: rgba(var(--theme-paper-rgb), 0.92);
   border-radius: 16px;
   padding: 40px 36px;
   width: 380px;
-  box-shadow: 0 20px 50px rgba(14, 165, 233, 0.15);
+  box-shadow: 0 20px 50px rgba(var(--theme-primary-strong-rgb), 0.15);
   backdrop-filter: blur(10px);
   border: 1px solid var(--c-line-soft);
 }
@@ -131,7 +134,7 @@ const submit = async () => {
   display: inline-grid;
   place-items: center;
   background: linear-gradient(135deg, var(--c-botany-500), var(--c-autumn-500));
-  color: #fff;
+  color: var(--theme-on-primary);
   font-family: var(--font-serif);
   font-size: 28px;
   margin-bottom: 12px;
@@ -141,7 +144,7 @@ const submit = async () => {
   border-radius: 14px;
   object-fit: cover;
   margin-bottom: 12px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  box-shadow: 0 4px 12px rgba(var(--theme-black-rgb), 0.08);
 }
 .login-brand h1 {
   font-family: var(--font-serif);

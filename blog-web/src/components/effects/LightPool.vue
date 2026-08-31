@@ -42,7 +42,7 @@
   left: -8vw;
   bottom: -12vh;
   opacity: 0.14;
-  background: radial-gradient(ellipse, rgba(125,211,252,0.38) 0%, rgba(125,211,252,0) 72%);
+  background: radial-gradient(ellipse, rgba(var(--theme-primary-light-rgb), 0.38) 0%, rgba(var(--theme-primary-light-rgb), 0) 72%);
   animation: pool-drift-1 24s ease-in-out infinite;
 }
 
@@ -53,7 +53,7 @@
   right: 6vw;
   bottom: -8vh;
   opacity: 0.11;
-  background: radial-gradient(ellipse, rgba(251,191,36,0.26) 0%, rgba(251,191,36,0) 72%);
+  background: radial-gradient(ellipse, rgba(var(--theme-accent-rgb), 0.26) 0%, rgba(var(--theme-accent-rgb), 0) 72%);
   animation: pool-drift-2 28s ease-in-out infinite;
 }
 
@@ -64,7 +64,7 @@
   left: 22vw;
   bottom: -16vh;
   opacity: 0.12;
-  background: radial-gradient(ellipse, rgba(56,189,248,0.3) 0%, rgba(56,189,248,0) 72%);
+  background: radial-gradient(ellipse, rgba(var(--theme-primary-rgb), 0.3) 0%, rgba(var(--theme-primary-rgb), 0) 72%);
   animation: pool-drift-3 22s ease-in-out infinite;
 }
 
@@ -75,7 +75,7 @@
   right: -4vw;
   bottom: -14vh;
   opacity: 0.09;
-  background: radial-gradient(ellipse, rgba(167,243,208,0.28) 0%, rgba(167,243,208,0) 72%);
+  background: radial-gradient(ellipse, rgba(var(--theme-mint-rgb), 0.28) 0%, rgba(var(--theme-mint-rgb), 0) 72%);
   animation: pool-drift-1 26s ease-in-out infinite;
 }
 
@@ -86,7 +86,7 @@
   left: 4vw;
   bottom: -10vh;
   opacity: 0.1;
-  background: radial-gradient(ellipse, rgba(251,191,36,0.22) 0%, rgba(251,191,36,0) 72%);
+  background: radial-gradient(ellipse, rgba(var(--theme-accent-rgb), 0.22) 0%, rgba(var(--theme-accent-rgb), 0) 72%);
   animation: pool-drift-2 30s ease-in-out infinite;
 }
 

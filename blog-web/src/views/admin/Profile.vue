@@ -12,7 +12,7 @@
         <template #header>
           <div class="card-header">
             <el-icon><User /></el-icon>
-            <span>个人资料</span>
+            <span>{{ wx('个人资料') }}</span>
           </div>
         </template>
 
@@ -31,7 +31,7 @@
 
         <el-form :model="profileForm" label-width="80px" class="profile-form">
           <el-form-item label="昵称">
-            <el-input v-model="profileForm.nickname" placeholder="你的昵称" />
+            <el-input v-model="profileForm.nickname" :placeholder="wx('你的昵称')" />
           </el-form-item>
           <el-form-item label="邮箱">
             <el-input v-model="profileForm.email" type="email" inputmode="email" placeholder="联系邮箱" />
@@ -52,7 +52,7 @@
       <div class="profile-right">
         <el-card class="profile-card" v-loading="siteLoading">
           <template #header>
-            <div class="card-header"><el-icon><Setting /></el-icon><span>站点信息</span></div>
+            <div class="card-header"><el-icon><Setting /></el-icon><span>{{ wx('站点信息') }}</span></div>
           </template>
           <el-form :model="siteForm" label-width="90px">
             <el-row :gutter="16">
@@ -60,7 +60,7 @@
                 <el-form-item label="站点名称"><el-input v-model="siteForm.siteName" placeholder="MyBlog" /></el-form-item>
               </el-col>
               <el-col :md="12">
-                <el-form-item label="副标题"><el-input v-model="siteForm.motto" placeholder="草木蔓发，春山可望" /></el-form-item>
+                <el-form-item label="副标题"><el-input v-model="siteForm.motto" :placeholder="wx('草木蔓发，春山可望')" /></el-form-item>
               </el-col>
             </el-row>
             <el-form-item label="站点描述">
@@ -142,6 +142,9 @@
 </template>
 
 <script setup>
+import { useWuxiaCopy } from '@/composables/useWuxiaCopy'
+const { wx } = useWuxiaCopy()
+
 import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { User, Lock, Setting, Camera, WarningFilled } from '@element-plus/icons-vue'
@@ -409,8 +412,8 @@ onMounted(loadAll)
   display: flex; align-items: center; gap: 12px;
   padding: 10px 16px;
   margin-bottom: 16px;
-  background: #fef3c7; color: #92400e;
-  border: 1px solid #fcd34d; border-radius: 8px;
+  background: var(--c-autumn-100); color: var(--c-brown-text);
+  border: 1px solid var(--c-autumn-300); border-radius: 8px;
   font-size: 13px; line-height: 1.5;
 }
 .load-error .el-icon { font-size: 16px; flex-shrink: 0; }
@@ -429,7 +432,7 @@ onMounted(loadAll)
   :deep(.el-dialog) { width: 92vw !important; }
 }
 .form-tip {
-  font-size: 12px; color: var(--c-ink-soft, #94a3b8);
+  font-size: 12px; color: var(--c-ink-soft, var(--c-ink-300));
   line-height: 1.6; margin-top: 4px;
 }
 
@@ -456,9 +459,9 @@ onMounted(loadAll)
 
 .avatar-overlay {
   position: absolute; inset: 0; border-radius: 50%;
-  background: rgba(0, 0, 0, 0.45);
+  background: rgba(var(--theme-black-rgb), 0.45);
   display: flex; flex-direction: column; align-items: center; justify-content: center;
-  gap: 4px; color: #fff; font-size: 12px; opacity: 0; transition: opacity 0.2s;
+  gap: 4px; color: var(--theme-on-primary); font-size: 12px; opacity: 0; transition: opacity 0.2s;
 }
 .avatar-upload:hover .avatar-overlay { opacity: 1; }
 .avatar-overlay .el-icon { font-size: 22px; }
@@ -468,5 +471,5 @@ onMounted(loadAll)
 
 /* 裁剪 */
 .crop-container { max-height: 400px; }
-.cropper-instance { background: #f0f0f0; max-height: 400px; }
+.cropper-instance { background: var(--c-neutral-fill-soft); max-height: 400px; }
 </style>

@@ -1,10 +1,10 @@
 <template>
   <div class="project-mgmt-page">
     <el-tabs v-model="activeTab" class="project-mgmt-tabs">
-      <el-tab-pane label="项目列表" name="projects">
+      <el-tab-pane :label="wx('项目列表')" name="projects">
         <ProjectList />
       </el-tab-pane>
-      <el-tab-pane label="项目分类" name="categories">
+      <el-tab-pane :label="wx('项目分类')" name="categories">
         <ProjectCategoryList />
       </el-tab-pane>
     </el-tabs>
@@ -12,6 +12,9 @@
 </template>
 
 <script setup>
+import { useWuxiaCopy } from '@/composables/useWuxiaCopy'
+const { wx } = useWuxiaCopy()
+
 import { ref, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import ProjectList from './ProjectList.vue'

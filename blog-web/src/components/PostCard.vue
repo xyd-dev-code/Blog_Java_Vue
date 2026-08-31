@@ -25,13 +25,16 @@
         <span class="dot">·</span>
         <span class="views">{{ article.viewCount || 0 }} 阅读</span>
         <span class="dot">·</span>
-        <span class="comments">{{ article.commentCount || 0 }} 评论</span>
+        <span class="comments">{{ article.commentCount || 0 }} {{ wx('评论') }}</span>
       </div>
     </div>
   </article>
 </template>
 
 <script setup>
+import { useWuxiaCopy } from '@/composables/useWuxiaCopy'
+const { wx } = useWuxiaCopy()
+
 import { computed, ref } from 'vue'
 import { fmtDate, excerpt } from '@/utils/format'
 
@@ -90,8 +93,8 @@ const onGlowMove = (e) => {
   transform: translate(-50%, -50%);
   background: radial-gradient(
     circle,
-    rgba(251, 191, 36, 0.15) 0%,
-    rgba(56, 189, 248, 0.10) 30%,
+    rgba(var(--theme-accent-rgb), 0.15) 0%,
+    rgba(var(--theme-primary-rgb), 0.10) 30%,
     transparent 65%
   );
   pointer-events: none;
@@ -127,13 +130,13 @@ const onGlowMove = (e) => {
   content: '';
   position: absolute;
   width: 120%; height: 120%;
-  background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 60%);
+  background: radial-gradient(circle, rgba(var(--theme-paper-rgb), 0.15) 0%, transparent 60%);
   animation: shimmer 4s ease-in-out infinite;
 }
 .cover-char {
   font-family: var(--font-serif);
   font-size: 80px;
-  color: rgba(255, 255, 255, 0.8);
+  color: rgba(var(--theme-paper-rgb), 0.8);
   font-weight: 500;
   position: relative;
   z-index: 1;
@@ -174,10 +177,10 @@ const onGlowMove = (e) => {
   align-items: center;
   gap: 8px;
   font-size: 12px;
-  color: #999;
+  color: var(--c-legacy-muted);
   margin-top: auto;
 }
-.dot { color: #ccc; }
+.dot { color: var(--c-legacy-line); }
 
 /* mobile */
 @media (max-width: 480px) {

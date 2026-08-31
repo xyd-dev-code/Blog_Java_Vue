@@ -27,7 +27,7 @@
     <div class="container hf-inner">
       <p class="hf-eyebrow">friends</p>
       <h1 class="hf-title">
-        {{ title }}
+        <WuxiaHeadingLettering :text="title" />
         <span class="hf-connect-icon">
           <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
             <circle cx="7" cy="6" r="2.5"/>
@@ -48,6 +48,7 @@
 </template>
 
 <script setup>
+import WuxiaHeadingLettering from '@/components/WuxiaHeadingLettering.vue'
 import GodRays from '@/components/effects/GodRays.vue'
 defineProps({
   title: { type: String, required: true },
@@ -84,9 +85,9 @@ const warmDots = Array.from({ length: 4 }, (_, i) => ({
   /* 不设不透明底色——让全局 html,body 的天空渐变透上来，实现"一体"感。
      只留极淡的 alpha 光斑作为装饰性氛围 */
   background:
-    radial-gradient(ellipse 70% 60% at 50% 0%, rgba(125,211,252,0.08) 0%, transparent 65%),
-    radial-gradient(ellipse 60% 50% at 18% 80%, rgba(251,191,36,0.04) 0%, transparent 70%),
-    radial-gradient(ellipse 50% 40% at 90% 80%, rgba(56,189,248,0.05) 0%, transparent 70%);
+    radial-gradient(ellipse 70% 60% at 50% 0%, rgba(var(--theme-primary-light-rgb), 0.08) 0%, transparent 65%),
+    radial-gradient(ellipse 60% 50% at 18% 80%, rgba(var(--theme-accent-rgb), 0.04) 0%, transparent 70%),
+    radial-gradient(ellipse 50% 40% at 90% 80%, rgba(var(--theme-primary-rgb), 0.05) 0%, transparent 70%);
   padding: 48px 0 56px;
   text-align: center;
   margin-bottom: 18px;
@@ -109,7 +110,7 @@ const warmDots = Array.from({ length: 4 }, (_, i) => ({
   right: 5%;
   width: 220px;
   height: 220px;
-  background: rgba(56,189,248,0.15);
+  background: rgba(var(--theme-primary-rgb), 0.15);
   animation: float 10s ease-in-out infinite;
 }
 .hf-glow-2 {
@@ -117,7 +118,7 @@ const warmDots = Array.from({ length: 4 }, (_, i) => ({
   left: 8%;
   width: 180px;
   height: 180px;
-  background: rgba(251,191,36,0.12);
+  background: rgba(var(--theme-accent-rgb), 0.12);
   animation: float 12s ease-in-out infinite -4s;
 }
 
@@ -137,7 +138,7 @@ const warmDots = Array.from({ length: 4 }, (_, i) => ({
       /* 水平连接 */
       repeating-linear-gradient(90deg,
         transparent 0px, transparent 144px,
-        rgba(56,189,248,0.06) 144px, rgba(56,189,248,0.06) 145px
+        rgba(var(--theme-primary-rgb), 0.06) 144px, rgba(var(--theme-primary-rgb), 0.06) 145px
       );
   }
 }
@@ -148,16 +149,16 @@ const warmDots = Array.from({ length: 4 }, (_, i) => ({
   pointer-events: none;
 }
 .hf-dot-blue {
-  background: rgba(125,211,252,0.75);
-  box-shadow: 0 0 4px rgba(125,211,252,0.5);
+  background: rgba(var(--theme-primary-light-rgb), 0.75);
+  box-shadow: 0 0 4px rgba(var(--theme-primary-light-rgb), 0.5);
 }
 .hf-dot-deep {
-  background: rgba(14,165,233,0.85);
-  box-shadow: 0 0 6px rgba(14,165,233,0.5);
+  background: rgba(var(--theme-primary-strong-rgb), 0.85);
+  box-shadow: 0 0 6px rgba(var(--theme-primary-strong-rgb), 0.5);
 }
 .hf-dot-warm {
-  background: rgba(251,191,36,0.85);
-  box-shadow: 0 0 6px rgba(251,191,36,0.55);
+  background: rgba(var(--theme-accent-rgb), 0.85);
+  box-shadow: 0 0 6px rgba(var(--theme-accent-rgb), 0.55);
 }
 @keyframes pulse-dot {
   0%, 100% { transform: scale(1); opacity: 0.5; }

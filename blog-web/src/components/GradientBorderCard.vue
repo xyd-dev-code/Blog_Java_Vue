@@ -24,7 +24,7 @@ defineProps({
 <style scoped lang="scss">
 .gradient-border-card {
   position: relative;
-  background: var(--c-paper, #fff);
+  background: var(--c-paper, var(--c-white));
   border-radius: 18px;
   padding: 24px;
   isolation: isolate;
@@ -48,9 +48,9 @@ defineProps({
 // 晴空渐变（蓝 → 青）
 .gradient-border-card.variant-sky::before {
   background: linear-gradient(135deg,
-    #7dd3fc 0%, #38bdf8 35%, #22d3ee 70%, #38bdf8 100%);
+    var(--c-botany-300) 0%, var(--c-botany-500) 35%, var(--c-cyan-500) 70%, var(--c-botany-500) 100%);
   background-size: 200% 200%;
-  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask: linear-gradient(var(--c-black) 0 0) content-box, linear-gradient(var(--c-black) 0 0);
   -webkit-mask-composite: xor;
           mask-composite: exclude;
   animation: gb-flow 8s linear infinite paused;
@@ -59,8 +59,8 @@ defineProps({
 // 暖阳渐变（金 → 蓝）
 .gradient-border-card.variant-sun::before {
   background: linear-gradient(135deg,
-    #fcd34d 0%, #fbbf24 40%, #38bdf8 100%);
-  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    var(--c-autumn-300) 0%, var(--c-autumn-500) 40%, var(--c-botany-500) 100%);
+  -webkit-mask: linear-gradient(var(--c-black) 0 0) content-box, linear-gradient(var(--c-black) 0 0);
   -webkit-mask-composite: xor;
           mask-composite: exclude;
 }
@@ -68,8 +68,8 @@ defineProps({
 // 混合（三色）
 .gradient-border-card.variant-mix::before {
   background: linear-gradient(135deg,
-    #38bdf8 0%, #22d3ee 35%, #fbbf24 70%, #38bdf8 100%);
-  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    var(--c-botany-500) 0%, var(--c-cyan-500) 35%, var(--c-autumn-500) 70%, var(--c-botany-500) 100%);
+  -webkit-mask: linear-gradient(var(--c-black) 0 0) content-box, linear-gradient(var(--c-black) 0 0);
   -webkit-mask-composite: xor;
           mask-composite: exclude;
 }
@@ -83,8 +83,8 @@ defineProps({
 }
 .gradient-border-card.is-hoverable:hover {
   transform: translateY(-4px);
-  box-shadow: 0 16px 40px rgba(14, 165, 233, 0.12),
-              0 24px 60px rgba(14, 165, 233, 0.14);
+  box-shadow: 0 16px 40px rgba(var(--theme-primary-strong-rgb), 0.12),
+              0 24px 60px rgba(var(--theme-primary-strong-rgb), 0.14);
 }
 .gradient-border-card.is-hoverable:hover::before {
   animation-play-state: running;

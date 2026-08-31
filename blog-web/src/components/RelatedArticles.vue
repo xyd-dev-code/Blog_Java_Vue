@@ -1,6 +1,6 @@
 <template>
   <section class="related-section" v-if="list.length">
-    <h3 class="rs-title">相关推荐</h3>
+    <h3 class="rs-title">{{ wx('相关推荐') }}</h3>
     <div class="rs-grid">
       <div v-for="a in list" :key="a.id" class="rs-card" @click="$router.push(`/articles/${a.slug}`)">
         <h4>{{ a.title }}</h4>
@@ -11,6 +11,9 @@
 </template>
 
 <script setup>
+import { useWuxiaCopy } from '@/composables/useWuxiaCopy'
+const { wx } = useWuxiaCopy()
+
 import { excerpt } from '@/utils/format'
 defineProps({ list: { type: Array, default: () => [] } })
 </script>

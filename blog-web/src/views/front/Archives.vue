@@ -19,13 +19,16 @@
             </li>
           </ul>
         </div>
-        <el-empty v-if="!articles.length" description="还没有文章" />
+        <el-empty v-if="!articles.length" :description="wx('还没有文章')" />
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
+import { useWuxiaCopy } from '@/composables/useWuxiaCopy'
+const { wx } = useWuxiaCopy()
+
 import { ref, computed, onMounted } from 'vue'
 import { archives } from '@/api/front'
 import { fmtDate } from '@/utils/format'
@@ -68,7 +71,7 @@ const grouped = computed(() => {
   text-align: right;
   padding-right: 28px;
   border-right: 2px solid transparent;
-  background-image: linear-gradient(180deg, #38bdf8, #fbbf24);
+  background-image: linear-gradient(180deg, var(--c-botany-500), var(--c-autumn-500));
   background-size: 2px 100%;
   background-repeat: no-repeat;
   background-position: right 0;
@@ -80,17 +83,17 @@ const grouped = computed(() => {
   right: -8px; top: 4px;
   width: 14px; height: 14px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #38bdf8, #fbbf24);
-  border: 3px solid #fff;
+  background: linear-gradient(135deg, var(--c-botany-500), var(--c-autumn-500));
+  border: 3px solid var(--c-white);
   box-shadow:
-    0 0 0 2px rgba(56, 189, 248, 0.3),
-    0 4px 12px rgba(56, 189, 248, 0.25);
+    0 0 0 2px rgba(var(--theme-primary-rgb), 0.3),
+    0 4px 12px rgba(var(--theme-primary-rgb), 0.25);
 }
 .tl-year {
   font-family: var(--font-serif);
   font-size: 30px;
   font-weight: 700;
-  background: linear-gradient(135deg, #0369a1, #38bdf8);
+  background: linear-gradient(135deg, var(--c-botany-900), var(--c-botany-500));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
           background-clip: text;
@@ -98,7 +101,7 @@ const grouped = computed(() => {
 }
 .tl-month {
   font-size: 13px;
-  color: #0369a1;
+  color: var(--c-botany-900);
   font-weight: 500;
   margin-top: 4px;
 }
@@ -107,7 +110,7 @@ const grouped = computed(() => {
   color: var(--c-ink-soft);
   margin-top: 6px;
   padding: 2px 8px;
-  background: rgba(56, 189, 248, 0.1);
+  background: rgba(var(--theme-primary-rgb), 0.1);
   border-radius: 999px;
   display: inline-block;
 }
@@ -122,8 +125,8 @@ const grouped = computed(() => {
   align-items: center;
   gap: 14px;
   padding: 14px 18px;
-  background: rgba(255, 255, 255, 0.6);
-  border: 1px solid rgba(125, 211, 252, 0.4);
+  background: rgba(var(--theme-paper-rgb), 0.6);
+  border: 1px solid rgba(var(--theme-primary-light-rgb), 0.4);
   border-radius: 12px;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
@@ -131,18 +134,18 @@ const grouped = computed(() => {
   backdrop-filter: blur(6px);
 }
 .tl-list li:hover {
-  background: #fff;
-  border-color: #38bdf8;
+  background: var(--c-paper);
+  border-color: var(--c-botany-500);
   transform: translateX(4px);
   box-shadow:
-    0 6px 20px rgba(56, 189, 248, 0.15),
-    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    0 6px 20px rgba(var(--theme-primary-rgb), 0.15),
+    inset 0 1px 0 rgba(var(--theme-paper-rgb), 0.8);
 }
 .tl-day {
   font-family: var(--font-serif);
   font-size: 22px;
   font-weight: 700;
-  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+  background: linear-gradient(135deg, var(--c-autumn-500), var(--c-autumn-700));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
           background-clip: text;
@@ -157,16 +160,16 @@ const grouped = computed(() => {
   flex: 1;
   transition: color 0.2s ease;
 }
-.tl-list li:hover .tl-title { color: #0369a1; }
+.tl-list li:hover .tl-title { color: var(--c-botany-900); }
 .tl-cat {
   font-size: 12px;
   color: var(--c-ink-soft);
-  background: rgba(56, 189, 248, 0.08);
+  background: rgba(var(--theme-primary-rgb), 0.08);
   padding: 2px 8px;
   border-radius: 999px;
 }
 .tl-arrow {
-  color: #38bdf8;
+  color: var(--c-botany-500);
   font-weight: 600;
   opacity: 0;
   transform: translateX(-4px);

@@ -1,6 +1,6 @@
 <template>
   <div class="articles-page">
-    <HeroArticles :title="'所有文章'" :subtitle="`共 ${total} 篇 · 慢一点，让灵魂跟上脚步`" />
+    <HeroArticles title="所有文章" :subtitle="`共 ${total} 篇 · 慢一点，让灵魂跟上脚步`" />
 
     <!-- 浮光粒子 -->
     <div class="af-motes" aria-hidden="true">
@@ -20,7 +20,7 @@
       <div class="articles-search">
         <el-input
           v-model="kw"
-          placeholder="搜索文章标题、内容或标签…（回车搜索）"
+          :placeholder="wx('搜索文章标题、内容或标签…（回车搜索）')"
           clearable
           size="default"
           inputmode="search"
@@ -49,7 +49,7 @@
         <div v-if="searching" class="loading">
           <el-skeleton :rows="3" animated />
         </div>
-        <el-empty v-else-if="!results.length" description="没有找到相关文章" />
+        <el-empty v-else-if="!results.length" :description="wx('没有找到相关文章')" />
         <div v-else class="article-list">
           <PostCardSky
             v-for="(a, i) in results"
@@ -65,7 +65,7 @@
         <div v-if="loading" class="loading">
           <el-skeleton :rows="3" animated />
         </div>
-        <el-empty v-else-if="!list.length" description="暂无文章" />
+        <el-empty v-else-if="!list.length" :description="wx('暂无文章')" />
         <PostCardSky
           v-for="(a, i) in list"
           v-else
@@ -85,6 +85,9 @@
 </template>
 
 <script setup>
+import { useWuxiaCopy } from '@/composables/useWuxiaCopy'
+const { wx } = useWuxiaCopy()
+
 import { ref, onMounted } from 'vue'
 import { Search } from '@element-plus/icons-vue'
 import PostCardSky from '@/components/PostCardSky.vue'
@@ -121,7 +124,7 @@ const doSearch = async () => {
   const k = kw.value.trim()
   if (!k) return exitSearch()
   if (k.length < 2) {
-    searchTip.value = '搜索关键词至少 2 个字'
+    searchTip.value = wx('搜索关键词至少 2 个字', '寻卷关键词至少 2 个字')
     return
   }
   searchTip.value = ''
@@ -201,25 +204,25 @@ onMounted(reload)
   max-width: 520px;
   margin: 0 auto;
   padding: 2px 2px 2px 14px;
-  background: rgba(255, 255, 255, 0.65);
-  border: 1px solid rgba(125, 211, 252, 0.4);
+  background: rgba(var(--theme-paper-rgb), 0.65);
+  border: 1px solid rgba(var(--theme-primary-light-rgb), 0.4);
   border-radius: 999px;
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   box-shadow:
-    0 4px 20px rgba(14, 165, 233, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+    0 4px 20px rgba(var(--theme-primary-strong-rgb), 0.08),
+    inset 0 1px 0 rgba(var(--theme-paper-rgb), 0.7);
   transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease;
 }
 .articles-search:hover {
-  border-color: rgba(125, 211, 252, 0.7);
+  border-color: rgba(var(--theme-primary-light-rgb), 0.7);
   transform: translateY(-1px);
 }
 .articles-search:focus-within {
-  border-color: #38bdf8;
+  border-color: var(--c-botany-500);
   box-shadow:
-    0 8px 28px rgba(14, 165, 233, 0.18),
-    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+    0 8px 28px rgba(var(--theme-primary-strong-rgb), 0.18),
+    inset 0 1px 0 rgba(var(--theme-paper-rgb), 0.7);
   transform: translateY(-1px);
 }
 .articles-search :deep(.el-input__wrapper) {
@@ -232,11 +235,11 @@ onMounted(reload)
   font-size: 14px;
 }
 .articles-search :deep(.el-input__inner::placeholder) {
-  color: #94a3b8;
+  color: var(--c-ink-300);
 }
 /* 前缀搜索图标：与站内 AppHeader/Search.vue 风格一致——无圆、无背景，仅浅蓝着色 */
 .articles-search :deep(.el-input__prefix-inner) {
-  color: #0ea5e9;
+  color: var(--c-botany-700);
   font-size: 16px;
   line-height: 1;
   margin-right: 2px;
@@ -251,7 +254,7 @@ onMounted(reload)
 }
 .articles-search :deep(.el-input__wrapper.is-focus) ~ * .el-input__prefix-inner,
 .articles-search:focus-within :deep(.el-input__prefix-inner) {
-  color: #0369a1;
+  color: var(--c-botany-900);
 }
 
 @media (max-width: 600px) {
@@ -266,27 +269,27 @@ onMounted(reload)
 .search-status {
   margin: 10px auto 0;
   font-size: 13px;
-  color: var(--c-ink-soft, #64748b);
+  color: var(--c-ink-soft, var(--c-ink-400));
 }
-.search-tip { color: #ea580c; }
+.search-tip { color: var(--c-orange-text); }
 .search-status {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 12px;
 }
-.search-status b { color: #0369a1; font-weight: 600; }
+.search-status b { color: var(--c-botany-900); font-weight: 600; }
 .ss-exit {
   padding: 2px 12px;
   font-size: 12.5px;
-  color: #0369a1;
-  background: #f0f9ff;
-  border: 1px solid #bae6fd;
+  color: var(--c-botany-900);
+  background: var(--c-botany-50);
+  border: 1px solid var(--c-botany-200);
   border-radius: 999px;
   cursor: pointer;
   transition: background 0.2s ease, border-color 0.2s ease;
 }
-.ss-exit:hover { background: #e0f2fe; border-color: #38bdf8; }
+.ss-exit:hover { background: var(--c-botany-100); border-color: var(--c-botany-500); }
 
 /* 搜索结果复用 .article-list 网格，卡片样式与正常列表完全一致 */
 
@@ -294,7 +297,7 @@ onMounted(reload)
   height: 3px;
   margin: 14px auto 0;
   max-width: 320px;
-  background: linear-gradient(90deg, transparent, #38bdf8, #fbbf24, #38bdf8, transparent);
+  background: linear-gradient(90deg, transparent, var(--c-botany-500), var(--c-autumn-500), var(--c-botany-500), transparent);
   background-size: 200% 100%;
   border-radius: 999px;
   animation: divider-shimmer 4s ease-in-out infinite;

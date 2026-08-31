@@ -2,12 +2,16 @@
   <div class="notfound">
     <div class="nf-inner">
       <div class="nf-num">404</div>
-      <h1>页面找不到了</h1>
+      <h1><WuxiaHeadingLettering text="页面找不到了" /></h1>
       <p>可能走丢了，去别处看看吧</p>
       <el-button type="primary" @click="$router.push('/')">回首页</el-button>
     </div>
   </div>
 </template>
+
+<script setup>
+import WuxiaHeadingLettering from '@/components/WuxiaHeadingLettering.vue'
+</script>
 
 <style scoped lang="scss">
 .notfound {

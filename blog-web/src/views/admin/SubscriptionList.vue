@@ -3,7 +3,7 @@
     <el-card>
       <template #header>
         <div class="header-bar">
-          <span>订阅者管理</span>
+          <span>{{ wx('订阅者管理') }}</span>
           <div class="header-actions">
             <el-button :loading="exporting" @click="onExport">
               <el-icon><Download /></el-icon> 导出 CSV
@@ -50,7 +50,7 @@
 
       <!-- 表格 -->
       <div class="table-scroll">
-        <el-table :data="list" v-loading="loading" :row-key="(row) => row.id" empty-text="暂无订阅者">
+        <el-table :data="list" v-loading="loading" :row-key="(row) => row.id" :empty-text="wx('暂无订阅者')">
           <el-table-column label="序号" width="60" align="center">
             <template #default="{ $index }">
               {{ (query.page - 1) * query.size + $index + 1 }}
@@ -117,6 +117,9 @@
 </template>
 
 <script setup>
+import { useWuxiaCopy } from '@/composables/useWuxiaCopy'
+const { wx } = useWuxiaCopy()
+
 import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Bell, CircleCheck, Clock, TrendCharts, Calendar, Download, Plus, Search, CircleClose } from '@element-plus/icons-vue'
@@ -135,12 +138,12 @@ const keyword = ref('')
 const filter = ref('all')
 
 const statsCards = [
-  { key: 'total', label: '总订阅数', bg: 'linear-gradient(135deg,#0ea5e9,#38bdf8)', icon: Bell },
-  { key: 'confirmed', label: '已确认', bg: 'linear-gradient(135deg,#10b981,#34d399)', icon: CircleCheck },
-  { key: 'pending', label: '待确认', bg: 'linear-gradient(135deg,#f59e0b,#fbbf24)', icon: Clock },
-  { key: 'unsubscribed', label: '已退订', bg: 'linear-gradient(135deg,#64748b,#94a3b8)', icon: CircleClose },
-  { key: 'todayNew', label: '今日新增', bg: 'linear-gradient(135deg,#6366f1,#818cf8)', icon: Calendar },
-  { key: 'weekNew', label: '近 7 天新增', bg: 'linear-gradient(135deg,#ec4899,#f472b6)', icon: TrendCharts }
+  { key: 'total', label: '总订阅数', bg: 'linear-gradient(135deg,var(--c-botany-700),var(--c-botany-500))', icon: Bell },
+  { key: 'confirmed', label: '已确认', bg: 'linear-gradient(135deg,var(--c-success),var(--c-emerald-400))', icon: CircleCheck },
+  { key: 'pending', label: '待确认', bg: 'linear-gradient(135deg,var(--c-autumn-700),var(--c-autumn-500))', icon: Clock },
+  { key: 'unsubscribed', label: '已退订', bg: 'linear-gradient(135deg,var(--c-ink-400),var(--c-ink-300))', icon: CircleClose },
+  { key: 'todayNew', label: '今日新增', bg: 'linear-gradient(135deg,var(--c-indigo),var(--c-indigo-400))', icon: Calendar },
+  { key: 'weekNew', label: '近 7 天新增', bg: 'linear-gradient(135deg,var(--c-rouge-500),var(--c-pink-400))', icon: TrendCharts }
 ]
 
 const sourceLabel = (s) => {
@@ -262,7 +265,7 @@ onMounted(reload)
 .stat-card {
   border-radius: 12px;
   padding: 18px 20px;
-  color: #fff;
+  color: var(--theme-on-primary);
   position: relative;
   overflow: hidden;
   min-height: 96px;

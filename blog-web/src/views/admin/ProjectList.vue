@@ -3,8 +3,8 @@
     <el-card>
       <template #header>
         <div class="header-bar">
-          <span>项目管理</span>
-          <el-button type="primary" @click="openForm()"><el-icon><Plus /></el-icon> 新建项目</el-button>
+          <span>{{ wx('项目管理') }}</span>
+          <el-button type="primary" @click="openForm()"><el-icon><Plus /></el-icon> {{ wx('新建项目') }}</el-button>
         </div>
       </template>
       <div class="toolbar">
@@ -33,7 +33,7 @@
           <el-table-column prop="description" label="简介" show-overflow-tooltip min-width="200">
             <template #default="{ row }">{{ row.description }}</template>
           </el-table-column>
-          <el-table-column label="技术栈" min-width="200">
+          <el-table-column :label="wx('技术栈')" min-width="200">
             <template #default="{ row }">
               <div class="stack-cell">
                 <el-tag v-for="t in (row.stack || []).slice(0, 3)" :key="t" size="small" class="m-r">{{ t }}</el-tag>
@@ -73,7 +73,7 @@
       />
     </el-card>
 
-    <el-dialog v-model="dlg" :title="form.id ? '编辑项目' : '新建项目'" width="min(560px, 92vw)">
+    <el-dialog v-model="dlg" :title="form.id ? wx('编辑项目') : wx('新建项目')" width="min(560px, 92vw)">
       <el-form :model="form" label-width="80px">
         <el-form-item label="名称" required>
           <el-input v-model="form.name" />
@@ -104,7 +104,7 @@
         <el-form-item label="简介">
           <el-input v-model="form.description" type="textarea" :rows="3" />
         </el-form-item>
-        <el-form-item label="技术栈">
+        <el-form-item :label="wx('技术栈')">
           <el-select v-model="form.stack" multiple filterable allow-create default-first-option placeholder="输入后回车添加">
           </el-select>
         </el-form-item>
@@ -133,9 +133,13 @@
 </template>
 
 <script setup>
+import { useWuxiaCopy } from '@/composables/useWuxiaCopy'
+const { wx } = useWuxiaCopy()
+
 import { ref, reactive, onMounted } from 'vue'
 import { Plus } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { DEFAULT_CONTENT_ACCENT } from '@/themes/registry'
 import {
   adminProjects, adminCreateProject, adminUpdateProject, adminDeleteProject, adminUpdateProjectStatus,
   adminProjectCategoriesAll, adminUpload,
@@ -154,7 +158,7 @@ const categoriesAll = ref([])
 
 const emptyForm = () => ({
   id: null, name: '', categoryId: null, description: '', stack: [],
-  icon: 'Folder', color: '#38bdf8', coverUrl: '', githubUrl: '', demoUrl: '', sortOrder: 0,
+  icon: 'Folder', color: DEFAULT_CONTENT_ACCENT, coverUrl: '', githubUrl: '', demoUrl: '', sortOrder: 0,
 })
 const form = reactive(emptyForm())
 
@@ -271,7 +275,7 @@ onMounted(() => {
 }
 .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 .pager { margin-top: 12px; justify-content: flex-end; display: flex; }
-.cover-thumb { width: 72px; height: 40px; object-fit: cover; border-radius: 6px; background: #eef6ff; }
+.cover-thumb { width: 72px; height: 40px; object-fit: cover; border-radius: 6px; background: var(--c-skeleton-base); }
 .cover-none { color: var(--c-ink-300); font-size: 12px; }
 
 .cover-uploader { display: flex; align-items: center; gap: 12px; }

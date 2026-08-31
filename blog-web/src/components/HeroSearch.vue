@@ -24,13 +24,14 @@
 
     <div class="container hs-inner">
       <p class="hs-eyebrow">search</p>
-      <h1 class="hs-title">{{ title }}</h1>
+      <h1 class="hs-title"><WuxiaHeadingLettering :text="title" /></h1>
       <p class="hs-sub" v-if="subtitle">{{ subtitle }}</p>
     </div>
   </div>
 </template>
 
 <script setup>
+import WuxiaHeadingLettering from '@/components/WuxiaHeadingLettering.vue'
 import GodRays from '@/components/effects/GodRays.vue'
 defineProps({
   title: { type: String, required: true },
@@ -48,7 +49,7 @@ defineProps({
   flex-direction: column;
   justify-content: center;
   background:
-    radial-gradient(ellipse 110% 70% at 50% -5%, rgba(56, 189, 248, 0.06) 0%, transparent 62%);
+    radial-gradient(ellipse 110% 70% at 50% -5%, rgba(var(--theme-primary-rgb), 0.06) 0%, transparent 62%);
 }
 
 /* 放大镜 + 涟漪舞台（整体微浮动） */
@@ -70,7 +71,7 @@ defineProps({
   margin-left: -66px; margin-top: -66px;
   color: var(--c-botany-500);
   opacity: 0.11;
-  filter: drop-shadow(0 0 26px rgba(56, 189, 248, 0.28));
+  filter: drop-shadow(0 0 26px rgba(var(--theme-primary-rgb), 0.28));
 }
 .hs-ring {
   position: absolute;
@@ -78,7 +79,7 @@ defineProps({
   width: 150px; height: 150px;
   margin-left: -75px; margin-top: -75px;
   border-radius: 50%;
-  border: 1.5px solid rgba(56, 189, 248, 0.28);
+  border: 1.5px solid rgba(var(--theme-primary-rgb), 0.28);
   opacity: 0;
   animation: ring-expand 4s ease-out infinite;
 }
@@ -105,7 +106,7 @@ defineProps({
   position: absolute;
   width: 4px; height: 4px;
   border-radius: 50%;
-  background: radial-gradient(circle, #fbbf24 0%, transparent 70%);
+  background: radial-gradient(circle, var(--c-autumn-500) 0%, transparent 70%);
   opacity: 0;
   animation: sparkle-drift 6s ease-in-out infinite;
 }

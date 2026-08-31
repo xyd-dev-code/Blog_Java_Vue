@@ -2,7 +2,7 @@
   <header class="app-header">
     <div class="container nav-inner">
       <router-link to="/" class="brand" @mouseenter="prefetchByName('home')">
-        <img v-if="siteLogo" :src="siteLogo" class="brand-mark brand-mark-img" alt="" aria-hidden="true" />
+        <img v-if="siteLogo && !logoFailed" :src="siteLogo" class="brand-mark brand-mark-img" alt="" aria-hidden="true" @error="logoFailed = true" />
         <span v-else-if="siteName" class="brand-mark">{{ brandMark }}</span>
         <span class="brand-text">
           <span class="brand-name">{{ siteName }}</span>
@@ -10,6 +10,7 @@
         </span>
       </router-link>
 
+      <!-- 导航名称固定使用原文，不随主题或当前页面变化。 -->
       <nav class="nav-menu">
         <router-link to="/" class="nav-item" exact-active-class="active" @mouseenter="prefetchByName('home')">首页</router-link>
         <router-link to="/articles" class="nav-item" active-class="active" @mouseenter="prefetchByName('articles')">文章</router-link>
@@ -89,10 +90,12 @@ const siteStore = useSiteStore()
 const kw = ref('')
 const drawerOpen = ref(false)
 const searchFocused = ref(false)
+const logoFailed = ref(false)
 
 const siteName = computed(() => siteStore.info?.siteName || '个人博客')
 const siteMotto = computed(() => siteStore.info?.motto || '')
 const siteLogo = computed(() => siteStore.info?.siteLogo || '')
+watch(siteLogo, () => { logoFailed.value = false })
 // 站点 mark 默认字符:取站点名第一个汉字或字母
 const brandMark = computed(() => {
   const s = siteName.value || ''
@@ -152,11 +155,11 @@ watch(drawerOpen, (v) => {
   align-items: center;
   height: 64px;
   border-radius: 16px;
-  background: rgba(255, 255, 255, 0.8);
+  background: var(--theme-header-bg);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
-  border: 1px solid rgba(255, 255, 255, 0.65);
-  box-shadow: 0 6px 24px rgba(14, 165, 233, 0.12);
+  border: 1px solid var(--theme-header-border);
+  box-shadow: var(--shadow-soft);
   /* 不再有任何 scrolled 态变化 —— 用户明确不要滚动收缩/变色 */
 }
 .brand {
@@ -179,16 +182,16 @@ watch(drawerOpen, (v) => {
   display: grid;
   place-items: center;
   background: linear-gradient(135deg, var(--c-botany-500), var(--c-autumn-500));
-  color: #fff;
+  color: var(--theme-on-primary);
   font-family: var(--font-serif);
   font-size: 22px;
   font-weight: 600;
-  box-shadow: 0 4px 14px rgba(14, 165, 233, 0.2);
+  box-shadow: 0 4px 14px rgba(var(--theme-primary-strong-rgb), 0.2);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 .brand:hover .brand-mark {
   transform: scale(1.05) rotate(-2deg);
-  box-shadow: 0 6px 18px rgba(14, 165, 233, 0.3);
+  box-shadow: 0 6px 18px rgba(var(--theme-primary-strong-rgb), 0.3);
 }
 .brand-mark-img {
   display: block;
@@ -284,14 +287,14 @@ watch(drawerOpen, (v) => {
     transition: background 0.25s ease, box-shadow 0.25s ease;
   }
   :deep(.el-input__wrapper):hover {
-    background: #fff;
+    background: var(--c-paper);
     box-shadow: 0 0 0 1px var(--c-botany-300);
   }
   :deep(.el-input__wrapper.is-focus) {
-    background: #fff;
+    background: var(--c-paper);
     box-shadow:
       0 0 0 1px var(--c-botany-500),
-      0 4px 16px rgba(56, 189, 248, 0.18);
+      0 4px 16px rgba(var(--theme-primary-rgb), 0.18);
   }
 }
 
@@ -321,7 +324,7 @@ watch(drawerOpen, (v) => {
 .mobile-drawer {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.45);
+  background: var(--theme-overlay);
   z-index: 1000;
   display: flex;
   justify-content: flex-end;
@@ -329,12 +332,12 @@ watch(drawerOpen, (v) => {
 }
 .drawer-panel {
   width: min(86vw, 320px);
-  background: #fff;
+  background: var(--c-paper);
   height: 100%;
   max-width: 100vw;
   display: flex;
   flex-direction: column;
-  box-shadow: -8px 0 32px rgba(15, 23, 42, 0.18);
+  box-shadow: -8px 0 32px rgba(var(--theme-ink-rgb), 0.18);
 }
 .drawer-head {
   display: flex; align-items: center; justify-content: space-between;
@@ -371,7 +374,7 @@ watch(drawerOpen, (v) => {
   &:hover { background: var(--c-botany-50); color: var(--c-botany-700); }
   &.router-link-active {
     background: linear-gradient(135deg, var(--c-botany-500), var(--c-botany-700));
-    color: #fff;
+    color: var(--theme-on-primary);
     font-weight: 500;
   }
 }
@@ -387,7 +390,7 @@ watch(drawerOpen, (v) => {
   color: var(--c-ink-700);
   font-size: 14px;
   transition: all 0.18s;
-  &:hover { background: var(--c-botany-500); color: #fff; }
+  &:hover { background: var(--c-botany-500); color: var(--theme-on-primary); }
 }
 
 .drawer-enter-active, .drawer-leave-active { transition: opacity 0.25s; overflow: hidden; }

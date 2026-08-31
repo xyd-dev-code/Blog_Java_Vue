@@ -3,7 +3,7 @@
     <el-card>
       <template #header>
         <div class="edit-header">
-          <span>{{ isEdit ? '编辑文章' : '新建文章' }}</span>
+          <span>{{ isEdit ? wx('编辑文章') : wx('新建文章') }}</span>
           <div>
             <el-button @click="goBack">返回</el-button>
             <el-button type="warning" plain @click="save(0)" :loading="saving">保存草稿</el-button>
@@ -14,7 +14,7 @@
 
       <el-form :model="form" label-width="80px">
         <el-form-item label="标题">
-          <el-input v-model="form.title" placeholder="给文章起个名字" size="large" maxlength="100" show-word-limit />
+          <el-input v-model="form.title" :placeholder="wx('给文章起个名字')" size="large" maxlength="100" show-word-limit />
         </el-form-item>
         <el-row :gutter="20">
           <el-col :xs="24" :md="8">
@@ -113,6 +113,9 @@
 </template>
 
 <script setup>
+import { useWuxiaCopy } from '@/composables/useWuxiaCopy'
+const { wx } = useWuxiaCopy()
+
 import { ref, reactive, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
@@ -379,7 +382,7 @@ onBeforeUnmount(() => {
   gap: 0;
   border-radius: 4px;
   overflow: hidden;
-  border: 1px solid #dcdfe6;
+  border: 1px solid var(--c-editor-border);
   width: fit-content;
 }
 
@@ -387,21 +390,21 @@ onBeforeUnmount(() => {
   padding: 2px 10px;
   font-size: 12px;
   cursor: pointer;
-  color: #909399;
-  background: #f5f7fa;
+  color: var(--c-editor-placeholder);
+  background: var(--c-editor-fill);
   transition: all 0.2s;
   user-select: none;
   line-height: 24px;
 
-  &:first-child { border-right: 1px solid #dcdfe6; }
+  &:first-child { border-right: 1px solid var(--c-editor-border); }
 
   &.active {
-    color: #409eff;
-    background: #ecf5ff;
+    color: var(--c-editor-primary);
+    background: var(--c-editor-primary-soft);
     font-weight: 500;
   }
 
-  &:hover:not(.active) { color: #606266; }
+  &:hover:not(.active) { color: var(--c-editor-text); }
 }
 
 .cover-upload {
@@ -441,13 +444,13 @@ onBeforeUnmount(() => {
     font-size: 16px;
     line-height: 1;
     border-radius: 50%;
-    background: rgba(0, 0, 0, 0.45);
-    color: #fff;
+    background: rgba(var(--theme-black-rgb), 0.45);
+    color: var(--theme-on-primary);
     display: none;
     align-items: center;
     justify-content: center;
 
-    &:hover { background: rgba(0, 0, 0, 0.7); }
+    &:hover { background: rgba(var(--theme-black-rgb), 0.7); }
   }
 
   &:hover .cover-clear { display: flex; }

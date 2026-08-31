@@ -1,6 +1,6 @@
 <template>
   <section class="comment-section">
-    <h3 class="cs-title">评论 <span class="cs-count">({{ total }})</span></h3>
+    <h3 class="cs-title">{{ wx('评论') }} <span class="cs-count">({{ total }})</span></h3>
 
     <!-- 首次加载骨架 -->
     <div class="comment-list skeleton-list" v-if="loading && !tree.length">
@@ -23,14 +23,14 @@
       />
     </div>
     <div class="comment-empty" v-else>
-      <el-empty description="还没有评论，来抢沙发吧～" />
+      <el-empty :description="wx('还没有评论，来抢沙发吧～')" />
     </div>
 
     <!-- 触发式写评论：默认只显示「我来说一句」按钮 -->
     <div class="comment-trigger" v-if="!formExpanded">
       <el-button type="primary" round class="trigger-btn" @click="openForm">
         <el-icon><EditPen /></el-icon>
-        <span>我来说一句</span>
+        <span>{{ wx('我来说一句') }}</span>
       </el-button>
       <span class="trigger-hint">已有 {{ total }} 条评论，期待你的声音</span>
     </div>
@@ -38,7 +38,7 @@
     <!-- 展开后的写评论表单 -->
     <div class="comment-form" ref="formRef" v-else>
       <div class="form-header">
-        <span class="form-title">{{ replyTo ? '回复 @' + replyTo.nickname : '写下你的评论' }}</span>
+        <span class="form-title">{{ replyTo ? '回复 @' + replyTo.nickname : wx('写下你的评论') }}</span>
         <el-button link type="info" size="small" @click="closeForm" class="form-close">
           <el-icon><Close /></el-icon> 收起
         </el-button>
@@ -75,7 +75,7 @@
           <span class="text-soft cs-avatar-tip">不传则用 Gravatar 邮箱头像</span>
         </div>
       </div>
-      <el-input v-model="form.nickname" placeholder="昵称 *" maxlength="20" />
+      <el-input v-model="form.nickname" :placeholder="wx('昵称 *')" maxlength="20" />
       <el-input v-model="form.email" type="email" inputmode="email" placeholder="邮箱 (选填, 不会公开)" />
       <el-input v-model="form.website" placeholder="网站 (选填)" />
       <el-input
@@ -83,7 +83,7 @@
         v-model="form.content"
         type="textarea"
         :rows="4"
-        placeholder="说点什么… 支持 Markdown"
+        :placeholder="wx('说点什么… 支持 Markdown')"
         maxlength="1000"
         show-word-limit
         @keydown.ctrl.enter.exact.prevent="submit"
@@ -104,13 +104,16 @@
           <el-icon class="clear-reply" @click="cancelReply"><Close /></el-icon>
         </span>
         <span class="text-soft hotkey-hint" v-else>Ctrl + Enter 快速发表</span>
-        <el-button type="primary" @click="submit" :loading="submitting">发表评论</el-button>
+        <el-button type="primary" @click="submit" :loading="submitting">{{ wx('发表评论') }}</el-button>
       </div>
     </div>
   </section>
 </template>
 
 <script setup>
+import { useWuxiaCopy } from '@/composables/useWuxiaCopy'
+const { wx } = useWuxiaCopy()
+
 import { ref, reactive, computed, onMounted, nextTick, onBeforeUnmount } from 'vue'
 import { Close, Plus, EditPen, ChatLineRound, Loading } from '@element-plus/icons-vue'
 import { ElMessage, ElNotification } from 'element-plus'
@@ -226,7 +229,7 @@ const load = async () => {
     tree.value = resp.data || []
     total.value = countTree(tree.value)
   } catch (e) {
-    ElMessage.error('评论加载失败,稍后重试')
+    ElMessage.error(wx('评论加载失败,稍后重试'))
   } finally {
     loading.value = false
   }
@@ -257,10 +260,10 @@ const cancelReply = () => {
 }
 
 const submit = async () => {
-  if (!form.nickname.trim()) return ElMessage.warning('请填写昵称')
+  if (!form.nickname.trim()) return ElMessage.warning(wx('请填写昵称'))
   if (captcha.enabled && !form.captchaAnswer.trim()) return ElMessage.warning('请填写验证码')
-  if (!form.content.trim()) return ElMessage.warning('请填写评论内容')
-  if (form.content.trim().length < 2) return ElMessage.warning('评论内容太短')
+  if (!form.content.trim()) return ElMessage.warning(wx('请填写评论内容'))
+  if (form.content.trim().length < 2) return ElMessage.warning(wx('评论内容太短'))
 
   submitting.value = true
   const payload = {
@@ -285,8 +288,8 @@ const submit = async () => {
     // 提交成功后自动收起表单,体验更清爽
     formExpanded.value = false
     ElNotification.success({
-      title: '评论已提交',
-      message: '评论正在等待审核,通过后会自动展示',
+      title: wx('评论已提交'),
+      message: wx('评论正在等待审核,通过后会自动展示'),
       duration: 2500
     })
   } catch (e) {
@@ -378,7 +381,7 @@ onBeforeUnmount(() => revokeLocal())
   min-width: 140px;
   height: 40px;
   font-weight: 500;
-  box-shadow: 0 2px 8px rgba(217, 119, 6, 0.18);
+  box-shadow: 0 2px 8px rgba(var(--theme-accent-dark-rgb), 0.18);
 }
 .trigger-hint {
   font-size: 13px;
@@ -429,7 +432,7 @@ onBeforeUnmount(() => revokeLocal())
 .cs-avatar-wrap { position: relative; flex-shrink: 0; }
 .cs-avatar-mask {
   position: absolute; inset: 0; border-radius: 50%;
-  background: rgba(255, 255, 255, 0.7);
+  background: rgba(var(--theme-paper-rgb), 0.7);
   display: flex; align-items: center; justify-content: center;
   font-size: 18px; color: var(--c-autumn-500);
 }

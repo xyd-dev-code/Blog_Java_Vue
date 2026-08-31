@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { wuxiaCopy } from '@/utils/wuxiaCopy'
 
 const SITE_NAME = '个人博客'
 
@@ -32,6 +33,7 @@ const TITLE_MAP = {
   'admin-friend-links': '友链管理',
   'admin-subscriptions': '订阅管理',
   'admin-stats': '访问统计',
+  'admin-themes': '主题管理',
   'admin-profile': '个人资料'
 }
 
@@ -78,6 +80,7 @@ const routes = [
       { path: 'friend-links', name: 'admin-friend-links', component: () => import('@/views/admin/FriendLinkList.vue') },
       { path: 'subscriptions', name: 'admin-subscriptions', component: () => import('@/views/admin/SubscriptionList.vue') },
       { path: 'stats', name: 'admin-stats', component: () => import('@/views/admin/Stats.vue') },
+      { path: 'themes', name: 'admin-themes', component: () => import('@/views/admin/ThemeManagement.vue') },
       { path: 'profile', name: 'admin-profile', component: () => import('@/views/admin/Profile.vue') }
     ]
   },
@@ -110,7 +113,7 @@ router.beforeEach((to, from, next) => {
 })
 
 // 路由切换后设置浏览器 tab title。优先级：自定义标题 > 路由名映射 > 默认
-router.afterEach((to) => {
+const updatePageTitle = (to) => {
   const map = to.matched[to.matched.length - 1]
   const pageName = TITLE_MAP[to.name] || (map && map.name) || ''
   // 尝试读取 article/page 等动态标题（在 meta.title 里设置）
@@ -118,11 +121,14 @@ router.afterEach((to) => {
   if (typeof custom === 'string' && custom) {
     document.title = custom
   } else if (pageName) {
-    document.title = `${pageName} · ${SITE_NAME}`
+    const themed = to.path !== '/' && document.documentElement.dataset.theme === 'ink'
+    document.title = `${themed ? (wuxiaCopy[pageName] || pageName) : pageName} · ${SITE_NAME}`
   } else {
     document.title = SITE_NAME
   }
-})
+}
+router.afterEach(updatePageTitle)
+window.addEventListener('blog:theme-change', () => updatePageTitle(router.currentRoute.value))
 
 // 防止 Vue Router 4 默认抛 NavigationDuplicated 阻断流程
 const originalPush = router.push

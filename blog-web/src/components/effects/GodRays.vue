@@ -47,49 +47,49 @@ defineProps({
   height: 170%;
   left: 18%;
   opacity: 0.07;
-  background: linear-gradient(to top, rgba(251,191,36,0.12), transparent);
+  background: linear-gradient(to top, rgba(var(--theme-accent-rgb), 0.12), transparent);
   animation: ray-sway-1 18s ease-in-out infinite;
 }
 .gr-ray-2 {
   height: 160%;
   left: 28%;
   opacity: 0.05;
-  background: linear-gradient(to top, rgba(56,189,248,0.1), transparent);
+  background: linear-gradient(to top, rgba(var(--theme-primary-rgb), 0.1), transparent);
   animation: ray-sway-2 22s ease-in-out infinite;
 }
 .gr-ray-3 {
   height: 180%;
   left: 42%;
   opacity: 0.08;
-  background: linear-gradient(to top, rgba(251,191,36,0.14), transparent);
+  background: linear-gradient(to top, rgba(var(--theme-accent-rgb), 0.14), transparent);
   animation: ray-sway-3 20s ease-in-out infinite;
 }
 .gr-ray-4 {
   height: 150%;
   left: 53%;
   opacity: 0.06;
-  background: linear-gradient(to top, rgba(14,165,233,0.11), transparent);
+  background: linear-gradient(to top, rgba(var(--theme-primary-strong-rgb), 0.11), transparent);
   animation: ray-sway-1 25s ease-in-out infinite;
 }
 .gr-ray-5 {
   height: 175%;
   left: 64%;
   opacity: 0.07;
-  background: linear-gradient(to top, rgba(251,191,36,0.1), transparent);
+  background: linear-gradient(to top, rgba(var(--theme-accent-rgb), 0.1), transparent);
   animation: ray-sway-2 19s ease-in-out infinite;
 }
 .gr-ray-6 {
   height: 140%;
   left: 74%;
   opacity: 0.05;
-  background: linear-gradient(to top, rgba(125,211,252,0.09), transparent);
+  background: linear-gradient(to top, rgba(var(--theme-primary-light-rgb), 0.09), transparent);
   animation: ray-sway-3 23s ease-in-out infinite;
 }
 .gr-ray-7 {
   height: 165%;
   left: 82%;
   opacity: 0.06;
-  background: linear-gradient(to top, rgba(251,191,36,0.11), transparent);
+  background: linear-gradient(to top, rgba(var(--theme-accent-rgb), 0.11), transparent);
   animation: ray-sway-1 21s ease-in-out infinite;
 }
 

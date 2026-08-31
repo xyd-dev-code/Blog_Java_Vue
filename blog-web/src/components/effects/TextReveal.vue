@@ -7,7 +7,9 @@
     而后者是可继承属性。若与逐字拆分的 <span> 同时存在，子 span 会继承 transparent
     却没有自己的背景，导致文字整体不可见。因此逐字动画播完后切换为纯文本再上扫光。
   -->
-  <component :is="tag" v-if="!done" :class="['ef-title-chars', rootClass]" :aria-label="text">
+  <component :is="tag" v-if="isWuxia" :class="rootClass"><WuxiaHeadingLettering :text="text" /></component>
+
+  <component :is="tag" v-else-if="!done" :class="['ef-title-chars', rootClass]" :aria-label="text">
     <span
       v-for="(ch, i) in chars"
       :key="i"
@@ -22,6 +24,11 @@
 
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
+import WuxiaHeadingLettering from '@/components/WuxiaHeadingLettering.vue'
+import { useThemeStore } from '@/stores/theme'
+
+const themeStore = useThemeStore()
+const isWuxia = computed(() => themeStore.activeThemeId === 'ink')
 
 const props = defineProps({
   text: { type: String, required: true },

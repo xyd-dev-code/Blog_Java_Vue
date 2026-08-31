@@ -100,12 +100,12 @@ onBeforeUnmount(() => {
   width: 52px;
   height: 52px;
   padding: 0;
-  border: 1px solid rgba(255, 255, 255, 0.75);
+  border: 1px solid rgba(var(--theme-paper-rgb), 0.75);
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.82);
+  background: rgba(var(--theme-paper-rgb), 0.82);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  box-shadow: 0 6px 22px rgba(14, 165, 233, 0.18);
+  box-shadow: 0 6px 22px rgba(var(--theme-primary-strong-rgb), 0.18);
   cursor: pointer;
   display: grid;
   place-items: center;
@@ -116,8 +116,8 @@ onBeforeUnmount(() => {
 
   &:hover {
     transform: translateY(-4px);
-    background: #fff;
-    box-shadow: 0 12px 30px rgba(14, 165, 233, 0.28);
+    background: var(--c-paper);
+    box-shadow: 0 12px 30px rgba(var(--theme-primary-strong-rgb), 0.28);
 
     .btt-cloud { fill: var(--c-botany-300); }
     .btt-arrow { stroke: var(--c-botany-900); }
@@ -155,7 +155,7 @@ onBeforeUnmount(() => {
 }
 .btt-ring-track {
   fill: none;
-  stroke: rgba(56, 189, 248, 0.14);
+  stroke: rgba(var(--theme-primary-rgb), 0.14);
   stroke-width: 2;
 }
 .btt-ring-bar {

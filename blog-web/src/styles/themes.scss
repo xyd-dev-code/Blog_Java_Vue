@@ -1,0 +1,765 @@
+/*
+ * 跨组件主题收口层。
+ * 这里不声明具体主题色，只消费注册表 token；组件自身无需感知主题 id。
+ * 只允许替换已有表面的颜色、纹理与装饰，禁止新增内容容器、边框宽度、
+ * 字体大小、圆角或定位规则。布局与组件形状始终由原始组件负责。
+ * 用户已将题字范围扩展至前台各页主副标题；正文、控件及原排版尺寸不变。
+ */
+
+@font-face {
+  font-family: 'PangMenZhengDao Cu';
+  src: url('/fonts/pangmenzhengdao-cu.woff2') format('woff2');
+  font-display: swap;
+  font-weight: 400 900;
+  font-style: normal;
+  ascent-override: 115.1%;
+  descent-override: 28.6%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: 'Ma Shan Zheng';
+  src: url('/fonts/ma-shan-zheng.woff2') format('woff2');
+  font-display: swap;
+  font-weight: 400;
+  font-style: normal;
+  ascent-override: 115.1%;
+  descent-override: 28.6%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: 'Zhi Mang Xing';
+  src: url('/fonts/zhi-mang-xing.woff2') format('woff2');
+  font-display: swap;
+  font-weight: 400;
+  font-style: normal;
+  // Explicit metrics keep the fallback and loaded line boxes predictable.
+  ascent-override: 115.1%;
+  descent-override: 28.6%;
+  line-gap-override: 0%;
+}
+
+/* 只在已有页面表面绘画，不新增节点或改变布局。
+   图像保持原比例；纸色罩染只作用于背景，正文与封面不参与混色。 */
+@mixin wuxia-page-backdrop {
+  background-color: var(--c-paper);
+  background-image:
+    linear-gradient(90deg,
+      rgba(var(--theme-paper-rgb), var(--wuxia-scene-edge, .58)),
+      rgba(var(--theme-paper-rgb), var(--wuxia-scene-center, .94)) 24% 76%,
+      rgba(var(--theme-paper-rgb), var(--wuxia-scene-edge, .58))),
+    url('/images/wuxia-jianghu-border.webp'),
+    url('/images/ink-mountain-layer-v2.png'),
+    url('/images/ink-paper-texture-v2.png');
+  background-size: auto, max(100%, 1440px) auto, max(100%, 1280px) auto, 1440px auto;
+  background-position: center, center bottom, center top 100px, center top;
+  background-repeat: no-repeat, no-repeat, no-repeat, repeat;
+  background-attachment: fixed;
+  background-blend-mode: normal, luminosity, luminosity, luminosity;
+
+  @media (max-width: 768px) {
+    // 窄屏把右侧山门留在画内，避免等比放大后只看见画卷中央的空白。
+    background-size: auto, auto 48vh, auto 34vh, 768px auto;
+    background-position: center, right -70px bottom, left -80px top 120px, center top;
+  }
+}
+
+.app-root {
+  /* 仅为背景画作建立独立层叠上下文，不改变根容器的尺寸与定位。 */
+  isolation: isolate;
+}
+
+button,
+input,
+textarea,
+select,
+.el-card,
+.el-dialog,
+.el-message,
+.el-message-box,
+.el-notification,
+.el-popper {
+  color: var(--c-ink);
+}
+
+:where(a, button, input, textarea, select, [tabindex]):focus-visible {
+  outline: 3px solid var(--theme-focus-ring);
+  outline-offset: 2px;
+}
+
+/* Sunny 的装饰保持原样；水墨依靠纸纹与墨晕留白，不叠加晴空粒子。 */
+:where(
+  .cloud-parallax,
+  .sparkle-field,
+  .aurora-sky,
+  .sky-sheen,
+  .leaf-field,
+  .bokeh-field,
+  .light-dust,
+  .light-pool,
+  .star-trail,
+  .sunny-decor
+) {
+  opacity: var(--theme-decoration-opacity);
+  transition: opacity 0.22s ease;
+}
+
+.ink-feedback-drop {
+  position: fixed;
+  z-index: 9999;
+  border-radius: 50%;
+  pointer-events: none;
+  opacity: 0;
+  background: radial-gradient(circle,
+    rgba(var(--theme-ink-rgb), var(--theme-ink-ripple-opacity)) 0 18%,
+    rgba(var(--theme-primary-strong-rgb), 0.1) 42%,
+    transparent 72%);
+  transform: scale(0.12);
+  animation: ink-feedback-spread var(--theme-motion-base) var(--theme-motion-ease) forwards;
+}
+
+html[data-theme='ink'] {
+  --font-wuxia-heading: 'PangMenZhengDao Cu', 'Ma Shan Zheng', 'KaiTi', 'STKaiti', serif;
+
+  // Fixed titles use lettering art; editable titles and subtitles use this companion face.
+  // Keep original font sizes, line heights, spacing, wrapping and body copy untouched.
+  .front-main :is(.hero-title, .ha-title, .hf-title, .hg-title, .hs-title, .sky-page-head h1, .art-title, .title-accent, .hero-desc, .section-title, .section-sub, .cta-title, .cta-desc, .sky-page-head p, .ha-sub, .hf-sub, .hg-sub, .hs-sub, .ha-tagline, .hero-subtitle, .hero-tagline, .hero-hint, .art-deck, .fh-title, .fh-desc, .fg-title, .ss-title, .sec-title, .rs-title, .toc-title, .profile-info h2) {
+    font-family: var(--font-wuxia-heading);
+  }
+
+  .notfound :is(h1, p) {
+    font-family: var(--font-wuxia-heading);
+  }
+
+  // The typing caret is UI chrome; keep its original width and alignment.
+  .ha-cursor { font-family: var(--font-serif); }
+
+  .wuxia-hero-art { color: var(--c-ink); }
+
+  body::before {
+    mix-blend-mode: multiply;
+  }
+
+  /* 晴天主题中的渐变字在水墨主题下改为实墨，阅读更接近纸本。 */
+  .section-title,
+  .ef-title-gradient,
+  .gradient-text {
+    background: none !important;
+    color: var(--c-ink) !important;
+    -webkit-text-fill-color: currentColor !important;
+  }
+
+  .section-title::after {
+    background: linear-gradient(90deg, var(--c-autumn-700), rgba(var(--theme-accent-rgb), 0.08));
+    animation: none;
+  }
+
+  .sky-page-head {
+    box-shadow: 0 14px 42px rgba(var(--theme-ink-rgb), 0.14);
+  }
+
+  .sky-page-head .cloud,
+  .sky-page-head .hero-light,
+  .sky-page-head .god-rays {
+    opacity: 0.16;
+    filter: grayscale(1);
+  }
+
+  .sky-hero .deco {
+    opacity: 0 !important;
+  }
+
+  /* 首页首屏沿用原画；下方各 section 单独绘制连续背景，防止首屏叠画。 */
+  .ink-wash-backdrop[data-scene='home'] {
+    opacity: 0 !important;
+    visibility: hidden !important;
+  }
+
+  .ink-wash-backdrop {
+    opacity: var(--theme-ink-scene-opacity);
+    visibility: visible;
+  }
+
+  /* 所有内页共享江湖画卷；首页仅补精选及后续内容区，首屏保持原样。
+     固定背景使用同一视口坐标，滚动长页或跨 section 时不会重起一张画。 */
+  .front-layout:not(:has(.home-sky)),
+  .home-sky > .section,
+  .admin-layout,
+  .notfound {
+    @include wuxia-page-backdrop;
+  }
+
+  // 阅读页和后台只在页面空白处留淡墨，卡片、表格与正文表面不动。
+  .front-layout:has(.article-detail),
+  .admin-layout {
+    --wuxia-scene-edge: .76;
+    --wuxia-scene-center: .98;
+  }
+
+  .gradient-border-card {
+    border-color: var(--c-line);
+  }
+
+  .gradient-border-card::before {
+    opacity: 0 !important;
+  }
+
+  /* 题签与线性图标：朱砂只作为小面积落印，不铺满大块表面。 */
+  .brand-mark:not(.brand-mark-img) {
+    background: var(--c-autumn-700);
+    box-shadow: 0 5px 16px rgba(var(--theme-accent-rgb), 0.18);
+  }
+
+  .el-icon svg,
+  svg.icon {
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  /* 导航笔触：悬停为墨线划过，激活态像一枚短朱砂题签。 */
+  .nav-item::after {
+    background: var(--theme-ink-brush-line);
+    transition: transform var(--theme-motion-base) var(--theme-motion-ease),
+                width var(--theme-motion-base) var(--theme-motion-ease),
+                margin-left var(--theme-motion-base) var(--theme-motion-ease);
+  }
+
+  .nav-item.active::after {
+    background: var(--c-autumn-700);
+  }
+
+  /* 卡片不做大幅漂浮，以边缘墨线、轻抬升和柔和纸面阴影反馈。 */
+  body :is(
+    .friend-card,
+    .post-card,
+    .post-card-sky,
+    .pc-compact,
+    .proj-card,
+    .tool-card,
+    .cta-card,
+    .stat-card,
+    .kpi-card,
+    .chart-card,
+    .profile-card,
+    .nav-card,
+    .tl-card,
+    .tag-cloud-card,
+    .share-card,
+    .story-card,
+    .comment-item:not(.is-default) > .ci-card,
+    .contact-item
+  ) {
+    transition-duration: var(--theme-motion-base);
+    transition-timing-function: var(--theme-motion-ease);
+  }
+
+  @media (hover: hover) {
+    body :is(
+      .friend-card,
+      .post-card,
+      .post-card-sky,
+      .pc-compact,
+      .proj-card,
+      .tool-card,
+      .cta-card,
+      .stat-card,
+      .kpi-card,
+      .chart-card,
+      .profile-card,
+      .nav-card,
+      .tl-card,
+      .tag-cloud-card,
+      .share-card,
+      .story-card,
+      .comment-item:not(.is-default) > .ci-card,
+      .contact-item
+    ):hover {
+      border-color: var(--c-botany-300) !important;
+      box-shadow: var(--theme-ink-hover-shadow) !important;
+    }
+  }
+
+  :is(.el-button, button.btn, .fh-apply-btn, .share-btn, .use-btn) {
+    transition-duration: var(--theme-motion-fast);
+    transition-timing-function: var(--theme-motion-ease);
+  }
+
+  :is(.el-button, button.btn, .fh-apply-btn, .share-btn, .use-btn):active {
+    box-shadow: inset 0 0 0 1px rgba(var(--theme-accent-rgb), 0.28);
+  }
+
+  /* 容器表面由组件原有 token 换色，不把透明区域统一涂成卡片。 */
+  body :is(
+    .el-input__wrapper,
+    .el-textarea__inner,
+    .el-select__wrapper,
+    .el-date-editor,
+    input,
+    textarea,
+    select
+  ) {
+    border-color: var(--c-line);
+    background-color: var(--c-paper-soft);
+    color: var(--c-ink);
+  }
+
+  .admin-layout,
+  .admin-content,
+  .tools-page,
+  .projects-page,
+  .friends-page,
+  .article-detail,
+  .about-page,
+  .archives-page {
+    background-color: transparent !important;
+  }
+
+  .admin-aside,
+  .admin-topbar {
+    background: var(--c-paper) !important;
+    border-color: var(--c-line) !important;
+  }
+
+  .el-button--primary {
+    color: var(--theme-on-primary) !important;
+    background: var(--c-botany-700) !important;
+    border-color: var(--c-botany-700) !important;
+  }
+
+  .el-overlay,
+  .mobile-drawer,
+  .aside-mask {
+    background: var(--theme-overlay) !important;
+  }
+
+  /* Markdown / 富文本预览的第三方浅色默认值也纳入主题。 */
+  .md-editor {
+    --md-color: var(--c-ink);
+    --md-hover-color: var(--c-ink-700);
+    --md-bk-color: var(--c-paper);
+    --md-bk-color-outstand: var(--c-paper-soft);
+    --md-bk-hover-color: var(--c-botany-50);
+    --md-border-color: var(--c-line);
+    --md-border-hover-color: var(--c-botany-300);
+    --md-border-active-color: var(--c-botany-500);
+    --md-scrollbar-bg-color: var(--c-paper-soft);
+    --md-scrollbar-thumb-color: var(--c-ink-300);
+    --md-theme-color: var(--c-ink);
+    --md-theme-bg-color: var(--c-paper);
+    --md-theme-bg-color-inset: var(--c-paper-soft);
+    --md-theme-border-color: var(--c-line);
+    color: var(--c-ink) !important;
+    background-color: var(--c-paper) !important;
+    border-color: var(--c-line) !important;
+  }
+
+  .markdown-body,
+  .md-editor-preview,
+  .md-editor-preview-wrapper {
+    color: var(--c-ink) !important;
+    background: transparent !important;
+  }
+
+  .markdown-body :is(pre, code, blockquote) {
+    border-color: var(--c-line) !important;
+    background-color: var(--c-paper-soft) !important;
+  }
+
+  .markdown-body a { color: var(--c-botany-700) !important; }
+
+  /* 同一张纸面从布局顶端连续铺开，覆盖固定导航预留区及两侧。
+     只调整背景绘制；导航留白、首屏高度和山水素材坐标沿用原布局。 */
+  .front-layout:has(.home-sky) {
+    background-color: var(--c-paper);
+    background-image:
+      linear-gradient(rgba(var(--theme-paper-rgb), .8), rgba(var(--theme-paper-rgb), .8)),
+      url('/images/ink-paper-texture-v2.png');
+    background-size: auto, 100% auto;
+    // Keep the paper fibers' luminance without importing the source image's yellow hue.
+    background-blend-mode: normal, luminosity;
+  }
+
+  /* 首页首屏只换素材、颜色和纸面质感，不覆盖任何布局属性。 */
+  .sky-hero {
+    .ink-hero-scene {
+      opacity: 1;
+      visibility: visible;
+      background: transparent;
+    }
+
+    .ink-paper-layer {
+      /* 纸纹由祖先统一绘制，避免在导航下沿重新起一张背景。 */
+      opacity: 0;
+    }
+
+    .hero-eyebrow {
+      color: var(--c-ink-700);
+      border-color: rgba(var(--theme-ink-rgb), .22);
+      background: rgba(var(--theme-paper-rgb), .72);
+    }
+
+    .hero-eyebrow .dot {
+      background: var(--c-autumn-500);
+      animation: none;
+    }
+
+    .title-main {
+      color: var(--c-ink-950);
+      background: none;
+      -webkit-text-fill-color: currentColor;
+      text-shadow: 0 2px 12px rgba(var(--theme-paper-rgb), .56);
+    }
+
+    .title-accent {
+      color: var(--c-autumn-700);
+      background: none;
+      -webkit-text-fill-color: currentColor;
+    }
+
+    .hero-desc { color: var(--c-ink-700); }
+
+    .hero-actions .el-button {
+      box-shadow: none;
+    }
+
+    .hero-actions .el-button--primary {
+      border-color: var(--c-ink-900);
+      background: var(--c-ink-900);
+      color: var(--theme-on-primary);
+    }
+
+    .hero-actions .el-button--primary:hover {
+      border-color: var(--c-autumn-700);
+      background: var(--c-autumn-700);
+    }
+
+    .hero-actions .el-button.is-plain {
+      border-color: rgba(var(--theme-ink-rgb), .35);
+      background: rgba(var(--theme-paper-rgb), .58);
+      color: var(--c-ink-800);
+    }
+
+    .weather-card {
+      background:
+        radial-gradient(ellipse at 100% 0%, rgba(var(--theme-weather-wash-rgb), .24), transparent 68%),
+        rgba(var(--theme-paper-rgb), .95);
+      box-shadow: 0 20px 56px rgba(var(--theme-ink-rgb), .14);
+      backdrop-filter: blur(9px) saturate(1.05);
+      -webkit-backdrop-filter: blur(9px) saturate(1.05);
+    }
+
+    .weather-card::before,
+    .weather-card::after { opacity: 0; }
+
+    .weather-eyebrow { color: var(--c-cyan-700); }
+    .weather-temp { color: rgb(var(--theme-weather-blue-rgb)); }
+    .weather-icon {
+      opacity: 1;
+      filter: drop-shadow(0 4px 10px rgba(var(--theme-weather-blue-rgb), .12));
+    }
+    .weather-loc-btn { background: transparent; color: var(--c-autumn-700); filter: none; }
+    .weather-loc-btn:hover { background: rgba(var(--theme-accent-rgb), .1); }
+    .weather-divider { background: rgba(var(--theme-weather-blue-rgb), .18); }
+    .wg-num { color: rgb(var(--theme-weather-blue-rgb)); }
+    .weather-grid > :last-child .wg-num { color: var(--c-autumn-700); }
+
+    .weather-quote {
+      background: rgba(var(--theme-accent-rgb), .07);
+      color: var(--c-autumn-800);
+    }
+
+  }
+
+  /* 导航保持原来的悬浮容器，纸面由 nav-inner 的主题 token 承载。 */
+  .app-header {
+    .brand-mark:not(.brand-mark-img) {
+      background: var(--c-autumn-700);
+      box-shadow: none;
+    }
+
+    .brand-name { color: var(--c-ink-950); }
+    .brand-motto { color: var(--c-ink-500); }
+
+    .nav-item {
+      color: var(--c-ink-600, var(--c-ink-500));
+    }
+
+    :is(.nav-item:hover, .nav-item.active, .nav-item.router-link-active) {
+      color: var(--c-ink-950) !important;
+      background: transparent !important;
+    }
+
+    :is(.nav-item::after, .nav-item.active::after, .nav-item.router-link-active::after) {
+      background: var(--c-autumn-500);
+    }
+
+    .search-box .el-input__wrapper {
+      background: rgba(var(--theme-paper-rgb), .58);
+      box-shadow: inset 0 0 0 1px rgba(var(--theme-ink-rgb), .13);
+    }
+
+    :is(.search-box .el-input__wrapper:hover, .search-box .el-input__wrapper.is-focus) {
+      background: rgba(var(--theme-paper-rgb), .84);
+      box-shadow: 0 0 0 1px rgba(var(--theme-accent-rgb), .45);
+    }
+
+    .drawer-link.router-link-active { background: var(--c-ink-900); color: var(--theme-on-primary); }
+  }
+
+  .post-card-sky {
+    box-shadow: 0 12px 34px rgba(var(--theme-ink-rgb), .08);
+
+    &:hover {
+      box-shadow: 0 18px 42px rgba(var(--theme-ink-rgb), .13);
+    }
+
+    .chip:first-child {
+      border-color: rgba(var(--theme-accent-rgb), .2);
+      background: rgba(var(--theme-accent-rgb), .08);
+      color: var(--c-autumn-800);
+    }
+
+  }
+
+  .home-sky {
+    background: transparent;
+
+    .section-eyebrow { color: var(--c-autumn-700); }
+    .section-title { color: var(--c-ink-950); }
+
+    .section-title::after {
+      background: var(--c-autumn-700);
+      animation: none;
+    }
+
+    :is(.more-link, .cta-more) { color: var(--c-autumn-800); }
+
+    :is(.tag-cloud-card, .cta-card) {
+      border-color: rgba(var(--theme-ink-rgb), .18);
+      background: rgba(var(--theme-paper-rgb), .88);
+      box-shadow: 0 14px 40px rgba(var(--theme-ink-rgb), .07);
+    }
+
+    .cta-sun { background: rgba(var(--theme-accent-rgb), .055); border-color: rgba(var(--theme-accent-rgb), .24); }
+    .tc-chip { background: transparent; border-color: rgba(var(--theme-ink-rgb), .2); color: var(--c-ink-700); }
+    .tc-chip.is-big { background: var(--c-ink-900); border-color: var(--c-ink-900); box-shadow: none; }
+    .tc-chip:hover { background: var(--c-autumn-700); border-color: var(--c-autumn-700); }
+    .reveal { transition-duration: var(--theme-motion-slow); transition-timing-function: var(--theme-motion-ease); }
+  }
+}
+
+/* 非首页的武侠增饰。只绘制现有表面，不声明布局、字号、边框宽度、
+   圆角或伪元素内容。根节点标记同时约束 body 下的 Teleport 弹层；
+   回到首页或切回晴天时整组规则立即失效。 */
+html[data-theme='ink']:has(.app-root[data-wuxia-page]) {
+  --wuxia-paper-grain: linear-gradient(rgba(var(--theme-paper-rgb), .95), rgba(var(--theme-paper-rgb), .95)),
+    url('/images/ink-paper-texture-v2.png');
+  --wuxia-scroll-edge: linear-gradient(90deg,
+    rgba(var(--theme-ink-rgb), .08), transparent 2.5% 97.5%, rgba(var(--theme-ink-rgb), .08));
+  --wuxia-sword-glint: linear-gradient(118deg,
+    transparent 38%, rgba(var(--theme-paper-rgb), .08) 46%,
+    rgba(var(--theme-paper-rgb), .3) 49.5%, transparent 52%);
+
+  // 内页沿用各自页头的透明背景、留白和装饰，不统一铺山水横幅或分界线。
+  // .hero-search 同时是工具页的搜索控件，也必须由原组件管理表面样式。
+
+  .ha-page {
+    background-image: var(--wuxia-scroll-edge), var(--wuxia-paper-grain);
+    background-blend-mode: normal, normal, luminosity;
+    border-color: rgba(var(--theme-ink-rgb), .18);
+    box-shadow: 0 2px 8px rgba(var(--theme-ink-rgb), .08);
+  }
+
+  :is(.ha-eyebrow, .hf-eyebrow, .hs-eyebrow, .section-eyebrow,
+      .fh-title, .toc-title, .share-eyebrow, .tl-year, .sec-title,
+      .aside-eyebrow, .pane-eyebrow, .topbar-title, .nf-num) {
+    color: var(--c-autumn-800);
+    -webkit-text-fill-color: currentColor;
+  }
+
+  :is(.art-progress, .sky-divider, .sec-line, .title-dot, .tl-dot.active) {
+    background: var(--theme-ink-brush-line);
+    box-shadow: none;
+  }
+
+  :is(.post-card-sky, .proj-card, .tool-card, .friend-card, .profile-card,
+      .story-card, .contact-item, .share-card, .tl-card, .login-card, .el-card,
+      .el-dialog, .el-drawer, .el-message-box, .el-notification, .el-message,
+      .drawer-panel, .theme-card) {
+    background-color: var(--c-paper);
+    background-image: var(--wuxia-scroll-edge), var(--wuxia-paper-grain);
+    background-blend-mode: normal, normal, luminosity;
+    border-color: rgba(var(--theme-ink-rgb), .22);
+  }
+
+  .post-card-sky .cover.is-placeholder {
+    background:
+      linear-gradient(180deg, rgba(var(--theme-paper-rgb), .62), rgba(var(--theme-paper-rgb), .34)),
+      url('/images/wuxia-jianghu-border.webp') center bottom / cover no-repeat,
+      var(--c-paper-soft);
+    box-shadow: inset 0 -1px 0 rgba(var(--theme-ink-rgb), .15);
+  }
+  .post-card-sky .cover-char { color: var(--c-ink-800); }
+
+  // Paint only missing-cover placeholders; administrator supplied images stay intact.
+  .card-illus:not(:has(img)), .pd-cover:not(:has(img)) {
+    background:
+      linear-gradient(rgba(var(--theme-paper-rgb), .58), rgba(var(--theme-paper-rgb), .58)),
+      url('/images/wuxia-jianghu-border.webp') center bottom / contain no-repeat;
+  }
+
+  :is(.nav-inner, .art-author-bar, .art-toc, .el-card__header, .admin-topbar,
+      .admin-aside, .login-page) {
+    background-image: var(--wuxia-paper-grain);
+    background-blend-mode: normal, luminosity;
+    border-color: var(--c-line);
+  }
+
+  .login-page {
+    @include wuxia-page-backdrop;
+  }
+
+  :is(.el-input__wrapper, .el-textarea__inner, .el-select__wrapper) {
+    background-image: var(--wuxia-paper-grain);
+    background-blend-mode: normal, luminosity;
+  }
+  .el-input__inner, .hero-search-input { background: transparent !important; }
+
+  :is(.el-input__wrapper.is-focus, .el-select__wrapper.is-focused) {
+    box-shadow: inset 0 0 0 1px var(--c-autumn-700) !important;
+  }
+
+  :is(.el-button--primary:not(.is-link):not(.is-text):not(.is-plain),
+      .hg-publish, .fh-apply-btn, .submit-btn, .btn-demo) {
+    color: var(--theme-on-primary) !important;
+    background-color: var(--c-ink-800) !important;
+    background-image: var(--wuxia-sword-glint) !important;
+    background-size: 240% 100% !important;
+    background-position: 100% 0;
+    border-color: var(--c-ink-800) !important;
+    box-shadow: inset 0 0 0 1px rgba(var(--theme-paper-rgb), .13);
+    transition: background-position .4s ease, background-color .2s ease, border-color .2s ease;
+  }
+
+  :is(.el-button--primary.is-plain, .el-button--primary.is-link, .el-button--primary.is-text) {
+    color: var(--c-autumn-800) !important;
+    background: transparent !important;
+  }
+
+  :is(.tabs-chip.active, .hero-chip.active, .cat-pill:not(.muted), .ci-admin),
+  .aside-nav .nav-item.router-link-active,
+  .drawer-link.router-link-active {
+    background: var(--c-ink-800) !important;
+    color: var(--theme-on-primary) !important;
+    border-color: var(--c-ink-800);
+    box-shadow: inset 0 -2px 0 var(--c-autumn-700);
+  }
+  .aside-nav .nav-item.router-link-active .el-icon { color: inherit; }
+  .drawer-link[href='/']:not(.router-link-exact-active) {
+    background: transparent !important;
+    color: var(--c-ink-700) !important;
+    box-shadow: none;
+  }
+
+  .el-button--primary.is-disabled {
+    background: rgba(var(--theme-ink-rgb), .35) !important;
+    border-color: transparent !important;
+    color: var(--theme-on-primary) !important;
+    box-shadow: none;
+  }
+
+  :is(.use-btn:not(.muted):not(.upcoming), .btn-more, .share-btn,
+      .tag-pill-sun, .meta-badge, .role-badge, .rank-badge, .cat-tag) {
+    color: var(--c-autumn-800);
+    background-color: rgba(var(--theme-accent-rgb), .055);
+    border-color: rgba(var(--theme-accent-rgb), .3);
+  }
+
+  :is(.hf-connect-icon, .hs-lens, .stat-icon, .card-icon:not(img),
+      .toc-title .el-icon, .fh-apply-btn .el-icon) {
+    filter: drop-shadow(1px 1px 0 rgba(var(--theme-ink-rgb), .14));
+  }
+
+  .el-empty {
+    --el-empty-fill-color-0: var(--c-paper);
+    --el-empty-fill-color-1: var(--c-paper-soft);
+    --el-empty-fill-color-2: var(--c-botany-50);
+    --el-empty-fill-color-3: var(--c-botany-100);
+    --el-empty-fill-color-4: var(--c-ink-100);
+    --el-empty-fill-color-5: var(--c-botany-200);
+    --el-empty-fill-color-6: var(--c-botany-100);
+    --el-empty-fill-color-7: var(--c-paper);
+    --el-empty-fill-color-8: var(--c-botany-200);
+    --el-empty-fill-color-9: var(--c-botany-300);
+  }
+
+  :is(.el-empty__description p, .empty-sub, .hero-tagline, .hero-hint,
+      .ha-sub, .hf-sub, .hs-sub, .hg-sub, .end-tip, .tools-page .footer) {
+    color: var(--c-ink-700);
+  }
+
+  .dashboard .stat-card {
+    background: var(--wuxia-sword-glint), var(--c-ink-800) !important;
+    box-shadow: inset 0 -2px 0 var(--c-autumn-700);
+  }
+  .el-table {
+    --el-table-header-bg-color: var(--c-paper-soft);
+    --el-table-row-hover-bg-color: rgba(var(--theme-accent-rgb), .05);
+    --el-table-border-color: var(--c-line-soft);
+  }
+
+  @media (hover: hover) {
+    :is(.el-button--primary:not(.is-disabled):not(.is-link):not(.is-text):not(.is-plain),
+        .hg-publish, .fh-apply-btn, .submit-btn, .btn-demo):hover {
+      background-color: var(--c-autumn-800) !important;
+      background-position: 0 0;
+      border-color: var(--c-autumn-800) !important;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    :is(.el-button, .hg-publish, .fh-apply-btn, .submit-btn, .btn-demo) { transition: none; }
+  }
+}
+
+@keyframes ink-feedback-spread {
+  0% { opacity: 0; transform: scale(0.12); }
+  28% { opacity: 1; }
+  100% { opacity: 0; transform: scale(1); }
+}
+
+@keyframes ink-mountain-breathe {
+  from { transform: translateX(-50%) scale(1.015); }
+  to { transform: translateX(-50%) scale(1.045); }
+}
+
+@keyframes ink-foliage-drift {
+  from { transform: translate3d(0, 0, 0) rotate(-.25deg); }
+  to { transform: translate3d(0, -7px, 0) rotate(.35deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :where(
+    .cloud-parallax,
+    .sparkle-field,
+    .aurora-sky,
+    .sky-sheen,
+    .leaf-field,
+    .bokeh-field,
+    .light-dust,
+    .light-pool,
+    .star-trail,
+    .sunny-decor
+  ) {
+    transition: none;
+  }
+
+  .sky-hero :is(.ink-mountain-layer, .ink-foliage-layer) {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .sky-hero .ink-mountain-layer { transform: translateX(-50%); }
+
+  .ink-feedback-drop { display: none; }
+}

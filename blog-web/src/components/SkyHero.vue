@@ -1,18 +1,22 @@
 ﻿<template>
   <section class="sky-hero" ref="rootRef">
+    <div class="ink-hero-scene" aria-hidden="true">
+      <img class="ink-paper-layer" src="/images/ink-paper-texture-v2.png" alt="" decoding="async" fetchpriority="high" />
+      <WuxiaHeroArt />
+    </div>
     <!-- 装饰层：视差光影 + 太阳 + 云朵 -->
     <HeroLight />
     <div class="deco">
       <div class="sun" :style="sunStyle"></div>
-      <svg class="cloud cloud-a" viewBox="0 0 64 24" fill="white" aria-hidden="true">
+      <svg class="cloud cloud-a" viewBox="0 0 64 24" fill="var(--theme-on-primary)" aria-hidden="true">
         <ellipse cx="20" cy="14" rx="14" ry="8" />
         <ellipse cx="38" cy="12" rx="18" ry="10" />
         <ellipse cx="52" cy="14" rx="10" ry="6" />
       </svg>
-      <svg class="cloud cloud-b" viewBox="0 0 64 24" fill="white" aria-hidden="true">
+      <svg class="cloud cloud-b" viewBox="0 0 64 24" fill="var(--theme-on-primary)" aria-hidden="true">
         <ellipse cx="32" cy="12" rx="22" ry="11" />
       </svg>
-      <svg class="cloud cloud-c" viewBox="0 0 64 24" fill="white" aria-hidden="true">
+      <svg class="cloud cloud-c" viewBox="0 0 64 24" fill="var(--theme-on-primary)" aria-hidden="true">
         <ellipse cx="32" cy="12" rx="18" ry="9" />
       </svg>
     </div>
@@ -25,8 +29,14 @@
           <span>{{ displayGreeting }} · {{ todayStr }}</span>
         </div>
         <h1 class="hero-title">
-          <span class="title-main">{{ titleMain }}</span>
-          <span class="title-accent">{{ titleAccent }}</span>
+          <span class="title-main">
+            <WuxiaTitleLettering v-if="showMainLettering" variant="main" />
+            <template v-else>{{ titleMain }}</template>
+          </span>
+          <span class="title-accent">
+            <WuxiaTitleLettering v-if="showAccentLettering" variant="accent" />
+            <template v-else>{{ titleAccent }}</template>
+          </span>
         </h1>
         <p class="hero-desc">{{ subtitle }}</p>
         <div class="hero-actions">
@@ -111,7 +121,7 @@
             <div class="wg-label">{{ s.label }}</div>
           </div>
         </div>
-        <div class="weather-quote">{{ quote }}</div>
+        <div class="weather-quote">{{ displayQuote }}</div>
       </GradientBorderCard>
     </div>
   </section>
@@ -125,6 +135,9 @@ import HeroLight from '@/components/effects/HeroLight.vue'
 import CountUp from '@/components/CountUp.vue'
 import { useWeather } from '@/composables/useWeather'
 import { useSiteStore } from '@/stores/site'
+import { useThemeStore } from '@/stores/theme'
+import WuxiaHeroArt from '@/components/effects/WuxiaHeroArt.vue'
+import WuxiaTitleLettering from './WuxiaTitleLettering.vue'
 
 // 天气卡展示访客所选城市的天气。默认按 IP 定位到城市，访客可手动搜索切换城市。
 const {
@@ -135,6 +148,7 @@ const {
 } = useWeather()
 
 const siteStore = useSiteStore()
+const themeStore = useThemeStore()
 // 天气卡底部"日期·站点名"——不再硬编码博主笔名，跟随后台站点配置走，
 // 改名后也能即时同步。
 const siteNameLabel = computed(() =>
@@ -170,6 +184,14 @@ const props = defineProps({
 })
 
 defineEmits(['cta', 'secondary'])
+
+// Fixed lettering must never override a changed site name/motto or the sunny theme.
+const showMainLettering = computed(() => themeStore.activeThemeId === 'ink' && props.titleMain === '拾光小筑')
+const showAccentLettering = computed(() => themeStore.activeThemeId === 'ink' && props.titleAccent === '仗剑天涯')
+
+const displayQuote = computed(() => themeStore.activeThemeId === 'ink'
+  ? '「一卷在手，江湖在心。」'
+  : props.quote)
 
 // 优先用外部传入的 greeting；未传入时按当前时段动态生成
 const displayGreeting = computed(() =>
@@ -223,21 +245,21 @@ onMounted(() => {
   top: 12%;
   width: 140px; height: 140px;
   border-radius: 50%;
-  background: radial-gradient(circle at 35% 35%, #fcd34d 0%, #fbbf24 55%, #f59e0b 100%);
-  box-shadow: 0 0 60px rgba(251, 191, 36, 0.5),
-              0 0 120px rgba(251, 191, 36, 0.25);
+  background: radial-gradient(circle at 35% 35%, var(--c-autumn-300) 0%, var(--c-autumn-500) 55%, var(--c-autumn-700) 100%);
+  box-shadow: 0 0 60px rgba(var(--theme-accent-rgb), 0.5),
+              0 0 120px rgba(var(--theme-accent-rgb), 0.25);
   animation: sun-pulse 5s ease-in-out infinite;
   transform: translate(calc(var(--sx, 50%) - 50% - 0px), calc(var(--sy, 50%) - 50% - 0px));
   transition: transform 1.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 @keyframes sun-pulse {
-  0%, 100% { box-shadow: 0 0 50px rgba(251,191,36,.4), 0 0 100px rgba(251,191,36,.2); }
-  50%      { box-shadow: 0 0 80px rgba(251,191,36,.65), 0 0 140px rgba(251,191,36,.35); }
+  0%, 100% { box-shadow: 0 0 50px rgba(var(--theme-accent-rgb), .4), 0 0 100px rgba(var(--theme-accent-rgb), .2); }
+  50%      { box-shadow: 0 0 80px rgba(var(--theme-accent-rgb), .65), 0 0 140px rgba(var(--theme-accent-rgb), .35); }
 }
 .cloud {
   position: absolute;
   opacity: 0.85;
-  filter: drop-shadow(0 6px 14px rgba(14,165,233,.12));
+  filter: drop-shadow(0 6px 14px rgba(var(--theme-primary-strong-rgb), .12));
 }
 .cloud-a { top: 18%; right: 18%; width: 180px; animation: cloud-drift 14s ease-in-out infinite; }
 .cloud-b { top: 56%; left:  4%;  width: 220px; animation: cloud-drift 18s ease-in-out infinite -4s; }
@@ -262,17 +284,17 @@ onMounted(() => {
   align-items: center;
   gap: 8px;
   padding: 6px 14px;
-  background: rgba(255, 255, 255, 0.7);
-  color: #0369a1;
+  background: rgba(var(--theme-paper-rgb), 0.7);
+  color: var(--c-botany-900);
   border-radius: 999px;
   font-size: 13px;
   margin-bottom: 34px;
-  border: 1px solid rgba(125, 211, 252, 0.5);
+  border: 1px solid rgba(var(--theme-primary-light-rgb), 0.5);
   backdrop-filter: blur(6px);
 }
 .hero-eyebrow .dot {
   width: 6px; height: 6px; border-radius: 50%;
-  background: #fbbf24;
+  background: var(--c-autumn-500);
   animation: pulse 2s ease-in-out infinite;
 }
 @keyframes pulse {
@@ -286,11 +308,11 @@ onMounted(() => {
   line-height: 1.2;
   margin: 0 0 36px;
   font-weight: 600;
-  color: var(--c-ink, #1e293b);
+  color: var(--c-ink, var(--c-ink-800));
 }
 .title-main {
   display: block;
-  background: linear-gradient(135deg, #0369a1 0%, #38bdf8 60%, #22d3ee 100%);
+  background: linear-gradient(135deg, var(--c-botany-900) 0%, var(--c-botany-500) 60%, var(--c-cyan-500) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -301,14 +323,14 @@ onMounted(() => {
   font-family: 'Caveat', 'Noto Serif SC', cursive;
   font-size: 60px;
   font-weight: 700;
-  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  background: linear-gradient(135deg, var(--c-autumn-500) 0%, var(--c-autumn-700) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 .hero-desc {
   font-size: 16px;
-  color: var(--c-ink-soft, #64748b);
+  color: var(--c-ink-soft, var(--c-ink-400));
   line-height: 1.9;
   max-width: 520px;
   margin: 0 0 52px;
@@ -333,34 +355,34 @@ onMounted(() => {
   font-size: 12px;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: #06b6d4;
+  color: var(--c-cyan-700);
   font-weight: 600;
 }
 .weather-temp {
   font-family: var(--font-serif);
   font-size: 32px;
   font-weight: 600;
-  color: var(--c-ink, #1e293b);
+  color: var(--c-ink, var(--c-ink-800));
   margin-top: 4px;
 }
 .weather-feels {
   font-family: inherit;
   font-size: 14px;
   font-weight: 400;
-  color: var(--c-ink-soft, #64748b);
+  color: var(--c-ink-soft, var(--c-ink-400));
   margin-left: 4px;
 }
 .weather-date {
   font-size: 12px;
-  color: var(--c-ink-soft, #64748b);
+  color: var(--c-ink-soft, var(--c-ink-400));
   margin-top: 4px;
 }
 
 // 城市切换按钮
 .weather-loc-btn {
   border: none;
-  background: rgba(56, 189, 248, 0.12);
-  color: #06b6d4;
+  background: rgba(var(--theme-primary-rgb), 0.12);
+  color: var(--c-cyan-700);
   cursor: pointer;
   font-size: 13px;
   line-height: 1;
@@ -368,14 +390,14 @@ onMounted(() => {
   border-radius: 8px;
   transition: background 0.2s ease;
 }
-.weather-loc-btn:hover { background: rgba(56, 189, 248, 0.24); }
-.weather-fail { color: var(--c-ink-soft, #64748b); }
+.weather-loc-btn:hover { background: rgba(var(--theme-primary-rgb), 0.24); }
+.weather-fail { color: var(--c-ink-soft, var(--c-ink-400)); }
 
 // 天气详情（湿度 / 风力）
 .weather-detail {
   margin-top: 4px;
   font-size: 12px;
-  color: var(--c-ink-soft, #94a3b8);
+  color: var(--c-ink-soft, var(--c-ink-300));
   letter-spacing: 0.02em;
 }
 .wd-sep { margin: 0 4px; opacity: 0.5; }
@@ -384,8 +406,8 @@ onMounted(() => {
 .city-picker {
   margin-top: 14px;
   padding: 12px;
-  background: rgba(255, 255, 255, 0.62);
-  border: 1px solid rgba(125, 211, 252, 0.5);
+  background: rgba(var(--theme-paper-rgb), 0.62);
+  border: 1px solid rgba(var(--theme-primary-light-rgb), 0.5);
   border-radius: 12px;
   backdrop-filter: blur(6px);
 }
@@ -396,28 +418,28 @@ onMounted(() => {
 .cp-input {
   flex: 1;
   min-width: 0;
-  border: 1px solid rgba(125, 211, 252, 0.6);
+  border: 1px solid rgba(var(--theme-primary-light-rgb), 0.6);
   border-radius: 8px;
   padding: 7px 10px;
   font-size: 13px;
   outline: none;
-  background: #fff;
-  color: var(--c-ink, #1e293b);
+  background: var(--c-paper);
+  color: var(--c-ink, var(--c-ink-800));
   transition: border-color 0.2s ease;
 }
-.cp-input:focus { border-color: #38bdf8; }
+.cp-input:focus { border-color: var(--c-botany-500); }
 .cp-reset {
   flex-shrink: 0;
-  border: 1px solid rgba(125, 211, 252, 0.6);
-  background: #fff;
-  color: #0284c7;
+  border: 1px solid rgba(var(--theme-primary-light-rgb), 0.6);
+  background: var(--c-paper);
+  color: var(--c-botany-800);
   border-radius: 8px;
   padding: 0 10px;
   font-size: 12px;
   cursor: pointer;
   transition: background 0.2s ease;
 }
-.cp-reset:hover { background: rgba(56, 189, 248, 0.12); }
+.cp-reset:hover { background: rgba(var(--theme-primary-rgb), 0.12); }
 .cp-list {
   list-style: none;
   margin: 10px 0 0;
@@ -435,26 +457,26 @@ onMounted(() => {
   cursor: pointer;
   transition: background 0.15s ease;
 }
-.cp-item:hover { background: rgba(56, 189, 248, 0.12); }
+.cp-item:hover { background: rgba(var(--theme-primary-rgb), 0.12); }
 .cp-name {
   font-weight: 600;
-  color: var(--c-ink, #1e293b);
+  color: var(--c-ink, var(--c-ink-800));
 }
 .cp-admin {
   font-size: 12px;
-  color: var(--c-ink-soft, #64748b);
+  color: var(--c-ink-soft, var(--c-ink-400));
   flex-shrink: 0;
 }
 .cp-tip {
   margin-top: 10px;
   font-size: 12px;
-  color: var(--c-ink-soft, #64748b);
+  color: var(--c-ink-soft, var(--c-ink-400));
 }
 .wd-btn {
   align-self: flex-start;
-  border: 1px solid var(--c-botany-500, #38bdf8);
-  background: rgba(56, 189, 248, 0.08);
-  color: var(--c-botany-600, #0284c7);
+  border: 1px solid var(--c-botany-500, var(--c-botany-500));
+  background: rgba(var(--theme-primary-rgb), 0.08);
+  color: var(--c-botany-600, var(--c-botany-800));
   font-size: 13px;
   padding: 5px 14px;
   border-radius: 20px;
@@ -462,8 +484,8 @@ onMounted(() => {
   transition: all 0.2s ease;
 }
 .wd-btn:hover {
-  background: var(--c-botany-500, #38bdf8);
-  color: #fff;
+  background: var(--c-botany-500, var(--c-botany-500));
+  color: var(--theme-on-primary);
 }
 .wd-btn:active {
   transform: scale(0.96);
@@ -471,7 +493,7 @@ onMounted(() => {
 .weather-icon {
   font-size: 56px;
   animation: icon-spin 12s linear infinite;
-  filter: drop-shadow(0 4px 12px rgba(251, 191, 36, 0.4));
+  filter: drop-shadow(0 4px 12px rgba(var(--theme-accent-rgb), 0.4));
 }
 @keyframes icon-spin {
   0%, 100% { transform: rotate(-6deg) scale(1); }
@@ -480,7 +502,7 @@ onMounted(() => {
 .weather-divider {
   height: 1px;
   margin: 18px 0;
-  background: linear-gradient(90deg, transparent, rgba(56,189,248,.3), transparent);
+  background: linear-gradient(90deg, transparent, rgba(var(--theme-primary-rgb), .3), transparent);
 }
 .weather-grid {
   display: grid;
@@ -492,11 +514,11 @@ onMounted(() => {
   font-family: var(--font-serif);
   font-size: 22px;
   font-weight: 600;
-  color: #0369a1;
+  color: var(--c-botany-900);
 }
 .wg-label {
   font-size: 12px;
-  color: var(--c-ink-soft, #64748b);
+  color: var(--c-ink-soft, var(--c-ink-400));
   margin-top: 2px;
 }
 // 第 4 项「阅读」固定放在第二列（即「分类」正下方）居中，
@@ -505,12 +527,12 @@ onMounted(() => {
 .weather-quote {
   margin-top: 16px;
   font-size: 12px;
-  color: var(--c-ink-soft, #64748b);
+  color: var(--c-ink-soft, var(--c-ink-400));
   font-style: italic;
   line-height: 1.6;
   padding: 10px 14px;
   // 左右对称渐变：两端透明、中间暖色，呼应居中显示
-  background: linear-gradient(90deg, transparent, rgba(251, 191, 36, 0.18), transparent);
+  background: linear-gradient(90deg, transparent, rgba(var(--theme-accent-rgb), 0.18), transparent);
   border-radius: 8px;
   text-align: center;
 }
@@ -526,6 +548,53 @@ onMounted(() => {
   transform: translateY(0);
 }
 
+/* 水墨主题：真实画作占据首屏，界面信息退为题签。 */
+.ink-hero-scene {
+  display: block;
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.22s ease;
+}
+.ink-hero-scene img {
+  position: absolute;
+  display: block;
+  user-select: none;
+}
+.ink-paper-layer {
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.ink-mountain-layer {
+  left: 50%;
+  top: 9%;
+  width: min(126vw, 2440px);
+  height: 76%;
+  object-fit: contain;
+  object-position: 50% 45%;
+  transform: translateX(-50%);
+}
+.ink-foliage-layer {
+  bottom: -7%;
+  width: min(42vw, 820px);
+  height: 78%;
+  object-fit: contain;
+}
+.ink-foliage-left {
+  left: -8%;
+  object-position: 0 100%;
+}
+.ink-foliage-right {
+  right: -8%;
+  object-position: 100% 100%;
+}
+
 @media (max-width: 900px) {
   .hero-grid { grid-template-columns: 1fr; }
   /* 移动端不再隐藏天气卡——原 display:none 导致移动端完全看不到天气、
@@ -539,10 +608,35 @@ onMounted(() => {
   .weather-temp { font-size: 28px; }
   .hero-title { font-size: 38px; }
   .title-accent { font-size: 44px; }
+
+  .ink-mountain-layer {
+    top: 6%;
+    width: 174vw;
+    height: 56%;
+    object-position: 50% 35%;
+  }
+  .ink-foliage-layer {
+    bottom: 11%;
+    width: 58vw;
+    height: 54%;
+  }
+  .ink-foliage-left { left: -18%; }
+  .ink-foliage-right { right: -20%; }
 }
 @media (max-width: 480px) {
   .weather-grid { gap: 6px; }
   .wg-num { font-size: 19px; }
   .weather-temp { font-size: 26px; }
+
+  .ink-mountain-layer {
+    width: 220vw;
+    height: 46%;
+  }
+  .ink-foliage-layer {
+    width: 82vw;
+    opacity: .58;
+  }
+  .ink-foliage-left { left: -34%; }
+  .ink-foliage-right { opacity: 0; }
 }
 </style>

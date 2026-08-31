@@ -15,12 +15,12 @@
         <el-card class="dashboard-card">
           <template #header>
             <div class="card-head">
-              <span>文章</span>
+              <span>{{ wx('文章') }}</span>
               <router-link to="/admin/articles" class="head-link">查看更多 →</router-link>
             </div>
           </template>
           <div class="card-section">
-            <div class="section-title">最近发布</div>
+            <div class="section-title">{{ wx('最近发布') }}</div>
             <div class="table-scroll">
               <el-table :data="recentArticles" stripe>
                 <el-table-column prop="title" label="标题" min-width="220" show-overflow-tooltip />
@@ -47,7 +47,7 @@
           <el-divider class="card-divider" />
 
           <div class="card-section">
-            <div class="section-title">最热阅读</div>
+            <div class="section-title">{{ wx('最热阅读') }}</div>
             <div class="table-scroll">
               <el-table :data="topArticles" stripe>
                 <el-table-column label="#" width="48" align="center">
@@ -69,11 +69,11 @@
         <el-card class="dashboard-card">
           <template #header>
             <div class="card-head">
-              <span>待审核评论</span>
+              <span>{{ wx('待审核评论') }}</span>
               <router-link to="/admin/comments?tab=comment" class="head-link">查看更多 →</router-link>
             </div>
           </template>
-          <el-empty v-if="!pendingComments.length && !loadingComments" description="无待审评论" :image-size="80" />
+          <el-empty v-if="!pendingComments.length && !loadingComments" :description="wx('无待审评论')" :image-size="80" />
           <div v-loading="loadingComments" v-else class="pc-list">
             <div v-for="c in pendingComments" :key="c.id" class="pc-item">
               <div class="pc-meta">
@@ -102,6 +102,9 @@
 </template>
 
 <script setup>
+import { useWuxiaCopy } from '@/composables/useWuxiaCopy'
+const { wx } = useWuxiaCopy()
+
 import { ref, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import {
@@ -125,10 +128,10 @@ const commentTotal = ref(0)
 const loadingComments = ref(false)
 
 const statsCards = computed(() => [
-  { label: '文章总数', value: stats.value.articleCount || 0, icon: Document, bg: 'linear-gradient(135deg, #38bdf8, #0ea5e9)' },
-  { label: '分类数', value: stats.value.categoryCount || 0, icon: Folder, bg: 'linear-gradient(135deg, #22d3ee, #06b6d4)' },
-  { label: '评论数', value: stats.value.commentCount || 0, icon: ChatDotRound, bg: 'linear-gradient(135deg, #fbbf24, #f59e0b)' },
-  { label: '总阅读量', value: stats.value.viewCount || 0, icon: View, bg: 'linear-gradient(135deg, #38bdf8, #22d3ee)' }
+  { label: '文章总数', value: stats.value.articleCount || 0, icon: Document, bg: 'linear-gradient(135deg, var(--c-botany-500), var(--c-botany-700))' },
+  { label: '分类数', value: stats.value.categoryCount || 0, icon: Folder, bg: 'linear-gradient(135deg, var(--c-cyan-500), var(--c-cyan-700))' },
+  { label: '评论数', value: stats.value.commentCount || 0, icon: ChatDotRound, bg: 'linear-gradient(135deg, var(--c-autumn-500), var(--c-autumn-700))' },
+  { label: '总阅读量', value: stats.value.viewCount || 0, icon: View, bg: 'linear-gradient(135deg, var(--c-botany-500), var(--c-cyan-500))' }
 ])
 
 const load = async () => {
@@ -190,7 +193,7 @@ onMounted(load)
 .stat-card {
   border-radius: 12px;
   padding: 22px 24px;
-  color: #fff;
+  color: var(--theme-on-primary);
   position: relative;
   overflow: hidden;
   min-height: 110px;
@@ -307,7 +310,7 @@ onMounted(load)
   color: var(--el-text-color-secondary);
   text-align: center;
 }
-.rank-badge.rank-1 { background: linear-gradient(135deg, #fbbf24, #f59e0b); color: #fff; }
-.rank-badge.rank-2 { background: linear-gradient(135deg, #cbd5e1, #94a3b8); color: #fff; }
-.rank-badge.rank-3 { background: linear-gradient(135deg, #fdba74, #fb923c); color: #fff; }
+.rank-badge.rank-1 { background: linear-gradient(135deg, var(--c-autumn-500), var(--c-autumn-700)); color: var(--theme-on-primary); }
+.rank-badge.rank-2 { background: linear-gradient(135deg, var(--c-ink-200), var(--c-ink-300)); color: var(--theme-on-primary); }
+.rank-badge.rank-3 { background: linear-gradient(135deg, var(--c-bronze-light), var(--c-bronze)); color: var(--theme-on-primary); }
 </style>
