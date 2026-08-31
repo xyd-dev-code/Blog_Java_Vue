@@ -8,12 +8,13 @@
       </div>
       <div class="footer-col">
         <h4>导航</h4>
+        <!-- 与顶部导航保持一致，导航名称不随主题变化。 -->
         <router-link to="/">首页</router-link>
-        <router-link to="/articles">{{ wx('文章') }}</router-link>
-        <router-link to="/projects">{{ wx('项目') }}</router-link>
-        <router-link to="/friends">{{ wx('友链') }}</router-link>
-        <router-link to="/guestbook">{{ wx('留言') }}</router-link>
-        <router-link to="/about">{{ wx('关于') }}</router-link>
+        <router-link to="/articles">文章</router-link>
+        <router-link to="/projects">项目</router-link>
+        <router-link to="/friends">友链</router-link>
+        <router-link to="/guestbook">留言</router-link>
+        <router-link to="/about">关于</router-link>
       </div>
       <div class="footer-col">
         <h4>关注</h4>
