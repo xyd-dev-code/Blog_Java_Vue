@@ -35,4 +35,16 @@ class WeatherLocationControllerTest {
         controller.location(request);
         verify(locations).locate("203.0.113.10");
     }
+
+    @Test
+    void trustedLocalProxyPrefersOverwrittenRealIpToForwardedChain() {
+        var locations = mock(WeatherLocationService.class);
+        var controller = new WeatherLocationController(new ClientIpResolver(), locations);
+        var request = new MockHttpServletRequest();
+        request.setRemoteAddr("127.0.0.1");
+        request.addHeader("X-Real-IP", "203.0.113.20");
+        request.addHeader("X-Forwarded-For", "198.51.100.20, 192.0.2.30");
+        controller.location(request);
+        verify(locations).locate("203.0.113.20");
+    }
 }

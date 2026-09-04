@@ -61,13 +61,21 @@ const rules = {
   password: [{ required: true, message: '请输入密码', trigger: 'blur' }]
 }
 
+const safeAdminRedirect = (value) => {
+  if (typeof value !== 'string') return '/admin/dashboard'
+  const isAdminPath = value === '/admin' || value.startsWith('/admin/') || value.startsWith('/admin?')
+  return isAdminPath && !value.startsWith('//')
+    ? value
+    : '/admin/dashboard'
+}
+
 const submit = async () => {
   try {
     await formRef.value.validate()
     loading.value = true
     await userStore.doLogin(form)
     ElMessage.success('登录成功')
-    const target = (route.query.redirect && String(route.query.redirect)) || '/admin/dashboard'
+    const target = safeAdminRedirect(route.query.redirect)
     // 强制整页跳转，避免 SPA 路由 + 守卫 + HMR 之间状态错位
     setTimeout(() => { window.location.assign(target) }, 300)
   } catch (_) {} finally {

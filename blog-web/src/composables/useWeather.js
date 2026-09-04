@@ -1,5 +1,5 @@
 import { ref, onMounted, onBeforeUnmount } from 'vue'
-import { fetchWeatherJson, locateByIp, normalizeLocation, readManualCity, saveManualCity } from '@/utils/weatherLocation'
+import { fetchWeatherJson, locateByDevice, locateByIp, normalizeLocation, readManualCity, saveManualCity } from '@/utils/weatherLocation'
 
 /**
  * 访客当地天气（多源数据 + 交叉校验 + 城市切换）。
@@ -181,12 +181,15 @@ export function useWeather() {
   const searchResults = ref([])
   const searching = ref(false)
   const searchError = ref('')
+  const preciseLocating = ref(false)
+  const preciseError = ref('')
 
   let manualCoords = readManualCity()
   let selectedCoords = null
   let debounceTimer = null
   let loadController = null
   let searchController = null
+  let preciseController = null
 
   // ── 3. Open-Meteo 天气获取（增强版：全字段 + 校验） ──
 
@@ -350,6 +353,7 @@ export function useWeather() {
 
   const togglePicker = () => {
     showPicker.value = !showPicker.value
+    if (!showPicker.value) preciseError.value = ''
     if (showPicker.value && cityKeyword.value) {
       searchCities(cityKeyword.value)
     }
@@ -358,6 +362,8 @@ export function useWeather() {
   const pickCity = (city) => {
     const coords = normalizeLocation(city)
     if (!coords) return
+    preciseController?.abort()
+    preciseError.value = ''
     manualCoords = coords
     selectedCoords = null
     saveManualCity(coords)
@@ -375,7 +381,47 @@ export function useWeather() {
     showPicker.value = false
   }
 
+  const usePreciseLocation = async () => {
+    preciseController?.abort()
+    const controller = new AbortController()
+    preciseController = controller
+    preciseLocating.value = true
+    preciseError.value = ''
+    try {
+      const coords = await locateByDevice({ signal: controller.signal })
+      if (controller.signal.aborted) return
+
+      // 只有设备坐标成功后才替换当前天气，拒绝授权时仍保留原来的 IP 天气。
+      loadController?.abort()
+      loadController = controller
+      manualCoords = null
+      selectedCoords = coords
+      saveManualCity(null)
+      locationSource.value = 'device'
+      locationPrecision.value = 'device'
+      location.value = coords.name
+      closePicker()
+      await loadWeather(coords.lat, coords.lon, coords.name, controller.signal)
+    } catch (error) {
+      if (controller.signal.aborted) return
+      preciseError.value = error?.message === 'device_location_denied'
+        ? '未获得定位权限，可在浏览器设置中开启，或直接搜索所在城市。'
+        : error?.message === 'device_location_unsupported'
+          ? '当前浏览器不支持精确定位，请直接搜索城市。'
+          : error?.message === 'device_location_timeout'
+            ? '精确定位超时，请重试或直接搜索城市。'
+            : '精确定位暂不可用，请重试或直接搜索城市。'
+    } finally {
+      if (preciseController === controller) {
+        preciseController = null
+        preciseLocating.value = false
+      }
+    }
+  }
+
   const resetCity = () => {
+    preciseController?.abort()
+    preciseError.value = ''
     manualCoords = null
     selectedCoords = null
     saveManualCity(null)
@@ -390,6 +436,7 @@ export function useWeather() {
     clearTimeout(debounceTimer)
     loadController?.abort()
     searchController?.abort()
+    preciseController?.abort()
   })
 
   const retry = () => { load() }
@@ -399,7 +446,8 @@ export function useWeather() {
     humidity, windSpeed, windDir, pressure,
     location, status, locationSource, locationPrecision,
     showPicker, cityKeyword, searchResults, searching, searchError,
-    togglePicker, onCityInput, searchCities, pickCity, resetCity,
+    preciseLocating, preciseError,
+    togglePicker, onCityInput, searchCities, pickCity, resetCity, usePreciseLocation,
     retry
   }
 }

@@ -1,0 +1,8 @@
+@echo off
+rem Copy this file to start-backend.local.bat and fill in local-only values.
+rem start-backend.local.bat is git-ignored; never commit real credentials.
+
+set "SPRING_PROFILES_ACTIVE=dev"
+set "DB_USERNAME=root"
+set "DB_PASSWORD=replace_with_your_mysql_password"
+set "BLOG_JWT_SECRET=replace_with_a_random_secret_of_at_least_32_bytes"

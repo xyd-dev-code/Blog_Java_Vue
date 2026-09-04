@@ -11,7 +11,7 @@
 - 首页、文章列表与详情、全文搜索、分类、标签和归档
 - 项目集、工具集、友链、留言板和关于页面
 - 文章评论、回复、点赞、举报及访客头像上传
-- Open-Meteo 天气卡，默认按 IP 估算位置（不申请浏览器定位权限），支持城市/区县搜索并记住选择
+- Open-Meteo 天气卡，默认按浏览器公网 IP 估算位置（不主动申请定位权限），支持用户授权设备精确定位及城市/区县搜索
 - 文章、项目和工具的分享点击统计
 - 邮箱订阅、确认订阅、退订和内容更新通知
 - 响应式布局、路由懒加载和“晴天”主题动效
@@ -139,12 +139,13 @@ FLUSH PRIVILEGES;
 
 ### 3. 创建本地配置
 
-复制配置模板。生成的 `application.yml` 已被 `.gitignore` 忽略，不应提交到仓库。
+直接双击 `start-backend.bat` 时，如果没有本地配置，启动器会隐藏输入 MySQL 密码并为本次运行生成临时 JWT 密钥。需要让登录状态在重启后继续有效时，复制本地启动模板：
 
 ```powershell
-Copy-Item blog-server/src/main/resources/application-example.yml `
-  blog-server/src/main/resources/application.yml
+Copy-Item start-backend.local.bat.example start-backend.local.bat
 ```
+
+然后在 `start-backend.local.bat` 中填写数据库密码和固定的随机 JWT 密钥。该文件已被 `.gitignore` 忽略，不应提交到仓库。
 
 至少准备以下配置：
 

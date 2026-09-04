@@ -18,7 +18,8 @@ await page.route(url => url.pathname.startsWith('/api/'), async route => {
   const req = route.request(), path = new URL(req.url()).pathname.replace('/api/v1','')
   if (!['GET','HEAD'].includes(req.method())) blockedWrites.push({ path, method: req.method() })
   let data = []
-  if (path === '/site' || path === '/admin/site') data = { siteTheme: 'ink', siteName: '拾光小筑', authorName: '站长' }
+  if (path === '/auth/me') data = { id: 1, username: 'qa', role: 'ADMIN' }
+  else if (path === '/site' || path === '/admin/site') data = { siteTheme: 'ink', siteName: '拾光小筑', authorName: '站长' }
   else if (path === '/home') data = { stats: {}, featured: [], latest: [] }
   else if (path === '/archives') data = { articles: [] }
   else if (path === '/admin/tool-categories') data = []

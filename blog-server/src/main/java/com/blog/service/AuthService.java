@@ -115,7 +115,8 @@ public class AuthService {
         User user = userMapper.selectById(u.getId());
         if (user == null) throw new BizException(404, "用户不存在");
         if (!encoder.matches(dto.getOldPassword(), user.getPassword())) {
-            throw new BizException(401, "旧密码错误");
+            // 当前 JWT 已通过认证；这里只是业务输入不匹配，不能返回 401 触发全局登出。
+            throw new BizException("旧密码错误");
         }
         User upd = new User();
         upd.setId(user.getId());

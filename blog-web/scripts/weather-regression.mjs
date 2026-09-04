@@ -22,10 +22,21 @@ async function scenario(name, config, run) {
   const errors = []
   let releaseIp
   const ipGate = config.holdIp ? new Promise(resolveGate => { releaseIp = resolveGate }) : null
-  await context.addInitScript(({ corrupt, blocked, manualKey }) => {
+  await context.addInitScript(({ corrupt, blocked, manualKey, geo }) => {
     window.weatherGeoCalls = 0
     Object.defineProperty(navigator, 'geolocation', { configurable: true, value: {
-      getCurrentPosition() { window.weatherGeoCalls++; throw new Error('Unexpected location permission request') },
+      getCurrentPosition(success, failure) {
+        window.weatherGeoCalls++
+        if (geo?.coords) {
+          success({ coords: { latitude: geo.coords.lat, longitude: geo.coords.lon } })
+          return
+        }
+        if (geo?.denied) {
+          failure({ code: 1 })
+          return
+        }
+        throw new Error('Unexpected location permission request')
+      },
       watchPosition() { window.weatherGeoCalls++; throw new Error('Unexpected location permission request') },
     } })
     if (corrupt) localStorage.setItem(manualKey, '{invalid json')
@@ -39,7 +50,7 @@ async function scenario(name, config, run) {
         Object.defineProperty(storage, 'removeItem', { value(key) { if (key.startsWith('blog.weather.')) throw new Error('Storage disabled'); return remove(key) } })
       }
     }
-  }, { corrupt: config.corrupt, blocked: config.blockedStorage, manualKey })
+  }, { corrupt: config.corrupt, blocked: config.blockedStorage, manualKey, geo: config.geo })
   await context.route('**/*', async route => {
     const url = new URL(route.request().url())
     const reply = (body, status = 200) => route.fulfill({ status, contentType: 'application/json', body: JSON.stringify(body) })
@@ -70,6 +81,10 @@ async function scenario(name, config, run) {
       requests.push({ kind: 'search' })
       return config.searchFailure ? reply({}, 503) : reply(search)
     }
+    if (url.hostname === 'api.bigdatacloud.net') {
+      requests.push({ kind: 'reverse', lat: url.searchParams.get('latitude') })
+      return reply(config.reverse || { city: '长沙市' })
+    }
     if (url.pathname.startsWith('/api/')) {
       let data = []
       if (url.pathname === '/api/v1/site') data = { siteTheme: 'sunny', siteName: '拾光小筑', motto: 'Hello World', authorName: '站长', description: '天气 IP 定位回归验证' }
@@ -85,7 +100,11 @@ async function scenario(name, config, run) {
     await page.goto(origin, { waitUntil: 'domcontentloaded' })
     await page.locator('.sky-hero').waitFor()
     await run({ page, requests, releaseIp, config })
-    assert.equal(await page.evaluate(() => window.weatherGeoCalls), 0, 'Browser location API must never be called')
+    assert.equal(
+      await page.evaluate(() => window.weatherGeoCalls),
+      config.expectedGeoCalls || 0,
+      'Device location may only be requested by the explicit precise-location action'
+    )
     assert.deepEqual(errors, [])
     results.push({ name, passed: true })
     console.log(`PASS ${name}`)
@@ -96,15 +115,21 @@ async function scenario(name, config, run) {
 }
 
 async function ready(page, expected = '长沙') {
-  await page.waitForFunction(() => document.querySelector('.weather-temp')?.textContent.includes('27°'))
+  await page.waitForFunction(expectedLocation => (
+    document.querySelector('.weather-temp')?.textContent.includes('27°')
+    && document.querySelector('.we-text')?.textContent.includes(expectedLocation)
+  ), expected)
   assert.ok((await page.locator('.we-text').textContent()).includes(expected))
 }
 
 try {
-  await scenario('首次访问通过 IP 获取天气，刷新复用缓存，不申请设备位置', {}, async ({ page, requests }) => {
+  await scenario('浏览器直连 IP 优先，避免服务端 CDN 节点误判，刷新复用缓存', {
+    district: { city: '洛杉矶', district: '', lat: 34.05, lon: -118.24 },
+  }, async ({ page, requests }) => {
     await ready(page)
     assert.doesNotMatch(await page.locator('.we-text').innerText(), /IP 估算/)
     assert.equal(requests.filter(r => r.kind === 'ip').length, 1)
+    assert.equal(requests.filter(r => r.kind === 'backend').length, 0)
     assert.deepEqual(requests.find(r => r.kind === 'weather'), { kind: 'weather', lat: '28.13', timeformat: 'unixtime' })
     await page.reload({ waitUntil: 'domcontentloaded' })
     await ready(page)
@@ -113,10 +138,12 @@ try {
   })
 
   await scenario('服务返回区县时展示区县，桌面和手机无横向溢出', {
+    ipFailure: true,
     district: { city: '长沙市', district: '雨花区', lat: 28.13, lon: 113.03 },
   }, async ({ page, requests }) => {
     await ready(page, '长沙市 · 雨花区')
-    assert.equal(requests.filter(r => r.kind === 'ip').length, 0)
+    assert.equal(requests.filter(r => r.kind === 'ip').length, 1)
+    assert.equal(requests.filter(r => r.kind === 'backend').length, 1)
     for (const width of [1440, 390]) {
       await page.setViewportSize({ width, height: 900 })
       await page.evaluate(async width => {
@@ -140,6 +167,43 @@ try {
   await scenario('备用源只返回经纬度时仍显示天气，不编造城市名', { ipFailure: true, coordinateFallback: { lat: 28.13, lon: 113.03, cc: 'CN' } }, async ({ page }) => {
     await ready(page, '附近')
     assert.doesNotMatch(await page.locator('.we-text').textContent(), /IP 估算/)
+  })
+
+  await scenario('IP 归属地误判美国时，用户可授权设备定位恢复长沙天气', {
+    ipData: { success: true, city: '洛杉矶', latitude: 34.05, longitude: -118.24 },
+    geo: { coords: { lat: 28.23, lon: 112.94 } },
+    reverse: { city: '长沙市' },
+    expectedGeoCalls: 1,
+  }, async ({ page, requests }) => {
+    await ready(page, '洛杉矶')
+    await page.setViewportSize({ width: 375, height: 812 })
+    await page.getByRole('button', { name: '切换城市或区县' }).click()
+    const preciseButton = page.getByRole('button', { name: /使用设备精确定位/ })
+    assert.ok((await preciseButton.boundingBox()).height >= 44)
+    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false)
+    await page.locator('.weather-card').screenshot({ path: resolve(output, 'precise-picker-375.png') })
+    await page.setViewportSize({ width: 667, height: 375 })
+    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false)
+    await page.setViewportSize({ width: 375, height: 812 })
+    await preciseButton.click()
+    await ready(page, '长沙市')
+    assert.deepEqual(requests.findLast(r => r.kind === 'weather'), {
+      kind: 'weather', lat: '28.23', timeformat: 'unixtime',
+    })
+    assert.equal(requests.filter(r => r.kind === 'reverse').length, 1)
+    assert.equal(await page.locator('.we-text').getAttribute('title'), '根据已授权的设备坐标定位')
+    assert.equal(await page.evaluate(key => localStorage.getItem(key), manualKey), null)
+  })
+
+  await scenario('用户拒绝设备定位时保留已有 IP 天气并提供恢复指引', {
+    geo: { denied: true },
+    expectedGeoCalls: 1,
+  }, async ({ page }) => {
+    await ready(page)
+    await page.getByRole('button', { name: '切换城市或区县' }).click()
+    await page.getByRole('button', { name: /使用设备精确定位/ }).click()
+    await page.getByText('未获得定位权限，可在浏览器设置中开启，或直接搜索所在城市。').waitFor()
+    await ready(page)
   })
 
   await scenario('所有 IP 来源失败可重试，也可直接选择区县并持久保存', { ipFailure: true }, async ({ page, config }) => {
