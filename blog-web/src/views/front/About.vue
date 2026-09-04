@@ -18,7 +18,7 @@
               </div>
               <p class="bio">{{ bio }}</p>
               <div class="social-row">
-                <a :href="siteGithub" target="_blank" class="soc-btn" title="GitHub">
+                <a :href="siteGithub" target="_blank" rel="noopener noreferrer" class="soc-btn" title="GitHub">
                   <svg viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.37 1.23-3.205-.135-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.255 2.88.12 3.18.765.84 1.23 1.905 1.23 3.205 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
                 </a>
                 <a :href="'mailto:' + siteEmail" class="soc-btn" title="Email">
@@ -99,13 +99,13 @@
             </div>
             <h4>GitHub</h4>
             <p>{{ githubDisplay }}</p>
-            <a :href="siteGithub" target="_blank" class="ci-link">访问主页 &rarr;</a>
+            <a :href="siteGithub" target="_blank" rel="noopener noreferrer" class="ci-link">访问主页 &rarr;</a>
           </div>
-          <div class="contact-item card sub-trigger" @click="openSubDialog" role="button" tabindex="0" @keyup.enter="openSubDialog" @keyup.space="openSubDialog">
+          <div class="contact-item card">
             <div class="ci-icon ci-mail">✉</div>
             <h4>{{ wx('邮箱订阅') }}</h4>
             <p>{{ wx('输入邮箱，第一时间收到新文章') }}</p>
-            <a href="javascript:;" class="ci-link" @click.stop="openSubDialog">{{ wx('立即订阅 →') }}</a>
+            <button type="button" class="ci-link ci-link-button" style="padding:6px 4px;border:0;margin:-6px -4px;font-family:inherit" @click="openSubDialog">{{ wx('立即订阅 →') }}</button>
           </div>
         </div>
       </section>
@@ -579,11 +579,14 @@ function initReveal() {
 .contact-item p { font-size: 13px; color: var(--c-ink-soft); margin: 0 0 14px; }
 .ci-link { font-size: 13px; color: var(--c-botany-700); font-weight: 500; }
 .ci-link:hover { color: var(--c-botany-500); }
-
-/* 邮箱订阅卡片：点击交互（与同级 ci-link 同色，与 card hover 兼容） */
-.sub-trigger { cursor: pointer; outline: none; }
-.sub-trigger:focus-visible {
-  box-shadow: var(--shadow-pop), 0 0 0 3px rgba(var(--theme-primary-rgb), 0.25);
+.ci-link-button {
+  background: transparent;
+  cursor: pointer;
+}
+.ci-link-button:active { opacity: 0.72; }
+.ci-link-button:focus-visible {
+  outline: 2px solid var(--c-botany-500);
+  outline-offset: 3px;
 }
 
 /* 邮箱订阅弹窗（提示文案 + 行内状态） */

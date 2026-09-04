@@ -6,56 +6,7 @@
     <style>
       html[data-theme-pending] body { visibility: hidden; }
     </style>
-    <script>
-      // 主题由管理员统一设置。本地仅缓存最近一次服务端结果，用于提前准备 CSS token；
-      // 页面会在公开站点配置确认后再挂载，避免旧缓存或首次访问产生主题闪烁。
-      ;(() => {
-        const root = document.documentElement
-        const fallback = 'ink'
-        const cacheKey = 'blog-site-theme-cache'
-        const cacheVersion = 7
-        const supportedThemes = ['sunny', 'ink']
-        root.dataset.themePending = 'true'
-        window.__BLOG_THEME_REVEAL_TIMER__ = window.setTimeout(() => {
-          root.removeAttribute('data-theme-pending')
-        }, 3200)
-        try {
-          // 清理旧版本的访客个人偏好，防止其继续覆盖管理员设置。
-          localStorage.removeItem('blog-theme-preference')
-          const cached = JSON.parse(localStorage.getItem(cacheKey) || 'null')
-          if (!cached || cached.version !== cacheVersion || !supportedThemes.includes(cached.id) || !cached.tokens) {
-            root.dataset.theme = fallback
-          } else {
-            root.dataset.theme = cached.id
-            root.style.colorScheme = cached.colorScheme || 'light'
-            Object.entries(cached.tokens).forEach(([token, value]) => {
-              if (token.startsWith('--') && typeof value === 'string') {
-                root.style.setProperty(token, value)
-              }
-            })
-          }
-        } catch (_) {
-          root.dataset.theme = fallback
-        }
-
-        const siteRequest = fetch('/api/v1/site', {
-          cache: 'no-store',
-          credentials: 'same-origin',
-          headers: { Accept: 'application/json' },
-        }).then((response) => {
-          if (!response.ok) throw new Error('site config unavailable')
-          return response.json()
-        }).then((payload) => {
-          if (!payload || (payload.code !== 0 && payload.code !== 200)) return null
-          return payload.data && typeof payload.data === 'object' ? payload.data : null
-        })
-
-        window.__BLOG_SITE_CONFIG_PROMISE__ = Promise.race([
-          siteRequest,
-          new Promise((resolve) => window.setTimeout(() => resolve(null), 2500)),
-        ]).catch(() => null)
-      })()
-    </script>
+    <script src="/theme-bootstrap.js"></script>
     <link id="site-favicon" rel="icon" type="image/png" sizes="64x64" href="/api/v1/site/favicon?v=4" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />

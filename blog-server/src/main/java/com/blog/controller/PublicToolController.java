@@ -1,8 +1,8 @@
 package com.blog.controller;
 
 import com.blog.common.R;
-import com.blog.entity.Tool;
 import com.blog.service.ToolService;
+import com.blog.vo.ToolPublicVO;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,20 +24,20 @@ public class PublicToolController {
         this.ipResolver = ipResolver;
     }
 
-    /** 前台工具列表(可选 category 过滤);返回 status=1 的工具 */
+    /** 前台工具列表(可选 category 过滤);返回正常、维护中和预告工具。 */
     @GetMapping
-    public R<List<Tool>> list(@RequestParam(required = false) String category) {
-        return R.ok(toolService.safeList(toolService.listPublished(category)));
+    public R<List<ToolPublicVO>> list(@RequestParam(required = false) String category) {
+        return R.ok(ToolPublicVO.list(toolService.listPublished(category)));
     }
 
     @GetMapping("/{id}")
-    public R<Tool> detail(@PathVariable Long id) {
-        return R.ok(toolService.getPublishedById(id));
+    public R<ToolPublicVO> detail(@PathVariable Long id) {
+        return R.ok(ToolPublicVO.from(toolService.getPublishedById(id)));
     }
 
     @GetMapping("/slug/{slug}")
-    public R<Tool> detailBySlug(@PathVariable String slug) {
-        return R.ok(toolService.getBySlug(slug));
+    public R<ToolPublicVO> detailBySlug(@PathVariable String slug) {
+        return R.ok(ToolPublicVO.from(toolService.getBySlug(slug)));
     }
 
     /** 累计点击 +1 + 今日点击 upsert */
@@ -50,7 +50,7 @@ public class PublicToolController {
 
     /** 今日热门 Top N(给前端 banner 用) */
     @GetMapping("/hot")
-    public R<List<Tool>> hot(@RequestParam(defaultValue = "4") int limit) {
-        return R.ok(toolService.safeList(toolService.hotToday(Math.min(limit, 20))));
+    public R<List<ToolPublicVO>> hot(@RequestParam(defaultValue = "4") int limit) {
+        return R.ok(ToolPublicVO.list(toolService.hotToday(Math.min(limit, 20))));
     }
 }

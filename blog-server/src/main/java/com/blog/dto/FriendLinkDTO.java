@@ -10,10 +10,10 @@ import jakarta.validation.constraints.Size;
 public class FriendLinkDTO {
     private Long id;
     @NotBlank @Size(max = 50) private String name;
-    @NotBlank @Size(max = 500)
+    @NotBlank @Size(max = 255)
     @Pattern(regexp = "^https?://[^\\s]+$", message = "站点链接必须以 http:// 或 https:// 开头")
     private String url;
-    @Size(max = 500)
+    @Size(max = 255)
     @Pattern(regexp = "^(https?://[^\\s]+)?$", message = "头像链接格式不正确")
     private String avatar;
     @Size(max = 200) private String description;

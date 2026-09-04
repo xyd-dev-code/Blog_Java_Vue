@@ -2,6 +2,8 @@ package com.blog.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
@@ -20,7 +22,7 @@ public class ToolDTO {
     private String icon;
 
     @NotBlank
-    @Size(max = 50)
+    @Size(max = 30)
     @Pattern(regexp = "^[a-zA-Z0-9-]+$", message = "category 仅允许字母、数字、连字符")
     private String category;
 
@@ -28,16 +30,21 @@ public class ToolDTO {
     private String description;
 
     @Size(max = 500)
+    @Pattern(regexp = "^(https?://[^\\s]+|/[^\\s]*)?$", message = "url 必须是 http/https 外链或站内绝对路径")
     private String url;
 
     /** 0=同页内嵌 1=外链 */
     @NotNull
+    @Min(0) @Max(1)
     private Integer type;
 
     /** 0=下线 1=正常 2=维护中 3=预告 */
     @NotNull
+    @Min(0) @Max(3)
     private Integer status;
 
+    @Min(0)
+    @Max(100000)
     private Integer sortOrder;
 
     @Size(max = 200)

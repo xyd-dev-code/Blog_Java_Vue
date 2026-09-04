@@ -11,12 +11,12 @@ public class FriendLinkApplyDTO {
     private String name;
 
     @NotBlank(message = "站点链接不能为空")
-    @Size(max = 500, message = "站点链接过长")
+    @Size(max = 255, message = "站点链接过长")
     // 仅允许 http/https,防止 javascript: / data: 等伪协议被管理员通过后注入
     @Pattern(regexp = "^https?://[^\\s]+$", message = "站点链接必须以 http:// 或 https:// 开头")
     private String url;
 
-    @Size(max = 500, message = "头像链接过长")
+    @Size(max = 255, message = "头像链接过长")
     @Pattern(regexp = "^(https?://[^\\s]+)?$", message = "头像链接格式不正确")
     private String avatar;
 

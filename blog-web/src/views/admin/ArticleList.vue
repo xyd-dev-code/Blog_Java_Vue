@@ -325,7 +325,7 @@ const batchDelete = async () => {
 }
 
 const preview = (row) => {
-  window.open(`/articles/${row.slug}`, '_blank')
+  window.open(`/articles/${row.slug}`, '_blank', 'noopener,noreferrer')
 }
 
 const onExportOne = async (row, fmt = 'md') => {

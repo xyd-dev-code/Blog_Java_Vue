@@ -68,7 +68,7 @@
               :key="f.id"
               :href="f.url"
               target="_blank"
-              rel="noopener"
+              rel="noopener noreferrer"
               class="friend-card-wrap reveal"
               :style="{ transitionDelay: `${150 + (gi * 90) + (fi * 55)}ms` }"
             >

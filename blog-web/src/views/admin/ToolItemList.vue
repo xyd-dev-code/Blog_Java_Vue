@@ -102,7 +102,7 @@
             <el-option v-for="c in categoryOptions" :key="c.value" :label="c.label" :value="c.value" />
           </el-select>
         </el-form-item>
-        <el-form-item label="类型">
+        <el-form-item label="类型" prop="type">
           <el-radio-group v-model="form.type">
             <el-radio-button :value="0">同页内嵌</el-radio-button>
             <el-radio-button :value="1">外链</el-radio-button>
@@ -114,7 +114,7 @@
         </el-form-item>
         <el-form-item label="图标">
           <div class="icon-field">
-            <el-input v-model="form.icon" maxlength="1000" clearable
+            <el-input v-model="form.icon" maxlength="255" clearable
               placeholder="图标图片 URL（可上传或粘贴外链，如 https://.../xx.jpg）" />
             <el-upload
               class="icon-uploader"
@@ -134,7 +134,7 @@
           <el-input v-model="form.description" type="textarea" :rows="2" maxlength="200"
             placeholder="一两句话说明功能,卡片上展示" />
         </el-form-item>
-        <el-form-item label="状态">
+        <el-form-item label="状态" prop="status">
           <el-select v-model="form.status" placeholder="状态" style="width: 160px">
             <el-option label="正常" :value="1" />
             <el-option :label="wx('维护中')" :value="2" />
@@ -264,6 +264,18 @@ const emptyForm = () => ({
   description: '', url: '', type: 0, status: 1, sortOrder: 0, announcement: ''
 })
 const form = reactive(emptyForm())
+const validateToolUrl = (_rule, value, callback) => {
+  const url = (value || '').trim()
+  if (form.type === 1 && !/^https?:\/\/\S+$/i.test(url)) {
+    callback(new Error('外链工具必须填写 http:// 或 https:// 地址'))
+    return
+  }
+  if (form.type === 0 && url && !/^\/\S*$/.test(url)) {
+    callback(new Error('站内工具地址必须以 / 开头'))
+    return
+  }
+  callback()
+}
 const rules = {
   name: [{ required: true, message: '请填写名称', trigger: 'blur' }],
   slug: [
@@ -272,7 +284,8 @@ const rules = {
   ],
   category: [{ required: true, message: '请选择分类', trigger: 'change' }],
   type: [{ required: true, message: '请选择类型', trigger: 'change' }],
-  status: [{ required: true, message: '请选择状态', trigger: 'change' }]
+  status: [{ required: true, message: '请选择状态', trigger: 'change' }],
+  url: [{ validator: validateToolUrl, trigger: ['blur', 'change'] }]
 }
 const resetForm = () => { Object.assign(form, emptyForm()) }
 

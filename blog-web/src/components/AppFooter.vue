@@ -18,8 +18,9 @@
       </div>
       <div class="footer-col">
         <h4>关注</h4>
-        <a :href="githubUrl || 'javascript:;'" target="_blank">GitHub</a>
-        <a href="javascript:;">微信公众号</a>
+        <a v-if="hasGithub" :href="githubUrl" target="_blank" rel="noopener noreferrer">GitHub</a>
+        <span v-else class="f-empty" style="display:block;margin:8px 0;font-size:14px">GitHub（未配置）</span>
+        <span class="f-empty" style="display:block;margin:8px 0;font-size:14px">微信公众号（暂未开放）</span>
         <form class="f-sub" @submit.prevent="onSubscribe">
           <input
             v-model.trim="subEmail"
@@ -55,14 +56,14 @@
       </div>
       <div class="footer-col">
         <h4>{{ wx('友链') }}</h4>
-        <a v-if="friendLinks.length === 0" href="javascript:;" class="f-empty">{{ wx('暂无友链,去申请 →', '暂无同道,递拜帖 →') }}</a>
+        <router-link v-if="friendLinks.length === 0" to="/friends" class="f-empty">{{ wx('暂无友链,去申请 →', '暂无同道,递拜帖 →') }}</router-link>
         <template v-else>
           <a
             v-for="link in friendLinksTop6"
             :key="link.id"
             :href="link.url"
             target="_blank"
-            rel="noopener"
+            rel="noopener noreferrer"
           >{{ link.name }}</a>
           <router-link v-if="hasMoreFriends" to="/friends" class="f-more" title="查看全部友链">......</router-link>
         </template>
@@ -91,6 +92,7 @@ const siteMotto = computed(() => siteStore.info?.motto || wx('草木蔓发，春
 const siteDesc = computed(() => siteStore.info?.description || '')
 const siteBeian = computed(() => siteStore.info?.beian || '')
 const githubUrl = computed(() => siteStore.info?.github || '')
+const hasGithub = computed(() => /^https?:\/\//i.test(githubUrl.value))
 const year = new Date().getFullYear()
 
 const friendLinks = ref([])
@@ -185,6 +187,8 @@ async function onSubscribe() {
   transition: color 0.2s;
 }
 .footer-col a:hover { color: var(--c-autumn-300); }
+.footer-col .f-empty { color: var(--c-footer-link); }
+span.f-empty { opacity: 0.72; }
 
 /* 邮箱订阅表单（替代原 RSS 订阅） */
 .f-sub {
