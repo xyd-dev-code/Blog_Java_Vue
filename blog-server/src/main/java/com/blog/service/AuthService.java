@@ -10,12 +10,12 @@ import com.blog.security.LoginUser;
 import com.blog.security.RateLimiter;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 @Service
 public class AuthService {
@@ -26,23 +26,20 @@ public class AuthService {
     private final com.blog.security.ClientIpResolver ipResolver;
     private final com.blog.security.JwtBlacklist blacklist;
 
-    /** 用于"用户不存在时也跑一次"恒定时间的假 hash(预生成合法 BCrypt 摘要,任意明文都失败) */
+    /** 用于"用户不存在时也跑一次"恒定时间的合法 BCrypt 摘要。 */
     private final String dummyHash;
-    private final boolean dummyHashValid;
 
     public AuthService(UserMapper userMapper, PasswordEncoder encoder, JwtUtil jwtUtil,
                        RateLimiter rateLimiter, com.blog.security.ClientIpResolver ipResolver,
-                       com.blog.security.JwtBlacklist blacklist,
-                       @Value("${blog.security.dummy-bcrypt-hash:!BOOTSTRAP_REQUIRED!u}") String dummyHash) {
+                       com.blog.security.JwtBlacklist blacklist) {
         this.userMapper = userMapper;
         this.encoder = encoder;
         this.jwtUtil = jwtUtil;
         this.rateLimiter = rateLimiter;
         this.ipResolver = ipResolver;
         this.blacklist = blacklist;
-        this.dummyHash = dummyHash;
-        // 启动时验证 dummy hash 格式合法;若不能,降级 — 避免部署时哑配置导致时序侧信道失效
-        this.dummyHashValid = dummyHash.startsWith("$2");
+        // 由当前 PasswordEncoder 生成，保证格式与成本参数都有效；仅在启动时计算一次。
+        this.dummyHash = encoder.encode(UUID.randomUUID().toString());
     }
 
     public Map<String, Object> login(LoginDTO dto, HttpServletRequest req) {
@@ -56,17 +53,10 @@ public class AuthService {
         // 3) 找用户;找不到也跑 dummy bcrypt 恒定时间,防时序侧信道枚举用户名
         User u = userMapper.selectOne(new LambdaQueryWrapper<User>()
                 .eq(User::getUsername, dto.getUsername()));
-        if (u == null) {
-            // 跑一次假比对,消耗跟真比对一样的时间(~250ms @ cost=12)
-            if (dummyHashValid) encoder.matches(dto.getPassword(), dummyHash);
-            throw new BizException(401, "用户名或密码错误");
-        }
-        if (u.getStatus() != null && u.getStatus() == 0) {
-            // 同样跑 dummy 保持时序一致
-            if (dummyHashValid) encoder.matches(dto.getPassword(), dummyHash);
-            throw new BizException(403, "账号已禁用");
-        }
-        if (!encoder.matches(dto.getPassword(), u.getPassword())) {
+        String hash = u == null || u.getPassword() == null ? dummyHash : u.getPassword();
+        boolean passwordMatches = encoder.matches(dto.getPassword(), hash);
+        // 不存在、禁用、密码错误统一返回相同状态和文案，避免枚举账号及其状态。
+        if (u == null || !Integer.valueOf(1).equals(u.getStatus()) || !passwordMatches) {
             throw new BizException(401, "用户名或密码错误");
         }
         String token = jwtUtil.generate(u);

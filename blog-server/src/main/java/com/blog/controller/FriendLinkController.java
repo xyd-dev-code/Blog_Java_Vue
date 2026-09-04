@@ -3,10 +3,10 @@ package com.blog.controller;
 import com.blog.common.R;
 import com.blog.common.BizException;
 import com.blog.dto.FriendLinkApplyDTO;
-import com.blog.entity.FriendLink;
 import com.blog.security.ClientIpResolver;
 import com.blog.security.RateLimiter;
 import com.blog.service.FriendLinkService;
+import com.blog.vo.FriendLinkPublicVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
@@ -33,13 +33,13 @@ public class FriendLinkController {
 
     @Operation(summary = "已通过友链列表")
     @GetMapping
-    public R<List<FriendLink>> list() {
-        return R.ok(friendLinkService.listPublished());
+    public R<List<FriendLinkPublicVO>> list() {
+        return R.ok(FriendLinkPublicVO.list(friendLinkService.listPublished()));
     }
 
     @Operation(summary = "申请友链")
     @PostMapping("/apply")
-    public R<FriendLink> apply(@Valid @RequestBody FriendLinkApplyDTO dto, HttpServletRequest req) {
+    public R<FriendLinkPublicVO> apply(@Valid @RequestBody FriendLinkApplyDTO dto, HttpServletRequest req) {
         String ip = ipResolver.resolve(req);
         try {
             // IP 维度:挡批量灌水/撑爆审核表
@@ -51,6 +51,6 @@ public class FriendLinkController {
         } catch (BizException e) {
             throw e;
         }
-        return R.ok(friendLinkService.apply(dto));
+        return R.ok(FriendLinkPublicVO.from(friendLinkService.apply(dto)));
     }
 }

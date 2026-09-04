@@ -51,7 +51,7 @@
         </router-link>
       </nav>
       <div class="aside-foot" v-if="!collapsed">
-        <a href="/" target="_blank"><el-icon><View /></el-icon> {{ wx('查看前台') }}</a>
+        <a href="/" target="_blank" rel="noopener noreferrer"><el-icon><View /></el-icon> {{ wx('查看前台') }}</a>
       </div>
     </aside>
 
@@ -153,7 +153,7 @@ const onCmd = (cmd) => {
     userStore.logout()
     router.push('/admin/login')
   } else if (cmd === 'home') {
-    window.open('/', '_blank')
+    window.open('/', '_blank', 'noopener,noreferrer')
   }
 }
 

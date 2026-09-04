@@ -103,7 +103,7 @@
               v-if="isLink(p.githubUrl)"
               :href="p.githubUrl"
               target="_blank"
-              rel="noopener"
+              rel="noopener noreferrer"
               class="btn btn-gh"
             >
               <svg class="gh-ic" viewBox="0 0 16 16" width="14" height="14" fill="currentColor" aria-hidden="true">
@@ -115,7 +115,7 @@
               v-if="isLink(p.demoUrl)"
               :href="p.demoUrl"
               target="_blank"
-              rel="noopener"
+              rel="noopener noreferrer"
               class="btn btn-demo"
             >
               <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -190,7 +190,7 @@
               v-if="isLink(detailProject.githubUrl)"
               :href="detailProject.githubUrl"
               target="_blank"
-              rel="noopener"
+              rel="noopener noreferrer"
               class="btn btn-gh"
             >
               <svg class="gh-ic" viewBox="0 0 16 16" width="14" height="14" fill="currentColor" aria-hidden="true">
@@ -202,7 +202,7 @@
               v-if="isLink(detailProject.demoUrl)"
               :href="detailProject.demoUrl"
               target="_blank"
-              rel="noopener"
+              rel="noopener noreferrer"
               class="btn btn-demo"
             >
               <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">

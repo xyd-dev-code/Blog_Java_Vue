@@ -11,9 +11,9 @@ import com.blog.mapper.ToolMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.time.LocalDate;
-import java.util.Collections;
 import java.util.List;
 
 @Service
@@ -28,10 +28,10 @@ public class ToolService {
         this.clickMapper = clickMapper;
     }
 
-    /** 前台:只查 status=1 的工具,按 sort_order 升序 */
+    /** 前台展示正常、维护中和预告工具；仅完全下线(status=0)的工具隐藏。 */
     public List<Tool> listPublished(String category) {
         LambdaQueryWrapper<Tool> w = new LambdaQueryWrapper<Tool>()
-                .eq(Tool::getStatus, 1)
+                .in(Tool::getStatus, List.of(1, 2, 3))
                 .orderByAsc(Tool::getSortOrder)
                 .orderByDesc(Tool::getId);
         if (category != null && !category.isEmpty() && !"all".equals(category)) {
@@ -99,6 +99,7 @@ public class ToolService {
     }
 
     public Long create(ToolDTO dto) {
+        validateUrlForType(dto);
         // slug 唯一性检查
         Long dup = toolMapper.selectCount(new LambdaQueryWrapper<Tool>()
                 .eq(Tool::getSlug, dto.getSlug()));
@@ -116,6 +117,7 @@ public class ToolService {
     }
 
     public void update(Long id, ToolDTO dto) {
+        validateUrlForType(dto);
         Tool t = toolMapper.selectById(id);
         if (t == null) throw new BizException("工具不存在");
         // slug 若变更,查唯一
@@ -229,7 +231,16 @@ public class ToolService {
                 .last("LIMIT " + Math.max(1, limit)));
     }
 
-    public List<Tool> safeList(List<Tool> in) { return in == null ? Collections.emptyList() : in; }
+    private void validateUrlForType(ToolDTO dto) {
+        String url = dto.getUrl() == null ? "" : dto.getUrl().trim();
+        if (Integer.valueOf(1).equals(dto.getType()) && !url.matches("^https?://[^\\s]+$")) {
+            throw new BizException("外链工具必须填写 http/https URL");
+        }
+        if (Integer.valueOf(0).equals(dto.getType()) && StringUtils.hasText(url) && !url.startsWith("/")) {
+            throw new BizException("站内工具 URL 必须以 / 开头");
+        }
+        dto.setUrl(url);
+    }
 
     private void applyDto(Tool t, ToolDTO dto) {
         t.setName(dto.getName());

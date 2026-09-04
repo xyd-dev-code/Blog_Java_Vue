@@ -56,7 +56,8 @@ public class ReviewFixIntegrationTest {
         }
         jdbc.execute("CREATE ALIAS IF NOT EXISTS date_format FOR \"com.blog.ReviewFixIntegrationTest.mysqlDateFormat\"");
         for (String table : List.of("comment_like", "comment_report", "comment", "article_tag", "article",
-                "user", "tool_daily_click", "tool", "email_subscription", "notification_delivery", "jwt_revocation"))
+                "user", "tool_daily_click", "tool", "project", "friend_link", "email_subscription",
+                "notification_delivery", "jwt_revocation"))
             jdbc.update("DELETE FROM " + table);
         jdbc.update("INSERT INTO user(id, username, password, role, status) VALUES (1, 'reviewadmin', ?, 'ADMIN', 1)",
                 new BCryptPasswordEncoder(4).encode("OldPassword!123"));
@@ -97,6 +98,20 @@ public class ReviewFixIntegrationTest {
                 .andExpect(status().isForbidden());
     }
 
+    @Test void loginDoesNotRevealWhetherAnAccountExistsOrIsDisabled() throws Exception {
+        String body = "{\"username\":\"%s\",\"password\":\"WrongPassword!123\"}";
+        mvc.perform(post("/api/v1/auth/login").contentType("application/json")
+                .content(body.formatted("missing-user")))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.message").value("用户名或密码错误"));
+
+        jdbc.update("UPDATE user SET status=0 WHERE id=1");
+        mvc.perform(post("/api/v1/auth/login").contentType("application/json")
+                .content(body.formatted("reviewadmin")))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.message").value("用户名或密码错误"));
+    }
+
     @Test void wrongOldPasswordIsAValidationErrorAndKeepsSessionValid() throws Exception {
         String token = token();
         mvc.perform(post("/api/v1/admin/profile/password").header("Authorization", "Bearer " + token)
@@ -128,6 +143,50 @@ public class ReviewFixIntegrationTest {
         jdbc.update("UPDATE tool SET status=0 WHERE id=1");
         mvc.perform(get("/api/v1/tools/1")).andExpect(status().isNotFound());
         mvc.perform(post("/api/v1/tools/1/click")).andExpect(status().isNotFound());
+    }
+
+    @Test void publicContentResponsesExcludePrivatePersistenceFields() throws Exception {
+        jdbc.update("INSERT INTO friend_link(id,name,url,email,status) VALUES(1,'Friend','https://example.invalid','private@example.com',1)");
+        mvc.perform(get("/api/v1/friend-links")).andExpect(status().isOk())
+                .andExpect(jsonPath("$.data[0].name").value("Friend"))
+                .andExpect(jsonPath("$.data[0].email").doesNotExist())
+                .andExpect(jsonPath("$.data[0].status").doesNotExist())
+                .andExpect(jsonPath("$.data[0].deleted").doesNotExist());
+
+        jdbc.update("INSERT INTO tool(id,name,slug,icon,category,url,type,status,notified,sort_order) "
+                + "VALUES(1,'Tool','tool','Tools','test','https://example.invalid',1,1,1,1)");
+        mvc.perform(get("/api/v1/tools/1")).andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.status").value(1))
+                .andExpect(jsonPath("$.data.notified").doesNotExist())
+                .andExpect(jsonPath("$.data.deleted").doesNotExist())
+                .andExpect(jsonPath("$.data.createTime").doesNotExist());
+        jdbc.update("INSERT INTO tool(id,name,slug,icon,category,url,type,status,sort_order) "
+                + "VALUES(2,'Maintenance','maintenance','Tools','test','/tools/maintenance',0,2,2)");
+        mvc.perform(get("/api/v1/tools")).andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.length()").value(2))
+                .andExpect(jsonPath("$.data[1].status").value(2));
+
+        jdbc.update("INSERT INTO project(id,name,status,notified) VALUES(1,'Project',1,1)");
+        mvc.perform(get("/api/v1/projects")).andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.records[0].name").value("Project"))
+                .andExpect(jsonPath("$.data.records[0].status").doesNotExist())
+                .andExpect(jsonPath("$.data.records[0].notified").doesNotExist())
+                .andExpect(jsonPath("$.data.records[0].deleted").doesNotExist());
+    }
+
+    @Test void toolUrlsMustMatchTheirNavigationType() throws Exception {
+        String admin = token();
+        String externalWithInternalUrl = "{\"name\":\"Tool\",\"slug\":\"tool\",\"icon\":\"Tools\","
+                + "\"category\":\"test\",\"url\":\"/tools/tool\",\"type\":1,\"status\":1}";
+        mvc.perform(post("/api/v1/admin/tools").header("Authorization", "Bearer " + admin)
+                .contentType("application/json").content(externalWithInternalUrl))
+                .andExpect(status().isBadRequest());
+
+        String unsafeUrl = "{\"name\":\"Tool\",\"slug\":\"tool\",\"icon\":\"Tools\","
+                + "\"category\":\"test\",\"url\":\"javascript:alert(1)\",\"type\":1,\"status\":1}";
+        mvc.perform(post("/api/v1/admin/tools").header("Authorization", "Bearer " + admin)
+                .contentType("application/json").content(unsafeUrl))
+                .andExpect(status().isBadRequest());
     }
 
     @Test void commentPolicyAndGuestbookHaveIndependentTargets() {

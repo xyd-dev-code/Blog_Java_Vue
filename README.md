@@ -315,11 +315,11 @@ pwsh ./scripts/privacy-scan.ps1 -History
 
 ## 生产部署说明
 
-当前公开仓库不包含生产服务器地址、Nginx 配置、systemd 单元、证书配置或一键部署脚本。一个完整部署至少需要：
+当前公开仓库不包含生产服务器地址、systemd 单元、私钥或一键部署脚本；提供了可审查、无凭据的 [Nginx 安全基线](deployment/nginx/example.com.conf.example)。部署前仍须按目标主机复核路径和证书位置。一个完整部署至少需要：
 
 1. 设置 `SPRING_PROFILES_ACTIVE=prod`，并从外部文件或环境变量注入全部敏感配置。
 2. 运行后端 JAR，仅向反向代理暴露服务端口。
-3. 使用 Nginx 等静态服务器托管 `blog-web/dist/`。
+3. 使用 Nginx 等静态服务器托管 `blog-web/dist/` 的构建产物；当前发布目录为 `/home/blog/blog/frontend`。
 4. 将 `/api/` 反向代理到 Spring Boot。
 5. 独立托管 `UPLOAD_DIR`，并让公开地址与 `IMG_BASE_URL` 一致。
 6. 配置 HTTPS、日志轮转、数据库备份和最小权限账号。
@@ -340,5 +340,5 @@ pwsh ./scripts/privacy-scan.ps1 -History
 ## 仓库状态说明
 
 - 本项目当前没有独立的 `LICENSE` 文件。
-- `target/`、`dist/`、`node_modules/`、上传文件、私密配置和生产部署文件不会进入 Git。
+- `target/`、`dist/`、`node_modules/`、上传文件、私密配置和可执行生产部署文件不会进入 Git；仓库只保留脱敏的部署基线模板。
 - 设计原型位于 [`blog-web/design-prototypes/`](blog-web/design-prototypes/)，需求文档位于 [`docs/需求分析文档.md`](docs/需求分析文档.md)。

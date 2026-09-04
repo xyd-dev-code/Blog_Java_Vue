@@ -30,6 +30,8 @@ jobs:
         working-directory: blog-web
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -37,6 +39,12 @@ jobs:
           cache-dependency-path: blog-web/package-lock.json
       - run: npm ci
       - run: npm audit --audit-level=moderate --registry=https://registry.npmjs.org
+      - run: node ../scripts/check-deployment-config.mjs
       - run: npm run build
       - run: npx playwright install --with-deps chromium
+      - run: npm run test:auth-guard
       - run: npm run test:review
+      - name: Verify theme changes preserve content layout
+        env:
+          THEME_LAYOUT_BASELINE: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: npm run test:theme-layout

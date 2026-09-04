@@ -28,7 +28,7 @@ function Add-Finding([string]$category, [string]$path, [int]$line, [string]$reas
 function Test-Placeholder([string]$value, [string]$line) {
     if ([string]::IsNullOrWhiteSpace($value)) { return $true }
     if ($line -match '(?i)@Value\(|dummy-bcrypt-hash|"integrity"\s*:') { return $true }
-    return $value -match '^(\$\{|%[A-Za-z_][A-Za-z0-9_]*%|\$env:|\$[A-Za-z_]|process\.env|<[^>]+>|your|example|placeholder|dummy|change[-_]?me|any_long|!BOOTSTRAP_REQUIRED!|this\.|props\.|form\.|dto\.)'
+    return $value -match '^(\$\{|%[A-Za-z_][A-Za-z0-9_]*%|\$env:|\$[A-Za-z_]|process\.env|<[^>]+>|your|example|placeholder|dummy|change[-_]?me|replace[-_]?(me|with)|any_long|!BOOTSTRAP_REQUIRED!|this\.|props\.|form\.|dto\.)'
 }
 
 function Test-PublicIp([string]$candidate) {

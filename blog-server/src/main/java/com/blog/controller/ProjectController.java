@@ -3,8 +3,8 @@ package com.blog.controller;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.blog.common.R;
 import com.blog.dto.ProjectQuery;
-import com.blog.entity.Project;
 import com.blog.service.ProjectService;
+import com.blog.vo.ProjectPublicVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.constraints.Max;
@@ -26,7 +26,7 @@ public class ProjectController {
 
     @Operation(summary = "已发布项目列表(支持分页与分类筛选)")
     @GetMapping
-    public R<Page<Project>> list(
+    public R<Page<ProjectPublicVO>> list(
             @RequestParam(required = false) Long categoryId,
             @RequestParam(defaultValue = "1") @Min(1) long page,
             @RequestParam(defaultValue = "12") @Min(1) @Max(100) long size) {
@@ -34,6 +34,6 @@ public class ProjectController {
         q.setCategoryId(categoryId);
         q.setPage(page);
         q.setSize(size);
-        return R.ok(projectService.publishedPage(q));
+        return R.ok(ProjectPublicVO.page(projectService.publishedPage(q)));
     }
 }

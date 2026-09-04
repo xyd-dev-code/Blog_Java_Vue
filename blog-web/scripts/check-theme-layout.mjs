@@ -42,9 +42,13 @@ for (const theme of themeRegistry) {
 assert.doesNotMatch(readFileSync(resolve(root, 'src/styles/themes.scss'), 'utf8'), /hero-text\s*::(?:before|after)/,
   'The original hero text is not a card: no theme-generated surface may wrap it')
 
-const baseline = process.argv.find((arg) => arg.startsWith('--baseline='))?.split('=')[1]
+// Always compare real files. Callers may override the baseline for a feature branch;
+// HEAD is a safe default for the policy-only local check and prevents a false "0 files" pass.
+const requestedBaseline = process.argv.find((arg) => arg.startsWith('--baseline='))?.split('=')[1]
+  || process.env.THEME_LAYOUT_BASELINE
+const baseline = requestedBaseline && !/^0+$/.test(requestedBaseline) ? requestedBaseline : 'HEAD'
 let comparedFiles = 0
-if (baseline) {
+{
   const repoRoot = execFileSync('git', ['rev-parse', '--show-toplevel'], { cwd: root, encoding: 'utf8' }).trim()
   const htmlPath = relative(repoRoot, resolve(root, 'index.html')).replaceAll('\\', '/')
   const originalHtml = execFileSync('git', ['show', `${baseline}:${htmlPath}`], { cwd: root, encoding: 'utf8' })
@@ -90,6 +94,12 @@ if (baseline) {
     }
     comparedFiles++
   }
+  assert.ok(comparedFiles > 0, `No layout files were compared against ${baseline}`)
   assert.deepEqual(diffs, [], 'Content layout must match the original sunny implementation')
 }
-console.log(JSON.stringify({ pass: true, themes: themeRegistry.map((theme) => theme.id), originalLayoutFilesCompared: comparedFiles }))
+console.log(JSON.stringify({
+  pass: true,
+  themes: themeRegistry.map((theme) => theme.id),
+  baseline,
+  originalLayoutFilesCompared: comparedFiles
+}))

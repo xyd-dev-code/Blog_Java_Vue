@@ -158,7 +158,7 @@ const buildMonths = (arr) => {
 }
 
 const goEdit = (row) => router.push(`/admin/articles/${row.id}/edit`)
-const preview = (row) => window.open(`/articles/${row.slug}`, '_blank')
+const preview = (row) => window.open(`/articles/${row.slug}`, '_blank', 'noopener,noreferrer')
 
 onMounted(reload)
 </script>
