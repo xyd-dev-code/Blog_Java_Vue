@@ -70,6 +70,7 @@ const site = {
 }
 const pageData = (url) => {
   const path = new URL(url).pathname.replace('/api/v1', '')
+  if (path === '/auth/me') return { id: 1, username: 'qa', role: 'ADMIN' }
   if (path === '/site' || path === '/admin/site') return site
   if (path === '/admin/tool-categories') return []
   if (path === '/admin/profile') return { username: 'qa', nickname: 'QA', email: 'qa@example.com' }

@@ -84,6 +84,30 @@ public class ReviewFixIntegrationTest {
         mvc.perform(get("/api/v1/admin/profile").header("Authorization", "Bearer " + token)).andExpect(status().isUnauthorized());
     }
 
+    @Test void adminEndpointsRejectAnonymousAndNonAdminUsers() throws Exception {
+        mvc.perform(get("/api/v1/auth/me")).andExpect(status().isUnauthorized());
+        mvc.perform(get("/api/v1/admin/dashboard")).andExpect(status().isUnauthorized());
+
+        jdbc.update("INSERT INTO user(id, username, password, role, status) VALUES (2, 'reviewuser', ?, 'USER', 1)",
+                new BCryptPasswordEncoder(4).encode("UserPassword!123"));
+        String userToken = jwt.generate(users.selectById(2L));
+        mvc.perform(get("/api/v1/auth/me").header("Authorization", "Bearer " + userToken))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.data.role").value("USER"));
+        mvc.perform(get("/api/v1/admin/dashboard").header("Authorization", "Bearer " + userToken))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test void wrongOldPasswordIsAValidationErrorAndKeepsSessionValid() throws Exception {
+        String token = token();
+        mvc.perform(post("/api/v1/admin/profile/password").header("Authorization", "Bearer " + token)
+                .contentType("application/json")
+                .content("{\"oldPassword\":\"WrongPassword!123\",\"newPassword\":\"NewPassword!456\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value(400));
+        mvc.perform(get("/api/v1/admin/profile").header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk());
+    }
+
     @Test void publicArticlesNeverExposePasswordOrListBodies() throws Exception {
         mvc.perform(get("/api/v1/articles")).andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.records[0].content").doesNotExist())

@@ -55,14 +55,14 @@ public class ClientIpResolver {
      */
     public String resolveFromForwarded(HttpServletRequest req) {
         if (req == null) return "0.0.0.0";
+        String xri = req.getHeader("X-Real-IP");
+        if (xri != null && !xri.isBlank() && !"unknown".equalsIgnoreCase(xri)) return xri.trim();
         String xff = req.getHeader("X-Forwarded-For");
         if (xff != null && !xff.isBlank() && !"unknown".equalsIgnoreCase(xff)) {
             int lastComma = xff.lastIndexOf(',');
             String last = (lastComma >= 0 ? xff.substring(lastComma + 1) : xff).trim();
             if (!last.isEmpty()) return last;
         }
-        String xri = req.getHeader("X-Real-IP");
-        if (xri != null && !xri.isBlank()) return xri.trim();
         String remote = req.getRemoteAddr();
         return (remote == null || remote.isBlank()) ? "0.0.0.0" : remote;
     }

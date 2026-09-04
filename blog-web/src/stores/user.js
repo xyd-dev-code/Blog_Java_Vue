@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { login } from '@/api/front'
 import axios from 'axios'
+import { clearStoredAuthSession } from '@/utils/authSession'
 
 export const useUserStore = defineStore('user', {
   state: () => ({
@@ -25,7 +26,7 @@ export const useUserStore = defineStore('user', {
     clearSession() {
       this.token = ''
       this.userInfo = null
-      localStorage.removeItem('token')
+      clearStoredAuthSession()
     },
     async logout() {
       const token = this.token

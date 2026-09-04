@@ -54,7 +54,7 @@
         <div class="weather-head">
           <div>
             <div class="weather-eyebrow">
-              <span class="we-text" :title="locationSource === 'ip' ? '根据 IP 估算位置，可能与实际所在地不同' : '手动选择的位置'">{{ location || '今日天气' }}</span>
+              <span class="we-text" :title="locationSource === 'ip' ? '根据 IP 估算位置，可能与实际所在地不同' : (locationSource === 'device' ? '根据已授权的设备坐标定位' : '手动选择的位置')">{{ location || '今日天气' }}</span>
               <button class="weather-loc-btn" type="button" title="切换城市或区县" aria-label="切换城市或区县" :aria-expanded="showPicker" @click="togglePicker">📍</button>
             </div>
             <div class="weather-temp" aria-live="polite" aria-atomic="true">
@@ -102,7 +102,18 @@
             />
             <button class="cp-reset" type="button" @click="resetCity" title="清除手动选择，重新按 IP 识别">自动</button>
           </div>
-          <div class="cp-tip">默认按 IP 估算位置，无需定位授权。区县信息不可用时显示城市；可手动搜索并记住选择。</div>
+          <button
+            class="cp-precise"
+            type="button"
+            :disabled="preciseLocating"
+            :aria-busy="preciseLocating"
+            @click="usePreciseLocation"
+          >
+            <span>{{ preciseLocating ? '正在获取设备位置…' : '使用设备精确定位' }}</span>
+            <span class="cp-precise-note">需授权</span>
+          </button>
+          <div v-if="preciseError" class="cp-tip cp-error" role="status">{{ preciseError }}</div>
+          <div class="cp-tip">默认按 IP 估算，无需授权；运营商或 CDN 可能导致偏差。定位不准时可使用精确定位，或搜索城市并记住选择。</div>
           <div v-if="searching" class="cp-tip">搜索中…</div>
           <div v-else-if="searchError" class="cp-tip" role="status">{{ searchError }}</div>
           <ul v-else-if="searchResults.length" class="cp-list">
@@ -148,7 +159,8 @@ const {
   temp, desc, icon, location, status, locationSource,
   humidity, windSpeed, windDir, pressure, feelsLike,
   showPicker, cityKeyword, searchResults, searching, searchError,
-  togglePicker, onCityInput, searchCities, pickCity, resetCity, retry
+  preciseLocating, preciseError,
+  togglePicker, onCityInput, searchCities, pickCity, resetCity, usePreciseLocation, retry
 } = useWeather()
 
 const siteStore = useSiteStore()
@@ -444,6 +456,33 @@ onMounted(() => {
   transition: background 0.2s ease;
 }
 .cp-reset:hover { background: rgba(var(--theme-primary-rgb), 0.12); }
+.cp-precise {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  min-height: 44px;
+  margin-top: 10px;
+  padding: 8px 10px;
+  border: 1px solid rgba(var(--theme-primary-light-rgb), 0.7);
+  border-radius: 8px;
+  background: rgba(var(--theme-primary-rgb), 0.08);
+  color: var(--c-botany-800);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease, opacity 0.2s ease;
+}
+.cp-precise:hover:not(:disabled) { background: rgba(var(--theme-primary-rgb), 0.16); }
+.cp-precise:disabled { cursor: wait; opacity: 0.68; }
+.cp-precise-note {
+  flex-shrink: 0;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--c-ink-soft, var(--c-ink-400));
+}
 .cp-list {
   list-style: none;
   margin: 10px 0 0;
@@ -478,7 +517,7 @@ onMounted(() => {
   text-align: right;
   overflow-wrap: anywhere;
 }
-.cp-item:focus-visible, .cp-reset:focus-visible, .weather-loc-btn:focus-visible {
+.cp-item:focus-visible, .cp-reset:focus-visible, .cp-precise:focus-visible, .weather-loc-btn:focus-visible {
   outline: 2px solid var(--c-cyan-700);
   outline-offset: 2px;
 }
@@ -562,6 +601,7 @@ onMounted(() => {
   opacity: 1;
   transform: translateY(0);
 }
+.cp-error { color: var(--c-autumn-700); }
 
 /* 水墨主题：真实画作占据首屏，界面信息退为题签。 */
 .ink-hero-scene {

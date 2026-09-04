@@ -2,6 +2,7 @@ import axios from 'axios'
 import { ElMessage } from 'element-plus'
 import router from '@/router'
 import { useUserStore } from '@/stores/user'
+import { isSessionAuthFailure } from '@/utils/authSession'
 
 const http = axios.create({
   baseURL: '/api/v1',
@@ -60,15 +61,18 @@ http.interceptors.response.use(
     const url = err.config?.url || ''
     const msg = status >= 500 ? '服务暂时不可用,请稍后再试'
       : (err.response?.data?.message || err.message || '网络错误')
-    if (silent) return Promise.reject(err)
-    // 只有需要登录的接口返回 401 才清理会话；403 表示权限不足。
-    const isAuthFailure = status === 401 && (url.startsWith('/admin/') || url.startsWith('/auth/'))
-    if (isAuthFailure) {
+    // 静默请求只能抑制普通错误提示，不能吞掉管理接口的会话失效。
+    // 登录接口自身的 401 是密码错误，不属于已有会话过期。
+    if (isSessionAuthFailure(status, url)) {
       const userStore = useUserStore()
       userStore.clearSession()
-      router.push('/admin/login')
+      const current = router.currentRoute.value
+      const target = current.path.startsWith('/admin') && current.path !== '/admin/login'
+        ? { path: '/admin/login', query: { redirect: current.fullPath } }
+        : { path: '/admin/login' }
+      router.replace(target)
       ElMessage.error('登录已过期，请重新登录')
-    } else {
+    } else if (!silent) {
       ElMessage.error(msg)
     }
     return Promise.reject(err)

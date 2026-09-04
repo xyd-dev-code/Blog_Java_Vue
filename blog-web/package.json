@@ -10,6 +10,7 @@
     "test:theme-layout": "node scripts/check-theme-layout.mjs",
     "test:theme-layout:browser": "node scripts/theme-layout-regression.mjs",
     "test:weather": "node scripts/weather-regression.mjs",
+    "test:auth-guard": "node scripts/auth-guard-regression.mjs",
     "test:review": "node scripts/review-regression.mjs"
   },
   "dependencies": {

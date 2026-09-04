@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { ensureAdminSession } from '@/utils/authSession'
 
 const SITE_NAME = '个人博客'
 
@@ -96,17 +97,9 @@ const router = createRouter({
   }
 })
 
-router.beforeEach((to, from, next) => {
-  if (to.meta.auth) {
-    // 兼容两种存储：直接的 localStorage.token，和 pinia 持久化键 localStorage.user
-    let token = localStorage.getItem('token')
-    if (!token) {
-      try {
-        const raw = localStorage.getItem('user')
-        if (raw) token = (JSON.parse(raw) || {}).token || ''
-      } catch (_) {}
-    }
-    if (!token) return next({ path: '/admin/login', query: { redirect: to.fullPath } })
+router.beforeEach(async (to, from, next) => {
+  if (to.meta.auth && !(await ensureAdminSession())) {
+    return next({ path: '/admin/login', query: { redirect: to.fullPath } })
   }
   next()
 })
