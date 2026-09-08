@@ -1,0 +1,221 @@
+{
+  "version": 1,
+  "blocked_token_sha256": [
+    "240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9",
+    "288a46da87cf00ea9fde94c9e71564c8a19b4186d1385938fe2ec224a2694897",
+    "3f4b2b90f9862f46d255eeb61464de7e2e273e430fb1e82d1e4cd7f53769917e",
+    "679dcf13818435d2aebf7c638355b30ca2638ff7500d34ee1375fba5fe90c31c",
+    "7165642252bb53c60fc5d6475b97524c3caa245f115e8af054ed3b5a4e510afc",
+    "8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92",
+    "9085e7a8d93d1d22d3561658c2df88d47925c7d62c03f2a824f50d4f116c96a2",
+    "927f9c1dc94365f9b666d3ce993b15d2a7979f2b1384d56b5692a49bcce82583",
+    "ba9b76ce39e696f64162d12dfc65e37612c0240fcdcebc4b82d7ef8834b50bca",
+    "d2776edeb17b60c790f6b7868ed398115c0dd78fd0d3e58b6ad8775ab5b6ce66",
+    "e3d591ab80e0604e1e44082cedec86a2bd91f6eb7fa1f5c4f0a054c820b89b10"
+  ],
+  "allowed_emails": [
+    "noreply@github.com",
+    "noreply@anthropic.com",
+    "blog-dev@local"
+  ],
+  "forbidden_paths": [
+    ".env",
+    ".env.*",
+    "*/.env",
+    "*/.env.*",
+    "*.env",
+    "*.key",
+    "*.pem",
+    "*.p12",
+    "*.pfx",
+    "*.jks",
+    "*.keystore",
+    "*/id_rsa",
+    "*/id_ed25519",
+    ".npmrc",
+    "*/.npmrc",
+    ".pypirc",
+    "*/credentials.json",
+    "*/secrets.json",
+    "**/application.yml",
+    "**/application-local.yml",
+    "**/application-prod.yml",
+    "server-config/*",
+    "release-sanitize/*",
+    "uploads/*",
+    "*/uploads/*",
+    "*.dump",
+    "*.sql.gz",
+    "*.bak",
+    "*.backup"
+  ],
+  "ip_exceptions": [
+    {
+      "path": "blog-server/src/test/java/com/blog/service/WeatherLocationServiceTest.java",
+      "value": "8.8.8.8",
+      "reason": "Synthetic IP classification boundary / public DNS fixture; no deployed asset."
+    },
+    {
+      "path": "blog-server/src/test/java/com/blog/service/WeatherLocationServiceTest.java",
+      "value": "1.1.1.1",
+      "reason": "Synthetic IP classification boundary / public DNS fixture; no deployed asset."
+    },
+    {
+      "path": "blog-server/src/test/java/com/blog/service/WeatherLocationServiceTest.java",
+      "value": "172.15.0.1",
+      "reason": "Synthetic IP classification boundary / public DNS fixture; no deployed asset."
+    },
+    {
+      "path": "blog-server/src/test/java/com/blog/service/WeatherLocationServiceTest.java",
+      "value": "172.32.0.1",
+      "reason": "Synthetic IP classification boundary / public DNS fixture; no deployed asset."
+    },
+    {
+      "path": "blog-server/src/test/java/com/blog/service/WeatherLocationServiceTest.java",
+      "value": "192.168.1.1",
+      "reason": "Synthetic IP classification boundary / public DNS fixture; no deployed asset."
+    },
+    {
+      "path": "blog-server/src/test/java/com/blog/service/WeatherLocationServiceTest.java",
+      "value": "10.1.1.1",
+      "reason": "Synthetic IP classification boundary / public DNS fixture; no deployed asset."
+    },
+    {
+      "path": "blog-server/src/test/java/com/blog/service/WeatherLocationServiceTest.java",
+      "value": "172.16.0.1",
+      "reason": "Synthetic IP classification boundary / public DNS fixture; no deployed asset."
+    },
+    {
+      "path": "blog-server/src/test/java/com/blog/service/WeatherLocationServiceTest.java",
+      "value": "172.31.255.255",
+      "reason": "Synthetic IP classification boundary / public DNS fixture; no deployed asset."
+    },
+    {
+      "path": "blog-server/src/test/java/com/blog/service/WeatherLocationServiceTest.java",
+      "value": "100.64.0.1",
+      "reason": "Synthetic IP classification boundary / public DNS fixture; no deployed asset."
+    },
+    {
+      "path": "blog-server/src/test/java/com/blog/service/WeatherLocationServiceTest.java",
+      "value": "169.254.1.1",
+      "reason": "Synthetic IP classification boundary / public DNS fixture; no deployed asset."
+    },
+    {
+      "path": "blog-server/src/test/java/com/blog/service/WeatherLocationServiceTest.java",
+      "value": "2606:4700:4700::1111",
+      "reason": "Public DNS and synthetic IPv6 classification boundary fixtures."
+    },
+    {
+      "path": "blog-server/src/test/java/com/blog/service/WeatherLocationServiceTest.java",
+      "value": "fd00::1",
+      "reason": "Public DNS and synthetic IPv6 classification boundary fixtures."
+    },
+    {
+      "path": "blog-server/src/test/java/com/blog/service/WeatherLocationServiceTest.java",
+      "value": "fe80::1",
+      "reason": "Public DNS and synthetic IPv6 classification boundary fixtures."
+    },
+    {
+      "path": "blog-server/src/test/java/com/blog/service/WeatherLocationServiceTest.java",
+      "value": "::ffff:c0a8:101",
+      "reason": "Public DNS and synthetic IPv6 classification boundary fixtures."
+    },
+    {
+      "path": "blog-server/src/test/java/com/blog/filter/VisitLogFilterTest.java",
+      "value": "120.0.0.0",
+      "reason": "Chrome version in synthetic User-Agent, not a network endpoint."
+    }
+  ],
+  "reviewed_assets": [
+    {
+      "path": "blog-server/src/main/resources/templates/blog-article-template.docx",
+      "sha256": "16deacbe2d1405dba95944216ed842c3ccb740c931d02a9a8b1140200e1319c6",
+      "reason": "Template XML, relationships and properties reviewed; no personal author or nonempty custom properties.",
+      "reviewer": "Codex privacy review 2026-09-08"
+    },
+    {
+      "path": "blog-web/public/images/wuxia-hero-lettering-v1.png",
+      "sha256": "15bd8660fd86ff66930e48418dcd6b86ecb4799783ff44a98cce0b66036ea1b5",
+      "reason": "Visual artwork and image metadata reviewed; generic illustration or UI lettering.",
+      "reviewer": "Codex privacy review 2026-09-08"
+    },
+    {
+      "path": "blog-web/public/fonts/ma-shan-zheng.woff2",
+      "sha256": "f42560c6bed568394752397e77b30a93900ffc9f17059864e11973f947906259",
+      "reason": "Font name metadata reviewed; third-party font attribution retained.",
+      "reviewer": "Codex privacy review 2026-09-08"
+    },
+    {
+      "path": "blog-web/public/fonts/pangmenzhengdao-cu.woff2",
+      "sha256": "fc1a514c9af8858e8f3f494e2033710432380f25fd14f2a574d3863a5fea7420",
+      "reason": "Font name metadata reviewed; third-party font attribution retained.",
+      "reviewer": "Codex privacy review 2026-09-08"
+    },
+    {
+      "path": "blog-web/public/fonts/zhi-mang-xing.woff2",
+      "sha256": "cdcbd29681fff86134cc900453b0dd44fa17155ad96815b0a7257e23668b95d3",
+      "reason": "Font name metadata reviewed; third-party font attribution retained.",
+      "reviewer": "Codex privacy review 2026-09-08"
+    },
+    {
+      "path": "blog-web/public/images/ink-foliage-left-v2.png",
+      "sha256": "f350bb517e9f9ffead590b0e05e101d98f2e113e558735959fa2767cd20502e4",
+      "reason": "Visual artwork and image metadata reviewed; generic illustration or UI lettering.",
+      "reviewer": "Codex privacy review 2026-09-08"
+    },
+    {
+      "path": "blog-web/public/images/ink-foliage-right-v2.png",
+      "sha256": "15bfe06b072979055bf345904507608a5ed62f19f371873aeafd700d901aa112",
+      "reason": "Visual artwork and image metadata reviewed; generic illustration or UI lettering.",
+      "reviewer": "Codex privacy review 2026-09-08"
+    },
+    {
+      "path": "blog-web/public/images/ink-mountain-layer-v2.png",
+      "sha256": "12d9b44b484ff55a80eebb79533ebbec872fc59af0cc10c1783b8766f2495789",
+      "reason": "Visual artwork and image metadata reviewed; generic illustration or UI lettering.",
+      "reviewer": "Codex privacy review 2026-09-08"
+    },
+    {
+      "path": "blog-web/public/images/ink-paper-texture-v2.png",
+      "sha256": "3dd3b59a640a7cee2d11109ba53e5402487a5682bdcc46e03e432efe313f62b5",
+      "reason": "Visual artwork and image metadata reviewed; generic illustration or UI lettering.",
+      "reviewer": "Codex privacy review 2026-09-08"
+    },
+    {
+      "path": "blog-web/public/images/wuxia-jianghu-border.webp",
+      "sha256": "75d03e1c0b73c47c41c47a31b4248405a30e43bf50a5c84261904fe1583b5b3c",
+      "reason": "Visual artwork and image metadata reviewed; generic illustration or UI lettering.",
+      "reviewer": "Codex privacy review 2026-09-08"
+    },
+    {
+      "path": "blog-web/public/images/wuxia-page-lettering-v2.png",
+      "sha256": "6be24601a166285140d8f0e915cd76f158ecf714352fe0a1c6fc80c3f9969d3b",
+      "reason": "Visual artwork and image metadata reviewed; generic illustration or UI lettering.",
+      "reviewer": "Codex privacy review 2026-09-08"
+    },
+    {
+      "path": "blog-web/public/images/wuxia-swordsman-complete-v2.png",
+      "sha256": "c1935439df86a4aa3f4094ce59a19c5ac0364c0f0525fab3eb9a6cc9cc798e71",
+      "reason": "Visual artwork and image metadata reviewed; generic illustration or UI lettering.",
+      "reviewer": "Codex privacy review 2026-09-08"
+    },
+    {
+      "path": "blog-web/public/images/wuxia-swordsman-poster.webp",
+      "sha256": "158891ef5be3ff9714bb5ccac5328714adca42c5406b3f516e6d528c61966b4a",
+      "reason": "Visual artwork and image metadata reviewed; generic illustration or UI lettering.",
+      "reviewer": "Codex privacy review 2026-09-08"
+    },
+    {
+      "path": "blog-web/public/media/wuxia-swordsman-intro.mp4",
+      "sha256": "2fcacff17e0c44fee9a1b9c7221b65938f7342ad646a1955aa890a05ee962bc5",
+      "reason": "Video contact frames and metadata reviewed; illustrated swordsman, no audio or personal contact information.",
+      "reviewer": "Codex privacy review 2026-09-08"
+    },
+    {
+      "path": "blog-web/public/images/wuxia-page-lettering-v1.png",
+      "sha256": "9bda39feeeb092c582ee180464a20518d24c26aac9eb70c2f5786899c2675402",
+      "reason": "Visual artwork and image metadata reviewed; generic illustration or UI lettering.",
+      "reviewer": "Codex privacy review 2026-09-08"
+    }
+  ]
+}

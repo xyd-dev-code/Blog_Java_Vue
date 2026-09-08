@@ -124,3 +124,6 @@ secrets.json
 *.sql.gz
 *.bak
 *.backup
+
+# Generated QA screenshots and browser traces may contain personal information
+blog-web/design-qa-assets/

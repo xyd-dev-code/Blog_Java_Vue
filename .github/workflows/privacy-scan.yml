@@ -3,16 +3,27 @@ name: Privacy leak scan
 on:
   push:
   pull_request:
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
-  scan-current-tree:
+  privacy-guard:
     runs-on: ubuntu-latest
     steps:
-      - name: Check out repository
+      - name: Check out complete history
         uses: actions/checkout@v4
-      - name: Scan tracked files without printing secret values
-        shell: pwsh
-        run: ./scripts/privacy-scan.ps1 -TrackedOnly
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Test the privacy gate in disposable repositories
+        run: python -m unittest discover -s scripts/tests -p 'test_privacy_guard.py' -v
+      - name: Scan current files (never print matching values)
+        run: python scripts/privacy_guard.py worktree --tracked-only
+      - name: Scan all fetched history, messages, identities and tags
+        if: ${{ !cancelled() }}
+        run: python scripts/privacy_guard.py history
