@@ -10,6 +10,8 @@ import com.blog.service.CommentService;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import org.springframework.web.bind.annotation.*;
+import jakarta.validation.constraints.Size;
+import org.springframework.util.StringUtils;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -30,12 +32,17 @@ public class AdminCommentController {
     @io.swagger.v3.oas.annotations.Operation(summary = "分页评论")
     public R<Page<Comment>> page(@RequestParam(defaultValue = "1") @Min(1) long page,
                                  @RequestParam(defaultValue = "15") @Min(1) @Max(200) long size,
-                                 @RequestParam(required = false) @Min(0) @Max(2) Integer status) {
+                                 @RequestParam(required = false) @Min(0) @Max(2) Integer status,
+                                      @RequestParam(required = false) @Size(max = 100) String keyword) {
         Page<Comment> p = Page.of(page, size);
         LambdaQueryWrapper<Comment> w = new LambdaQueryWrapper<Comment>()
                 .ne(Comment::getTargetType, CommentService.GUESTBOOK)
-                .orderByDesc(Comment::getCreateTime);
+                .orderByDesc(Comment::getCreateTime).orderByDesc(Comment::getId);
         if (status != null) w.eq(Comment::getStatus, status);
+        if (StringUtils.hasText(keyword)) {
+            String term = keyword.trim();
+            w.and(q -> q.like(Comment::getNickname, term).or().like(Comment::getContent, term));
+        }
         Page<Comment> result = commentService.page(p, w);
         // 填充文章标题
         List<Comment> records = result.getRecords();

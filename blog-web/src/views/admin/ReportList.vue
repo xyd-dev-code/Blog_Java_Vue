@@ -4,12 +4,20 @@
       <template #header>
         <div class="header-bar">
           <span>{{ wx('举报管理') }}</span>
+          <div class="header-filters">
           <el-radio-group v-model="filter" @change="reload">
             <el-radio-button value="all">全部</el-radio-button>
             <el-radio-button value="pending">待处理 ({{ counts.pending || 0 }})</el-radio-button>
             <el-radio-button value="resolved">已处理</el-radio-button>
             <el-radio-button value="dismissed">已驳回</el-radio-button>
           </el-radio-group>
+          <form class="management-search" role="search" @submit.prevent="search">
+            <el-input v-model="keyword" placeholder="搜索被举报人、内容、详情或邮箱" aria-label="搜索被举报人、内容、详情或邮箱" maxlength="100" clearable @clear="search">
+              <template #prefix><el-icon><Search /></el-icon></template>
+            </el-input>
+            <el-button native-type="submit" type="primary">搜索</el-button>
+          </form>
+          </div>
         </div>
       </template>
       <div class="table-scroll">
@@ -82,6 +90,7 @@ import { useWuxiaCopy } from '@/composables/useWuxiaCopy'
 const { wx } = useWuxiaCopy()
 
 import { ref, reactive, onMounted } from 'vue'
+import { Search } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   adminReports, adminReportStats, adminUpdateReportStatus, adminDeleteReport,
@@ -94,8 +103,9 @@ const total = ref(0)
 const loading = ref(false)
 const filter = ref('all')
 const counts = ref({})
+const keyword = ref('')
 
-const query = reactive({ page: 1, size: 15, status: '' })
+const query = reactive({ page: 1, size: 15, keyword: '', status: '' })
 
 const reasonLabels = {
   spam: '广告/垃圾', abuse: '辱骂/不友善', porn: '色情/违规', plagiarism: '抄袭',
@@ -103,7 +113,13 @@ const reasonLabels = {
 }
 const reasonLabel = (v) => reasonLabels[v] || v || '—'
 
+const search = () => {
+  query.keyword = keyword.value.trim()
+  reload()
+}
+let requestId = 0
 const reload = async (resetPage = true) => {
+  const currentRequest = ++requestId
   loading.value = true
   query.status = filter.value === 'all' ? '' :
                  filter.value === 'pending' ? 0 :
@@ -111,10 +127,12 @@ const reload = async (resetPage = true) => {
   // 分页器回调里传 false,避免「点第 2 页 → 立刻被重置回第 1 页」的递归 bug
   if (resetPage) query.page = 1
   try {
-    const resp = await adminReports(query)
+    const resp = await adminReports({ ...query })
+    if (currentRequest !== requestId) return
     list.value = resp.data?.records || []
     total.value = resp.data?.total || 0
   } catch (_) {}
+  if (currentRequest !== requestId) return
   loading.value = false
   try {
     counts.value = (await adminReportStats()).data || {}
@@ -149,6 +167,12 @@ onMounted(reload)
 </script>
 
 <style scoped lang="scss">
+.header-filters { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; }
+.management-search { display: flex; align-items: center; gap: 8px; width: 350px; max-width: 100%; }
+.management-search .el-input { flex: 1; min-width: 0; }
+@media (max-width: 600px) {
+  .header-filters, .management-search { width: 100%; }
+}
 .header-bar {
   display: flex;
   justify-content: space-between;

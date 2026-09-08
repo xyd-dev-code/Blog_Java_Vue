@@ -21,6 +21,7 @@ export const useInkInteractions = () => {
 
     const host = event.target.closest?.(INTERACTIVE_SELECTOR)
     if (!host || host.matches(':disabled, [aria-disabled="true"]')) return
+    if (host.closest('[data-ink-feedback="off"]')) return
 
     const rect = host.getBoundingClientRect()
     const size = Math.max(rect.width, rect.height) * 2.2

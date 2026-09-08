@@ -55,7 +55,7 @@ public class ArticleService {
         Page<Article> p = Page.of(Math.max(1, page), Math.max(1, Math.min(size, 100)));
         p = articleMapper.selectPage(p, ArticleVisibility.summaries()
                 .orderByDesc(Article::getIsTop)
-                .orderByDesc(Article::getPublishTime));
+                .orderByDesc(Article::getCreateTime));
         // 注入作者信息
         User admin = userMapper.selectById(1L);
         for (Article a : p.getRecords()) setAuthor(a, admin);

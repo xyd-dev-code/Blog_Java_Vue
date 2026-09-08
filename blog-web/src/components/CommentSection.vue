@@ -1,6 +1,15 @@
 <template>
   <section class="comment-section">
-    <h3 class="cs-title">{{ wx('评论') }} <span class="cs-count">(已加载 {{ total }})</span></h3>
+    <header class="cs-heading">
+      <div class="cs-heading-copy">
+        <span class="cs-kicker">{{ wx('读者会客厅', '以文会友 · 以言论剑') }}</span>
+        <h3 class="cs-title">{{ wx('评论', '江湖论剑') }} <span class="cs-count">已加载 {{ total }} 条</span></h3>
+        <p class="cs-intro">{{ wx('好文章是交流的开始。你的经验与见解，值得被更多人看见。', '一篇文章，一场相逢。留下你的见解，与同道切磋。') }}</p>
+      </div>
+      <el-button v-if="allowComment" class="cs-write" @click="openForm">
+        <el-icon><EditPen /></el-icon><span>{{ wx('加入讨论', '提笔留评') }}</span>
+      </el-button>
+    </header>
 
     <!-- 首次加载骨架 -->
     <div class="comment-list skeleton-list" v-if="loading && !tree.length">
@@ -16,9 +25,10 @@
 
     <div class="comment-list" v-else-if="tree.length">
       <CommentItem
-        v-for="c in tree"
+        v-for="(c, index) in tree"
         :key="c.id"
         :comment="c"
+        :index="index"
         @reply="onReply"
       />
     </div>
@@ -56,12 +66,13 @@
         </div>
         <div class="cs-avatar-actions">
           <el-upload
+            class="cs-avatar-upload"
             :show-file-list="false"
             :before-upload="beforeAvatarUpload"
             :http-request="uploadAvatar"
             accept="image/png,image/jpeg,image/gif"
           >
-            <el-button size="small" :loading="avatarUploading">
+            <el-button class="cs-avatar-upload-btn" size="small" :loading="avatarUploading">
               <el-icon><Plus /></el-icon>
               <span style="margin-left:4px">{{ avatarUploading ? '上传中…' : '上传头像' }}</span>
             </el-button>
@@ -364,15 +375,31 @@ onBeforeUnmount(() => { loadGeneration++; revokeLocal() })
 </script>
 
 <style scoped lang="scss">
-.comment-section { padding: 24px 0 28px; }
+.comment-section { padding: 28px; margin-top: 28px; background: var(--c-paper); border: 1px solid var(--c-line); border-radius: 16px; }
+.cs-heading { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding-bottom: 22px; border-bottom: 1px solid var(--c-line); }
+.cs-intro { margin: 10px 0 0; color: var(--c-ink-soft); font-size: 13px; line-height: 1.7; }
+.cs-write { min-height: 40px; flex-shrink: 0; border-color: var(--c-autumn-500); color: var(--c-autumn-700); background: transparent; }
+.cs-write span { margin-left: 6px; }
 .cs-title {
   font-family: var(--font-serif);
   font-size: 22px;
-  margin: 0 0 16px;
+  margin: 0;
   padding-left: 12px;
   border-left: 3px solid var(--c-autumn-500);
 }
-.cs-count { color: var(--c-ink-soft); font-size: 16px; font-weight: 400; }
+.cs-count { display: inline-block; vertical-align: middle; margin-left: 10px; padding: 3px 9px; border-radius: 5px; background: var(--c-paper-soft); color: var(--c-ink-soft); font-family: var(--font-sans); font-size: 12px; font-weight: 400; }
+
+/* 讨论区以卷首、独立讨论和嵌套回信形成层次。 */
+.comment-section { padding: 0 28px 28px; overflow: hidden; box-shadow: 0 10px 36px rgba(var(--theme-primary-deep-rgb), .06); }
+.cs-heading { position: relative; margin: 0 -28px 24px; padding: 32px 28px; border-top: 3px solid var(--c-autumn-500); background: linear-gradient(115deg, var(--c-paper-soft), var(--c-paper)); }
+.cs-heading::after { content: '言'; position: absolute; right: 180px; top: -24px; font-family: var(--font-serif); font-size: 156px; line-height: 1.3; color: var(--c-autumn-500); opacity: .06; pointer-events: none; }
+.cs-heading-copy, .cs-write { position: relative; z-index: 1; }
+.cs-kicker { display: block; margin-bottom: 12px; color: var(--c-autumn-700); font-size: 12px; font-weight: 600; letter-spacing: .18em; }
+.cs-title { font-size: 30px; border: 0; padding: 0; letter-spacing: .06em; }
+.cs-count { letter-spacing: 0; border: 1px solid var(--c-line); background: var(--c-paper); }
+.cs-write { padding: 12px 20px; min-height: 44px; background: var(--c-autumn-500); color: var(--theme-on-primary); border-radius: 8px; box-shadow: 0 4px 12px rgba(var(--theme-accent-dark-rgb), .16); }
+.cs-write:hover, .cs-write:focus-visible { color: var(--theme-on-primary); background: var(--c-autumn-700); border-color: var(--c-autumn-700); }
+.comment-list { display: flex; flex-direction: column; gap: 16px; }
 
 /* 空状态：压缩 el-empty 自带的留白 */
 .comment-empty {
@@ -440,7 +467,7 @@ onBeforeUnmount(() => { loadGeneration++; revokeLocal() })
 .form-close { font-size: 13px; }
 .form-close .el-icon { margin-right: 2px; }
 
-.comment-form .el-input { margin-bottom: 12px; }
+.comment-form > .el-input { margin-bottom: 12px; }
 
 /* 头像行:头像 + 上传 + 或 + URL输入 + 清除 + 提示 */
 .cs-avatar-row {
@@ -478,8 +505,25 @@ onBeforeUnmount(() => { loadGeneration++; revokeLocal() })
 .cs-avatar-url {
   flex: 1;
   min-width: 180px;
+  height: 36px;
 }
-.cs-avatar-url :deep(.el-input__wrapper) { border-radius: 8px; }
+.cs-avatar-upload { display: flex; flex-shrink: 0; }
+.cs-avatar-upload :deep(.el-upload) { display: flex; }
+.cs-avatar-actions .cs-avatar-upload-btn,
+.cs-avatar-url :deep(.el-input__wrapper) {
+  height: 36px;
+  box-sizing: border-box;
+  border: 1px solid var(--c-line);
+  border-radius: 8px;
+  background: var(--c-paper);
+  box-shadow: none;
+  font-size: 13px;
+  color: var(--c-ink);
+}
+.cs-avatar-actions .cs-avatar-upload-btn { padding: 0 12px; }
+.cs-avatar-actions .cs-avatar-upload-btn:hover,
+.cs-avatar-url :deep(.el-input__wrapper:hover),
+.cs-avatar-url :deep(.el-input__wrapper.is-focus) { border-color: var(--c-autumn-500); }
 .cs-avatar-tip {
   width: 100%;
   font-size: 12px;
@@ -538,6 +582,14 @@ onBeforeUnmount(() => { loadGeneration++; revokeLocal() })
 
 /* ───────── mobile ───────── */
 @media (max-width: 480px) {
+  .comment-section { padding: 0 12px 16px; border-radius: 12px; }
+  .cs-heading { align-items: flex-start; flex-wrap: wrap; gap: 16px; margin: 0 -12px 16px; padding: 22px 16px; }
+  .cs-heading::after { right: 8px; }
+  .cs-title { font-size: 28px; }
+  .cs-count { margin-left: 4px; }
+  .cs-intro { font-size: 12px; }
+  .cs-write { padding: 8px; min-height: 44px; }
+  .comment-trigger { flex-direction: column; padding: 18px 10px; }
   .cs-avatar-row {
     flex-direction: column;
     gap: 10px;

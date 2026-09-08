@@ -78,6 +78,56 @@ public class ReviewFixIntegrationTest {
         mvc.perform(get("/api/v1/admin/profile").header("Authorization", "Bearer " + fresh)).andExpect(status().isUnauthorized());
     }
 
+    @Test void guestbookSearchCombinesKeywordStatusAndPagination() throws Exception {
+        jdbc.update("INSERT INTO comment(id,article_id,target_type,parent_id,nickname,content,status) VALUES "
+                + "(901,0,'GUESTBOOK',0,'needle author','first',1),"
+                + "(902,0,'GUESTBOOK',0,'reader','needle content',1),"
+                + "(903,0,'GUESTBOOK',0,'reader','needle spam',2),"
+                + "(904,1,'ARTICLE',0,'reader','needle article',1),"
+                + "(905,0,'GUESTBOOK',0,'reader','unrelated',1)");
+        String auth = "Bearer " + token();
+        mvc.perform(get("/api/v1/admin/guestbook").header("Authorization", auth)
+                .param("keyword", "  needle  ").param("status", "1").param("size", "1").param("page", "2"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.data.total").value(2))
+                .andExpect(jsonPath("$.data.records.length()").value(1));
+        mvc.perform(get("/api/v1/admin/guestbook").header("Authorization", auth)
+                .param("keyword", "needle").param("status", "2"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.data.records[0].id").value(903));
+        mvc.perform(get("/api/v1/admin/guestbook").header("Authorization", auth)
+                .param("keyword", "   ").param("status", "1"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.data.total").value(3));
+        mvc.perform(get("/api/v1/admin/guestbook").header("Authorization", auth).param("keyword", "missing"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.data.total").value(0));
+    }
+
+    @Test void commentAndReportSearchPreserveStatusAndPagination() throws Exception {
+        jdbc.update("INSERT INTO comment(id,article_id,target_type,parent_id,nickname,content,status) VALUES "
+                + "(911,1,'ARTICLE',0,'needle author','first',1),"
+                + "(912,1,'ARTICLE',0,'reader','needle content',1),"
+                + "(913,0,'GUESTBOOK',0,'guest','needle guest',1),"
+                + "(914,1,'ARTICLE',0,'other','unrelated',2)");
+        jdbc.update("INSERT INTO comment_report(id,comment_id,reason,detail,email,status) VALUES "
+                + "(921,911,'other','detail','',0),(922,912,'other','detail','',0),"
+                + "(923,914,'other','needle detail','',0),(924,914,'other','detail','needle@example.com',0),"
+                + "(925,911,'other','detail','',1)");
+        String auth = "Bearer " + token();
+        mvc.perform(get("/api/v1/admin/comments").header("Authorization", auth)
+                .param("keyword", " needle ").param("status", "1").param("size", "1").param("page", "2"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.data.total").value(2))
+                .andExpect(jsonPath("$.data.records[0].id").value(911));
+        mvc.perform(get("/api/v1/admin/reports").header("Authorization", auth)
+                .param("keyword", " needle ").param("status", "0").param("size", "2").param("page", "2"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.data.total").value(4))
+                .andExpect(jsonPath("$.data.records.length()").value(2));
+        mvc.perform(get("/api/v1/admin/reports").header("Authorization", auth)
+                .param("keyword", "needle").param("status", "1"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.data.total").value(1));
+        for (String endpoint : List.of("comments", "reports")) {
+            mvc.perform(get("/api/v1/admin/" + endpoint).header("Authorization", auth).param("keyword", "missing"))
+                    .andExpect(status().isOk()).andExpect(jsonPath("$.data.total").value(0));
+        }
+    }
+
     @Test void logoutPersistsRevocationAcrossBlacklistInstances() throws Exception {
         String token = token();
         mvc.perform(post("/api/v1/auth/logout").header("Authorization", "Bearer " + token)).andExpect(status().isOk());

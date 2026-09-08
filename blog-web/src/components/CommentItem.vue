@@ -3,7 +3,7 @@
   <div
     :id="`comment-${comment.id}`"
     class="comment-item"
-    :class="[variantClass, { 'is-reply': depth > 0, 'is-pending': comment._pending }]"
+    :class="[variantClass, { 'is-reply': depth > 0, 'is-pending': comment._pending, 'is-author': comment.isAdmin }]"
     :style="{ scrollMarginTop: '80px' }"
   >
     <div class="ci-card" :style="cardStyle">
@@ -32,10 +32,10 @@
         <div class="ci-meta">
           <div class="ci-name">
             {{ comment.nickname }}
-            <span v-if="comment.isAdmin" class="ci-admin">{{ wx('博主') }}</span>
           </div>
           <div class="ci-time">{{ fromNow(comment.createTime) }}</div>
         </div>
+        <span v-if="!variant && depth === 0 && index !== 999" class="ci-floor">{{ String(index + 1).padStart(2, '0') }}</span>
       </div>
 
       <!-- 回复对象提示 -->
@@ -66,9 +66,9 @@
             <el-icon><WarnTriangleFilled /></el-icon><span>举报</span>
           </span>
         </template>
-        <span v-else class="ci-reply-btn" @click="$emit('reply', comment)">
+        <button v-else type="button" class="ci-reply-btn" @click="$emit('reply', comment)">
           <el-icon><TopLeft /></el-icon> 回复
-        </span>
+        </button>
       </div>
     </div>
 
@@ -352,7 +352,6 @@ const firstLetter = (name) => {
 .ci-meta { flex: 1; min-width: 0; }
 .ci-name { font-size: 13px; font-weight: 600; color: var(--c-ink); display: flex; align-items: center; gap: 6px; }
 .comment-item.is-reply .ci-name { font-size: 12px; }
-.ci-admin { font-size: 12px; padding: 1px 6px; background: linear-gradient(135deg, var(--c-botany-500), var(--c-botany-700)); color: var(--theme-on-primary); border-radius: 999px; font-weight: 500; }
 .ci-time { font-size: 12px; color: var(--c-ink-300); margin-top: 2px; }
 
 /* ============================== 回复对象 ============================== */
@@ -384,10 +383,41 @@ const firstLetter = (name) => {
 
 /* ============================== 便签/文章模式回复按钮 ============================== */
 .ci-reply-btn {
+  font-family: inherit; background: transparent; border: 0;
   font-size: 12px; color: var(--c-ink-300); cursor: pointer; display: inline-flex; align-items: center; gap: 3px;
   user-select: none; transition: color 0.2s; margin-top: 10px; padding-top: 8px; border-top: 1px dashed rgba(var(--theme-black-rgb), 0.08);
   &:hover { color: var(--c-botany-500); }
   .el-icon { font-size: 12px; }
+}
+
+/* 文章讨论：头像与正文形成同一阅读列，回复以浅底和连接线区分。 */
+.comment-item.is-default {
+  > .ci-card { padding: 22px 0 18px; }
+  > .ci-card > .ci-head { gap: 12px; margin-bottom: 10px; }
+  > .ci-card > .ci-head .ci-name { font-size: 14px; flex-wrap: wrap; overflow-wrap: anywhere; }
+  > .ci-card > .ci-head .ci-time { color: var(--c-ink-soft); }
+  > .ci-card > .ci-body { margin-left: 48px; font-size: 14px; line-height: 1.85; color: var(--c-ink); }
+  > .ci-card > .ci-foot { display: flex; justify-content: flex-end; margin-left: 48px; margin-top: 10px; }
+  > .ci-card > .ci-foot .ci-reply-btn {
+    margin: 0; padding: 5px 12px; min-height: 32px; border: 1px solid var(--c-line);
+    border-radius: 6px; color: var(--c-ink-soft); gap: 5px;
+    &:hover { color: var(--c-autumn-700); border-color: var(--c-autumn-500); background: var(--c-paper-soft); }
+    &:focus-visible { outline: 2px solid var(--c-autumn-500); outline-offset: 3px; }
+  }
+  > .ci-children { margin: 0 0 18px 48px; padding: 0 16px; background: var(--c-paper-soft); border-left: 2px solid var(--c-line); border-radius: 0 8px 8px 0; }
+  &.is-reply > .ci-card { padding: 14px 0; }
+  &.is-reply > .ci-card > .ci-body,
+  &.is-reply > .ci-card > .ci-foot,
+  &.is-reply > .ci-card > .ci-reply-to { margin-left: 40px; }
+  &.is-reply > .ci-children { margin-left: 12px; padding-right: 0; }
+}
+@media (max-width: 600px) {
+  .comment-item.is-default {
+    > .ci-card > .ci-body, > .ci-card > .ci-foot { margin-left: 0; }
+    > .ci-card > .ci-foot .ci-reply-btn { min-height: 44px; }
+    > .ci-children { margin-left: 10px; padding: 0 10px; }
+    &.is-reply > .ci-card > .ci-body, &.is-reply > .ci-card > .ci-foot, &.is-reply > .ci-card > .ci-reply-to { margin-left: 0; }
+  }
 }
 
 /* ============================== 子回复区 ============================== */
@@ -405,7 +435,22 @@ const firstLetter = (name) => {
 .ci-expand .el-icon { font-size: 12px; }
 
 /* ============================== 文章模式分隔线 ============================== */
-.comment-item.is-default:not(.is-reply) > .ci-card { border-bottom: 1px solid var(--c-line-soft); }
+.comment-item.is-default:not(.is-reply) {
+  border: 1px solid var(--c-line); border-radius: 12px; background: var(--c-paper);
+  box-shadow: 0 3px 14px rgba(var(--theme-primary-deep-rgb), .035);
+  > .ci-card { padding: 22px 24px 18px; }
+  > .ci-children { margin: 0 24px 22px 72px; }
+}
+.ci-floor { align-self: flex-start; font-family: var(--font-serif); font-size: 26px; font-style: italic; color: var(--c-ink-soft); opacity: .45; line-height: 1; }
+.comment-item.is-default .ci-avatar { box-shadow: 0 0 0 3px var(--c-paper), 0 0 0 4px var(--c-line); }
+.comment-item.is-default.is-author { border-left-color: var(--c-autumn-500); }
+.comment-item.is-default > .ci-card > .ci-foot .ci-reply-btn { background: var(--c-paper-soft); border-color: transparent; color: var(--c-ink); }
+@media (max-width: 600px) {
+  .comment-item.is-default:not(.is-reply) {
+    > .ci-card { padding: 18px 14px 12px; }
+    > .ci-children { margin: 0 12px 14px; }
+  }
+}
 
 /* ============================== 响应式 ============================== */
 @media (max-width: 640px) {
