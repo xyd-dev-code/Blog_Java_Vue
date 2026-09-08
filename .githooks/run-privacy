@@ -1,0 +1,15 @@
+#!/bin/sh
+# Probe without consuming pre-push stdin. Missing runtimes block the operation.
+set -eu
+root=$(git rev-parse --show-toplevel) || exit 2
+cd "$root"
+for runtime in python3 python; do
+    if command -v "$runtime" >/dev/null 2>&1 && "$runtime" -c 'import sys; sys.exit(sys.version_info < (3, 11))' </dev/null >/dev/null 2>&1; then
+        exec "$runtime" scripts/privacy_guard.py "$@"
+    fi
+done
+if command -v py >/dev/null 2>&1 && py -3 -c 'import sys; sys.exit(sys.version_info < (3, 11))' </dev/null >/dev/null 2>&1; then
+    exec py -3 scripts/privacy_guard.py "$@"
+fi
+echo 'Privacy check BLOCKED: Python 3.11+ is required. Install it and retry.' >&2
+exit 2
