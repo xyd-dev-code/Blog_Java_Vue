@@ -8,6 +8,8 @@ import com.blog.entity.Comment;
 import com.blog.service.CommentService;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Size;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.LinkedHashMap;
@@ -28,12 +30,17 @@ public class AdminGuestbookController {
     @io.swagger.v3.oas.annotations.Operation(summary = "分页留言")
     public R<Page<Comment>> page(@RequestParam(defaultValue = "1") @Min(1) long page,
                                  @RequestParam(defaultValue = "15") @Min(1) @Max(200) long size,
-                                 @RequestParam(required = false) @Min(0) @Max(2) Integer status) {
+                                 @RequestParam(required = false) @Min(0) @Max(2) Integer status,
+                                 @RequestParam(required = false) @Size(max = 100) String keyword) {
         Page<Comment> p = Page.of(page, size);
         LambdaQueryWrapper<Comment> w = new LambdaQueryWrapper<Comment>()
                 .eq(Comment::getTargetType, CommentService.GUESTBOOK)
-                .orderByDesc(Comment::getCreateTime);
+                .orderByDesc(Comment::getCreateTime).orderByDesc(Comment::getId);
         if (status != null) w.eq(Comment::getStatus, status);
+        if (StringUtils.hasText(keyword)) {
+            String term = keyword.trim();
+            w.and(q -> q.like(Comment::getNickname, term).or().like(Comment::getContent, term));
+        }
         Page<Comment> result = commentService.page(p, w);
         // 填充回复对象昵称
         List<Comment> records = result.getRecords();

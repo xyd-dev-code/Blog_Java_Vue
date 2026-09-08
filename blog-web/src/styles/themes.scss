@@ -132,6 +132,11 @@ html[data-theme='ink'] {
     font-family: var(--font-wuxia-heading);
   }
 
+  // 阅读页保留网络题字字体加载前的系统楷体，避免异步换字体改变字形和换行。
+  .front-main .article-detail :is(.art-title, .art-deck) {
+    font-family: 'KaiTi', 'STKaiti', serif;
+  }
+
   // The typing caret is UI chrome; keep its original width and alignment.
   .ha-cursor { font-family: var(--font-serif); }
 
@@ -284,7 +289,7 @@ html[data-theme='ink'] {
     .el-textarea__inner,
     .el-select__wrapper,
     .el-date-editor,
-    input,
+    input:not(.el-select__input),
     textarea,
     select
   ) {

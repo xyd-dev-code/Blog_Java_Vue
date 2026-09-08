@@ -16,6 +16,7 @@ import java.time.LocalTime;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.List;
 
 @Service
 public class VisitLogService {
@@ -108,7 +109,7 @@ public class VisitLogService {
         Map<String, Long> byDevice = distribution("device_type", start, end);
         Map<String, Long> byOs = distribution("os", start, end);
         Map<String, Long> byBrowser = distribution("browser", start, end);
-        Map<String, Long> byProvince = distribution("province", start, end);
+        Map<String, Long> byProvince = provinceDistribution(start, end);
 
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("date", date.toString());
@@ -121,6 +122,27 @@ public class VisitLogService {
         out.put("byBrowser", byBrowser);
         out.put("byProvince", byProvince);
         return out;
+    }
+
+    private Map<String, Long> provinceDistribution(LocalDateTime start, LocalDateTime end) {
+        // 历史 province 字段可能误存了城市。先在 SQL 中按 IP 计数，再按离线库省份合并。
+        Map<String, Long> totals = new HashMap<>();
+        visitLogMapper.selectMaps(new QueryWrapper<VisitLog>()
+                .select("ip AS k, COUNT(*) AS c")
+                .between("visit_time", start, end)
+                .groupBy("ip"))
+                .forEach(row -> totals.merge(resolvedProvince(row.get("k") == null ? "" : row.get("k").toString()),
+                        toLong(row.get("c")), Long::sum));
+        Map<String, Long> sorted = new LinkedHashMap<>();
+        totals.entrySet().stream()
+                .sorted(Map.Entry.<String, Long>comparingByValue().reversed().thenComparing(Map.Entry.comparingByKey()))
+                .forEach(entry -> sorted.put(entry.getKey(), entry.getValue()));
+        return sorted;
+    }
+
+    private String resolvedProvince(String ip) {
+        String province = ipRegionUtil.resolveProvince(ip);
+        return province == null || province.isBlank() ? "未知" : province;
     }
 
     private Map<String, Long> distribution(String column, LocalDateTime start, LocalDateTime end) {
@@ -149,8 +171,7 @@ public class VisitLogService {
     public Page<VisitLog> page(LocalDateTime start, LocalDateTime end, String ip,
                                String deviceType, String os, String browser, String province,
                                long page, long size) {
-        LambdaQueryWrapper<VisitLog> w = new LambdaQueryWrapper<VisitLog>()
-                .orderByDesc(VisitLog::getVisitTime);
+        LambdaQueryWrapper<VisitLog> w = new LambdaQueryWrapper<>();
         if (start != null && end != null) w.between(VisitLog::getVisitTime, start, end);
         else if (start != null) w.ge(VisitLog::getVisitTime, start);
         else if (end != null) w.le(VisitLog::getVisitTime, end);
@@ -158,7 +179,22 @@ public class VisitLogService {
         if (deviceType != null && !deviceType.isBlank()) w.eq(VisitLog::getDeviceType, deviceType);
         if (os != null && !os.isBlank()) w.eq(VisitLog::getOs, os);
         if (browser != null && !browser.isBlank()) w.eq(VisitLog::getBrowser, browser);
-        if (province != null && !province.isBlank()) w.eq(VisitLog::getProvince, province);
-        return visitLogMapper.selectPage(Page.of(page, size), w);
+        if (province != null && !province.isBlank()) {
+            List<String> matchingIps = visitLogMapper.selectList(w.clone()
+                            .select(VisitLog::getIp).groupBy(VisitLog::getIp)).stream()
+                    .map(VisitLog::getIp)
+                    .filter(candidate -> province.equals(resolvedProvince(candidate)))
+                    .toList();
+            if (matchingIps.isEmpty()) return Page.<VisitLog>of(page, size).setTotal(0);
+            w.in(VisitLog::getIp, matchingIps);
+        }
+        w.orderByDesc(VisitLog::getVisitTime);
+        Page<VisitLog> result = visitLogMapper.selectPage(Page.of(page, size), w);
+        Map<String, String> locations = new HashMap<>();
+        for (VisitLog visit : result.getRecords()) {
+            String location = locations.computeIfAbsent(visit.getIp(), ipRegionUtil::resolveLocation);
+            visit.setLocation(location == null || location.isBlank() ? visit.getProvince() : location);
+        }
+        return result;
     }
 }

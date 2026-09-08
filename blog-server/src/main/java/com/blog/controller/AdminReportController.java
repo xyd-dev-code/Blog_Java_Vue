@@ -11,6 +11,8 @@ import com.blog.mapper.CommentReportMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.*;
+import jakarta.validation.constraints.Size;
+import org.springframework.util.StringUtils;
 
 import java.util.*;
 
@@ -34,11 +36,19 @@ public class AdminReportController {
     @Operation(summary = "分页举报列表")
     public R<Page<CommentReport>> page(@RequestParam(defaultValue = "1") long page,
                                       @RequestParam(defaultValue = "15") long size,
-                                      @RequestParam(required = false) Integer status) {
+                                      @RequestParam(required = false) Integer status,
+                                      @RequestParam(required = false) @Size(max = 100) String keyword) {
         Page<CommentReport> p = Page.of(page, size);
         LambdaQueryWrapper<CommentReport> w = new LambdaQueryWrapper<CommentReport>()
-                .orderByDesc(CommentReport::getCreateTime);
+                .orderByDesc(CommentReport::getCreateTime).orderByDesc(CommentReport::getId);
         if (status != null) w.eq(CommentReport::getStatus, status);
+        if (StringUtils.hasText(keyword)) {
+            String term = keyword.trim();
+            w.and(q -> q.like(CommentReport::getDetail, term)
+                    .or().like(CommentReport::getEmail, term)
+                    .or().apply("EXISTS (SELECT 1 FROM comment c WHERE c.id = comment_report.comment_id "
+                            + "AND c.deleted = 0 AND (c.nickname LIKE {0} OR c.content LIKE {0}))", "%" + term + "%"));
+        }
         Page<CommentReport> result = reportMapper.selectPage(p, w);
 
         // 填充被举报留言的摘要、昵称(用于表格里展示)

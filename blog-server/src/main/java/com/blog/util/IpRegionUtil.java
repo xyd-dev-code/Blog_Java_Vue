@@ -26,7 +26,7 @@ import java.io.InputStream;
  * 文件不存在时,所有解析方法返回空字符串,不影响业务。</p>
  *
  * <p>解析结果格式示例(原始): 中国|0|广东省|广州市|电信
- * 本工具对国内 IP 返回省份(第 3 段),对国外 IP 返回国家(第 1 段)。</p>
+ * 兼容旧格式及“国家|省|市|ISP|ISO”新格式，提供省份与省市明细。</p>
  */
 @Component
 public class IpRegionUtil {
@@ -89,23 +89,59 @@ public class IpRegionUtil {
      * 国内 IP 返回省份(如"北京"、"广东"),国外 IP 返回国家名,本地/内网/解析失败返回空字符串。
      */
     public String resolveProvince(String ip) {
-        if (!available || ip == null || ip.isBlank()) return "";
-        // 本地/内网 IP 不解析
-        if (isPrivateOrLocal(ip)) return "";
+        return parseRegion(searchRegion(ip), false);
+    }
+
+    /** 用于访客明细：国内显示省市，国外显示国家、州/省、城市。 */
+    public String resolveLocation(String ip) {
+        return parseRegion(searchRegion(ip), true);
+    }
+
+    private String searchRegion(String ip) {
+        if (!available || ip == null || ip.isBlank() || isPrivateOrLocal(ip)) return "";
         try {
-            String region = searcher.search(ip);
-            if (region == null || region.isBlank() || "0".equals(region)) return "";
-            String[] parts = region.split("\\|");
-            if (parts.length < 3) return parts[0];
-            // 国内：中国|0|省份|城市|ISP -> 取省份；国外：国家|... -> 取国家
-            if ("中国".equals(parts[0])) {
-                return normalize(parts[2]);
-            }
-            return normalize(parts[0]);
+            return searcher.search(ip);
         } catch (Exception e) {
             log.debug("[IpRegion] IP 地域解析失败: {}", e.getClass().getSimpleName());
             return "";
         }
+    }
+
+    static String parseRegion(String region, boolean includeCity) {
+        if (region == null || region.isBlank() || "0".equals(region)) return "";
+        String[] parts = region.split("\\|", -1);
+        String country = clean(parts[0]);
+        // 新格式：国家|省|市|ISP|ISO；旧格式：国家|0|省|市|ISP。
+        boolean modern = parts.length == 5 && parts[4].matches("[A-Z]{2}");
+        boolean domestic = "中国".equals(country) || "China".equalsIgnoreCase(country)
+                || (modern && "CN".equals(parts[4]));
+        int provinceIndex = modern ? 1 : 2;
+        int cityIndex = modern ? 2 : 3;
+        String province = parts.length > provinceIndex ? clean(parts[provinceIndex]) : "";
+        String city = parts.length > cityIndex ? clean(parts[cityIndex]) : "";
+        if (!domestic) {
+            if (!includeCity) return country;
+            // 只使用地理字段，不将 ISP 或 ISO 编码当作城市；缺失层级跳过。
+            java.util.List<String> location = new java.util.ArrayList<>();
+            for (String part : new String[] { country, province, city }) {
+                if (!part.isEmpty() && location.stream().noneMatch(part::equalsIgnoreCase)) {
+                    location.add(part);
+                }
+            }
+            return String.join(" · ", location);
+        }
+        if (!includeCity) return normalize(province);
+        if (province.isEmpty()) return city;
+        // 直辖市只显示一次，避免“北京市·Beijing”或“北京市·北京市”。
+        if (province.matches("(北京|上海|天津|重庆)市?")) {
+            return province.endsWith("市") ? province : province + "市";
+        }
+        if (city.isEmpty() || province.equals(city)) return province;
+        return province + "·" + city;
+    }
+
+    private static String clean(String value) {
+        return value == null || value.isBlank() || "0".equals(value.trim()) ? "" : value.trim();
     }
 
     private static String normalize(String s) {

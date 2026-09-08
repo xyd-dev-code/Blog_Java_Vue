@@ -4,12 +4,20 @@
       <template #header>
         <div class="header-bar">
           <span>{{ wx('评论管理') }}</span>
+          <div class="header-filters">
           <el-radio-group v-model="filter" @change="reload">
             <el-radio-button value="all">全部</el-radio-button>
             <el-radio-button value="pending">待审核 ({{ counts.pending || 0 }})</el-radio-button>
             <el-radio-button value="approved">已通过</el-radio-button>
             <el-radio-button value="spam">垃圾</el-radio-button>
           </el-radio-group>
+          <form class="management-search" role="search" @submit.prevent="search">
+            <el-input v-model="keyword" placeholder="搜索评论人或内容" aria-label="搜索评论人或内容" maxlength="100" clearable @clear="search">
+              <template #prefix><el-icon><Search /></el-icon></template>
+            </el-input>
+            <el-button native-type="submit" type="primary">搜索</el-button>
+          </form>
+          </div>
         </div>
       </template>
 
@@ -122,6 +130,7 @@ import { useWuxiaCopy } from '@/composables/useWuxiaCopy'
 const { wx } = useWuxiaCopy()
 
 import { ref, reactive, onMounted } from 'vue'
+import { Search } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   adminComments, adminApproveComment, adminSpamComment, adminDeleteComment, adminCommentStats, adminReplyComment
@@ -133,6 +142,7 @@ const total = ref(0)
 const loading = ref(false)
 const filter = ref('all')
 const counts = ref({})
+const keyword = ref('')
 
 const replyVisible = ref(false)
 const replyLoading = ref(false)
@@ -154,9 +164,15 @@ const submitReply = async () => {
   }
 }
 
-const query = reactive({ page: 1, size: 15 })
+const query = reactive({ page: 1, size: 15, keyword: '' })
 
+const search = () => {
+  query.keyword = keyword.value.trim()
+  reload()
+}
+let requestId = 0
 const reload = async (resetPage = true) => {
+  const currentRequest = ++requestId
   loading.value = true
   const statusVal = filter.value === 'all' ? null :
                     filter.value === 'pending' ? 0 :
@@ -165,12 +181,14 @@ const reload = async (resetPage = true) => {
   // 分页器回调里传 false,避免「点第 2 页 → 立刻被重置回第 1 页」的递归 bug
   if (resetPage) query.page = 1
   try {
-    const resp = await adminComments(query)
+    const resp = await adminComments({ ...query })
+    if (currentRequest !== requestId) return
     list.value = resp.data?.records || []
     total.value = resp.data?.total || 0
   } catch (e) {
     console.error('[AdminComments] 加载失败', e)
   }
+  if (currentRequest !== requestId) return
   loading.value = false
   try {
     counts.value = (await adminCommentStats()).data || {}
@@ -188,6 +206,12 @@ onMounted(reload)
 </script>
 
 <style scoped lang="scss">
+.header-filters { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; }
+.management-search { display: flex; align-items: center; gap: 8px; width: 350px; max-width: 100%; }
+.management-search .el-input { flex: 1; min-width: 0; }
+@media (max-width: 600px) {
+  .header-filters, .management-search { width: 100%; }
+}
 .header-bar {
   display: flex;
   justify-content: space-between;

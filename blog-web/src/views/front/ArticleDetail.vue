@@ -63,7 +63,7 @@
 
     <div class="container-narrow art-body">
       <!-- 左侧目录侧边栏：独立滚动容器 + sticky 固定 -->
-      <aside class="art-toc" v-if="tocItems.length" aria-label="文章目录">
+      <aside ref="tocRef" class="art-toc" v-if="tocItems.length" aria-label="文章目录">
         <div class="toc-title">{{ wx('目录') }}</div>
         <ul class="toc-list">
           <li
@@ -71,7 +71,7 @@
             :key="item.id"
             :class="['toc-item', 'lv-' + item.level, { active: activeId === item.id }]"
           >
-            <a :href="'#' + item.id" @click.prevent="goAnchor(item.id)">{{ item.text }}</a>
+            <a :href="'#' + item.id" :aria-current="activeId === item.id ? 'location' : undefined" @click.prevent="goAnchor(item.id)">{{ item.text }}</a>
           </li>
         </ul>
       </aside>
@@ -171,6 +171,24 @@ const tocItems = ref([])        // [{ id, text, level }]
 const tocEls = []               // 缓存标题 DOM，用于滚动高亮
 const activeId = ref('')
 const contentRef = ref(null)
+const tocRef = ref(null)
+const headingOffset = 110
+let tocObserver
+let tocDirty = false
+
+// MdPreview 异步重绘会替换标题节点，不能继续测量已脱离文档的旧节点。
+watch(contentRef, (root) => {
+  tocObserver?.disconnect()
+  tocEls.length = 0
+  if (!root) return
+  tocObserver = new MutationObserver(() => {
+    tocDirty = true
+    onScroll()
+  })
+  tocObserver.observe(root, { childList: true, subtree: true })
+  tocDirty = true
+  onScroll()
+}, { flush: 'post' })
 
 // 收集正文 h2/h3 构建目录；若库未生成 id 则兜底补一个
 const buildToc = () => {
@@ -193,27 +211,44 @@ const buildToc = () => {
   tocItems.value = items
   tocEls.length = 0
   tocEls.push(...els)
-  if (items.length) activeId.value = items[0].id
 }
 
-// 点击目录项：平滑滚动到对应标题（全局 scroll-padding-top 已为固定 header 留位）
+// 与高亮判断共用偏移，避免 scroll-padding 和 scroll-margin 叠加后仍选中上一节。
 const goAnchor = (id) => {
-  const el = document.getElementById(id)
-  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  const el = Array.from(contentRef.value?.querySelectorAll('h2, h3') || []).find(n => n.id === id)
+  if (el) window.scrollTo({
+    top: window.scrollY + el.getBoundingClientRect().top - headingOffset,
+    behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth'
+  })
 }
 
 // 滚动时高亮当前可见章节
 const setActive = () => {
-  if (!tocEls.length) return
-  const offset = 110
+  if (!tocEls.length) {
+    activeId.value = ''
+    return
+  }
   let cur = tocEls[0].id
   for (const el of tocEls) {
-    if (el.getBoundingClientRect().top - offset <= 0) cur = el.id
+    if (!el.isConnected) continue
+    if (el.getBoundingClientRect().top <= headingOffset + 1) cur = el.id
     else break
   }
   // 仅在章节切换时才写响应式，避免每帧无谓重渲染
   if (cur !== activeId.value) activeId.value = cur
 }
+
+// 只滚动目录自身，避免 scrollIntoView 连带改变正文阅读位置。
+watch(activeId, async () => {
+  await nextTick()
+  const toc = tocRef.value
+  const item = toc?.querySelector('.toc-item.active')
+  if (!item) return
+  const bounds = toc.getBoundingClientRect()
+  const rect = item.getBoundingClientRect()
+  if (rect.top < bounds.top) toc.scrollTop += rect.top - bounds.top - 8
+  else if (rect.bottom > bounds.bottom) toc.scrollTop += rect.bottom - bounds.bottom + 8
+})
 
 const { authorName, authorAvatar, initial } = useAuthor(article)
 const { temp, desc, location } = useWeather()
@@ -227,22 +262,27 @@ const readMinutes = computed(() => {
 // 阅读进度
 const progressPercent = ref(0)
 // rAF 合并滚动帧：避免每次 scroll 事件都触发 Vue 重渲染 + 同步读取布局（getBoundingClientRect）
-let scrollTicking = false
+let scrollFrame = 0
 const onScroll = () => {
-  if (scrollTicking) return
-  scrollTicking = true
-  requestAnimationFrame(() => {
+  if (scrollFrame) return
+  scrollFrame = requestAnimationFrame(() => {
+    scrollFrame = 0
+    if (tocDirty) {
+      tocDirty = false
+      buildToc()
+    }
     const h = document.documentElement
     const total = h.scrollHeight - h.clientHeight
     progressPercent.value = total > 0 ? Math.min(100, (h.scrollTop / total) * 100) : 0
     setActive()
-    scrollTicking = false
   })
 }
 
 const load = async () => {
   article.value = null
   tocItems.value = []
+  tocEls.length = 0
+  activeId.value = ''
   try {
     const resp = await articleBySlug(route.params.slug)
     article.value = resp.data?.article
@@ -250,21 +290,23 @@ const load = async () => {
     next.value = resp.data?.next
     related.value = resp.data?.related || []
   } catch (_) {}
-  // 等 MdPreview 渲染出标题 DOM 再收集目录
+  // 由正文 DOM 观察器持续同步目录，不依赖固定延时猜测渲染完成时间。
   await nextTick()
-  buildToc()
-  // MdPreview 可能异步渲染，补一次兜底，确保标题都被收集
-  setTimeout(buildToc, 80)
-  setActive()
+  onScroll()
 }
 
 watch(() => route.params.slug, load)
-onMounted(async () => {
-  await load()
+onMounted(() => {
   window.addEventListener('scroll', onScroll, { passive: true })
-  onScroll()
+  window.addEventListener('resize', onScroll)
+  load()
 })
-onUnmounted(() => { window.removeEventListener('scroll', onScroll) })
+onUnmounted(() => {
+  window.removeEventListener('scroll', onScroll)
+  window.removeEventListener('resize', onScroll)
+  tocObserver?.disconnect()
+  cancelAnimationFrame(scrollFrame)
+})
 </script>
 
 <style scoped lang="scss">
@@ -481,6 +523,8 @@ onUnmounted(() => { window.removeEventListener('scroll', onScroll) })
 .avatar-img { object-fit: cover; }
 .avatar-fallback { font-weight: 600; }
 
+.author-text { text-align: left; }
+
 .author-name {
   font-family: var(--font-serif);
   font-size: 16px;
@@ -563,7 +607,7 @@ onUnmounted(() => { window.removeEventListener('scroll', onScroll) })
     align-items: flex-start;
     gap: 36px;
   }
-  .art-main { flex: 1; min-width: 0; }
+  .art-main { flex: 1; min-width: 0; max-width: 880px; margin-inline: auto; }
 }
 
 /* ===== 左侧目录侧边栏 ===== */
@@ -678,10 +722,65 @@ onUnmounted(() => { window.removeEventListener('scroll', onScroll) })
 .cover img { width: 100%; display: block; }
 
 .art-content {
-  font-size: 16px;
-  line-height: 1.95;
+  font-size: 17px;
+  line-height: 1.9;
   color: var(--c-ink);
-  padding: 16px 0;
+  padding: 32px clamp(16px, 3vw, 40px) 40px;
+  background: var(--c-paper);
+  border-radius: 8px;
+}
+/* 覆盖 Markdown 预览自身的排版，避免外层字号与行距被组件默认值截断。 */
+.art-content :deep(.md-editor),
+.art-content :deep(.md-editor-preview) {
+  font-family: var(--font-sans);
+  font-size: inherit;
+  line-height: inherit;
+}
+.art-content :deep(.md-editor-preview) {
+  padding: 0;
+  overflow-wrap: anywhere;
+  word-break: normal;
+  text-align: left;
+}
+.art-content :deep(.md-editor-preview p) {
+  margin: 0 0 16px;
+  line-height: 1.9;
+}
+.art-content :deep(.md-editor-preview > :first-child) { margin-top: 0; }
+.art-content :deep(.md-editor-preview > :last-child) { margin-bottom: 0; }
+.art-content :deep(.md-editor-preview :is(h1, h2, h3, h4, h5, h6)) {
+  line-height: 1.45;
+  margin-top: 28px;
+  margin-bottom: 14px;
+  scroll-margin-top: 112px;
+  text-wrap: balance;
+}
+.art-content :deep(.md-editor-preview h1) { font-size: 1.8em; }
+.art-content :deep(.md-editor-preview h2) { font-size: 1.55em; }
+.art-content :deep(.md-editor-preview h3) { font-size: 1.25em; }
+.art-content :deep(.md-editor-preview :is(ul, ol)) {
+  padding-left: 1.6em;
+  margin: .75em 0 1.5em;
+}
+.art-content :deep(.md-editor-preview li) { margin: .5em 0; line-height: 1.9; }
+.art-content :deep(.md-editor-preview li > p) { margin-bottom: .5em; }
+.art-content :deep(.md-editor-preview li > :is(ul, ol)) { margin-block: .5em; }
+.art-content :deep(.md-editor-preview blockquote) {
+  margin: 1.5em 0;
+  padding: 16px 20px;
+  border-left: 3px solid var(--c-line);
+  background: var(--c-paper-soft);
+  color: var(--c-ink-soft);
+}
+.art-content :deep(.md-editor-preview blockquote > :last-child) { margin-bottom: 0; }
+.art-content :deep(.md-editor-preview pre) { margin-block: 1.5em; line-height: 1.65; font-size: 14px; }
+.art-content :deep(.md-editor-preview :not(pre) > code) { font-size: .9em; overflow-wrap: anywhere; }
+.art-content :deep(.md-editor-preview :is(th, td)) { padding: 12px 16px; line-height: 1.65; font-size: 15px; }
+.art-content :deep(.md-editor-preview hr) { margin-block: 20px; }
+/* 分隔线已承担章节留白，相邻标题不再重复增加顶部间距。 */
+.art-content :deep(.md-editor-preview hr + :is(h1, h2, h3, h4, h5, h6)) { margin-top: 0; }
+@media (max-width: 768px) {
+  .art-content { padding: 24px 16px 32px; font-size: 16px; }
 }
 /* 防止 Markdown 内嵌图片/表格/代码块撑出屏幕 */
 .art-content :deep(img),
@@ -779,7 +878,7 @@ onUnmounted(() => { window.removeEventListener('scroll', onScroll) })
 }
 @media (max-width: 480px) {
   .art-title { font-size: 22px; line-height: 1.3; }
-  .art-content { font-size: 15px; }
+  .art-content { font-size: 16px; padding-inline: 12px; }
   .art-author { flex-direction: column; text-align: center; padding: 24px 18px; }
   .author-avatar { width: 80px; height: 80px; }
   .nav-card { padding: 16px 18px; }

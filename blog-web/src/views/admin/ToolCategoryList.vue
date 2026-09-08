@@ -5,24 +5,22 @@
         <div class="header-bar">
           <span>{{ wx('工具分类管理') }}</span>
           <div class="header-actions">
+            <div class="toolbar">
+              <el-input
+                v-model="filters.keyword"
+                placeholder="搜索分类键 / 名称"
+                clearable
+                inputmode="search"
+                @keyup.enter="reload"
+                @clear="reload"
+              />
+              <el-button @click="reload">查询</el-button>
+            </div>
             <el-button plain @click="openLogs"><el-icon><Tickets /></el-icon> 操作日志</el-button>
             <el-button type="primary" @click="openForm()"><el-icon><Plus /></el-icon> {{ wx('新建分类') }}</el-button>
           </div>
         </div>
       </template>
-
-      <div class="toolbar">
-        <el-input
-          v-model="filters.keyword"
-          placeholder="搜索分类键 / 名称"
-          clearable
-          inputmode="search"
-          style="width: 220px"
-          @keyup.enter="reload"
-          @clear="reload"
-        />
-        <el-button @click="reload">查询</el-button>
-      </div>
 
       <div class="table-scroll">
         <el-table :data="displayed" v-loading="loading" row-key="id" style="width: 100%">
@@ -288,14 +286,19 @@ onMounted(reload)
 }
 .header-actions {
   display: flex;
+  align-items: center;
   gap: 10px;
   flex-wrap: wrap;
 }
 .toolbar {
   display: flex;
+  align-items: center;
   gap: 10px;
-  margin-bottom: 12px;
+  width: 290px;
+  max-width: 100%;
 }
+.toolbar .el-input { flex: 1; min-width: 0; }
+.header-actions > .el-button + .el-button { margin-left: 0; }
 .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 .sort-num { font-family: 'Consolas', 'Monaco', monospace; color: var(--c-ink-soft); font-size: 12px; }
 .pager { display: flex; justify-content: flex-end; margin-top: 16px; }

@@ -3,6 +3,7 @@ package com.blog.entity;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.annotation.TableField;
 
 import java.time.LocalDateTime;
 
@@ -26,6 +27,12 @@ public class VisitLog {
     private LocalDateTime visitTime;
     /** 省份/地区(基于 ip2region 离线库解析,数据文件缺失时为空) */
     private String province;
+    /** 展示用地区（境外包含国家、州/省、城市），读取时按 IP 解析，不改变历史数据。 */
+    @TableField(exist = false)
+    private String location;
+
+    public String getLocation() { return location; }
+    public void setLocation(String location) { this.location = location; }
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
