@@ -19,6 +19,7 @@ const typographyRules = new Map([
   ["html[data-theme=ink] .front-main :is(.hero-title, .ha-title, .hf-title, .hg-title, .hs-title, .sky-page-head h1, .art-title, .title-accent, .hero-desc, .section-title, .section-sub, .cta-title, .cta-desc, .sky-page-head p, .ha-sub, .hf-sub, .hg-sub, .hs-sub, .ha-tagline, .hero-subtitle, .hero-tagline, .hero-hint, .art-deck, .fh-title, .fh-desc, .fg-title, .ss-title, .sec-title, .rs-title, .toc-title, .profile-info h2)", ['font-family']],
   ["html[data-theme=ink] .notfound :is(h1, p)", ['font-family']],
   ['html[data-theme=ink] .ha-cursor', ['font-family']],
+  ['html[data-theme=ink] .front-main .article-detail :is(.art-title, .art-deck)', ['font-family']],
 ])
 themeCss.walkRules((rule) => {
   const keyframes = rule.parent?.type === 'atrule' && /keyframes$/.test(rule.parent.name)

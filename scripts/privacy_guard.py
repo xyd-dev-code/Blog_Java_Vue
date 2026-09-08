@@ -152,7 +152,7 @@ class Guard:
                     continue
                 if address.is_loopback or address.is_unspecified or any(address in net for net in DOC_NETWORKS):
                     continue
-                if any((e.get('path') == path or path == POLICY) and e.get('value') == str(address) and e.get('reason') for e in self.policy['ip_exceptions']):
+                if self.ip_exception(address, path):
                     continue
                 self.add('network-address', source, n)
             for match in ASSIGN.finditer(line):
@@ -175,9 +175,16 @@ class Guard:
                     continue
                 if address.is_loopback or address.is_unspecified or address in ipaddress.ip_network('2001:db8::/32'):
                     continue
-                if any((e.get('path') == path or path == POLICY) and e.get('value') == str(address) and e.get('reason') for e in self.policy['ip_exceptions']):
+                if self.ip_exception(address, path):
                     continue
                 self.add('network-address', source, n)
+
+    def ip_exception(self, address, path: str) -> bool:
+        # IPv4-mapped IPv6 string formatting differs across Python releases.
+        # Compare address values, while preserving exact path/reason requirements.
+        return any((e.get('path') == path or path == POLICY) and e.get('reason')
+                   and ipaddress.ip_address(e['value']) == address
+                   for e in self.policy['ip_exceptions'])
 
     def identity(self, identity: str, source: str):
         self.text(identity, source)

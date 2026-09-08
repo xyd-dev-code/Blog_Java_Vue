@@ -92,6 +92,24 @@ class PrivacyGateTests(unittest.TestCase):
         self.git('add', '.')
         self.assert_block(self.run_guard('staged'), 'credential-default')
 
+    def test_ipv6_exception_uses_address_equality_and_exact_scope(self):
+        dotted = '::ffff:' + '192.168.' + '1.1'
+        hexadecimal = '::ffff:' + 'c0a8:101'
+        for approved, candidate in ((dotted, hexadecimal), (hexadecimal, dotted)):
+            policy = dict(self.policy, ip_exceptions=[{
+                'path': 'fixture.java', 'value': approved, 'reason': 'Synthetic boundary fixture'
+            }])
+            guard = module.Guard(self.root, policy)
+            try:
+                address = module.ipaddress.ip_address(candidate)
+                self.assertTrue(guard.ip_exception(address, 'fixture.java'))
+                self.assertTrue(guard.ip_exception(address, module.POLICY))
+                self.assertFalse(guard.ip_exception(address, 'other.java'))
+                other = module.ipaddress.ip_address('::ffff:' + '192.168.' + '1.2')
+                self.assertFalse(guard.ip_exception(other, 'fixture.java'))
+            finally:
+                guard.close()
+
     def test_clean_history_and_push_succeed(self):
         result = self.run_guard('history', 'HEAD')
         self.assertEqual(result.returncode, 0, result.stdout.decode())
