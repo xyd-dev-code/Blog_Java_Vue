@@ -84,6 +84,10 @@ public class NotifyService {
         String base = siteBaseUrl.replaceAll("/+$", "");
 
         List<EmailSubscription> subs = confirmedSubscribers();
+        if (subs.isEmpty()) {
+            log.warn("[Notify] 无已确认订阅者，保留待通知内容，等待订阅恢复后重试");
+            return;
+        }
         int a = notifyArticles(base, subs);
         int p = notifyProjects(base, subs);
         int t = notifyTools(base, subs);
@@ -109,7 +113,6 @@ public class NotifyService {
                 .eq(Article::getDeleted, 0)
                 .orderByAsc(Article::getPublishTime).last("LIMIT 25"));
         if (list.isEmpty()) return 0;
-        if (subs.isEmpty()) { markArticles(list); return 0; }
         String unsub = base + "/api/v1/subscribe/unsubscribe";
         for (Article a : list) {
             boolean allSent = true;
@@ -137,7 +140,6 @@ public class NotifyService {
                 .eq(Project::getDeleted, 0)
                 .orderByAsc(Project::getCreateTime).last("LIMIT 25"));
         if (list.isEmpty()) return 0;
-        if (subs.isEmpty()) { markProjects(list); return 0; }
         String unsub = base + "/api/v1/subscribe/unsubscribe";
         String url = base + "/projects";
         for (Project p : list) {
@@ -164,7 +166,6 @@ public class NotifyService {
                 .eq(Tool::getDeleted, 0)
                 .orderByAsc(Tool::getCreateTime).last("LIMIT 25"));
         if (list.isEmpty()) return 0;
-        if (subs.isEmpty()) { markTools(list); return 0; }
         String unsub = base + "/api/v1/subscribe/unsubscribe";
         String url = base + "/tools";
         for (Tool tl : list) {

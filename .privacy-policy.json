@@ -146,6 +146,12 @@
       "reviewer": "Codex privacy review 2026-09-08"
     },
     {
+      "path": "blog-web/public/fonts/ma-shan-zheng-motto.woff2",
+      "sha256": "8450e47aa67bfa4ddb086d93690ac378fecbfcdacafffb3e5ef12e953be88546",
+      "reason": "Six-character motto subset inspected: glyph outlines and metrics match the reviewed original font; name strings retain original attribution; no WOFF2 metadata or private data blocks.",
+      "reviewer": "Codex privacy review 2026-09-12"
+    },
+    {
       "path": "blog-web/public/fonts/pangmenzhengdao-cu.woff2",
       "sha256": "fc1a514c9af8858e8f3f494e2033710432380f25fd14f2a574d3863a5fea7420",
       "reason": "Font name metadata reviewed; third-party font attribution retained.",

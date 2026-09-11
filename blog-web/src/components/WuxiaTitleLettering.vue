@@ -43,7 +43,8 @@ const letteringUrl = '/images/wuxia-hero-lettering-v1.png'
 const id = useId()
 const filterId = `lettering-ink-${id}`
 const maskId = `lettering-mask-${id}`
-const ready = ref(false)
+// Reserve the final lettering from the first render; show text only on asset failure.
+const ready = ref(true)
 let preloader
 
 onMounted(() => {

@@ -157,6 +157,9 @@ class Guard:
                 self.add('network-address', source, n)
             for match in ASSIGN.finditer(line):
                 value = match['value']
+                # SQL NULL clears a credential; a quoted value remains a literal.
+                if not match['quote'] and value.casefold() == 'null':
+                    continue
                 if PLACEHOLDER.match(value) or value.startswith('--') or value in {'null', 'None', 'true', 'false', '?', '[]', '{}', '...'}:
                     continue
                 # Unquoted code expressions are references, not literal credentials.
