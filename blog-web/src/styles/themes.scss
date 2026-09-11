@@ -28,6 +28,19 @@
   line-gap-override: 0%;
 }
 
+// 首屏六字使用同款字体子集，避免等待完整中文字体下载后才切换字形。
+@font-face {
+  font-family: 'Ma Shan Zheng';
+  src: url('/fonts/ma-shan-zheng-motto.woff2') format('woff2');
+  unicode-range: U+4EE3, U+5199, U+6210, U+628A, U+7801, U+8BD7;
+  font-display: block;
+  font-weight: 400;
+  font-style: normal;
+  ascent-override: 115.1%;
+  descent-override: 28.6%;
+  line-gap-override: 0%;
+}
+
 @font-face {
   font-family: 'Zhi Mang Xing';
   src: url('/fonts/zhi-mang-xing.woff2') format('woff2');
@@ -130,6 +143,11 @@ html[data-theme='ink'] {
 
   .notfound :is(h1, p) {
     font-family: var(--font-wuxia-heading);
+  }
+
+  // 首页红色副标题固定为马善政，避免先显示马善政、再换成庞门正道。
+  .front-main .sky-hero .title-accent {
+    font-family: 'Ma Shan Zheng', 'KaiTi', 'STKaiti', serif;
   }
 
   // 阅读页保留网络题字字体加载前的系统楷体，避免异步换字体改变字形和换行。

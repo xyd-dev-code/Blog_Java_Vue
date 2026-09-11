@@ -79,6 +79,22 @@ class PrivacyGateTests(unittest.TestCase):
         result = self.run_guard('staged')
         self.assertEqual(result.returncode, 0, result.stdout.decode())
 
+    def test_sql_null_credential_reset_in_staged_docs_and_sql(self):
+        sql = '\n'.join('UPDATE delivery SET claim_token = ' + value + ';'
+                        for value in ('NULL', 'Null', 'null'))
+        self.write('recovery.md', '```sql\n' + sql + '\n```')
+        self.write('recovery.sql', sql)
+        self.git('add', '.')
+        result = self.run_guard('staged')
+        self.assertEqual(result.returncode, 0, result.stdout.decode())
+
+    def test_sql_quoted_null_and_null_prefixed_credentials_still_block(self):
+        for value in ("'NULL'", '"NULL"', 'NULLcredential'):
+            with self.subTest(value=value):
+                self.write('recovery.md', 'UPDATE delivery SET claim_token = ' + value + ';')
+                self.git('add', '.')
+                self.assert_block(self.run_guard('staged'), 'credential-literal')
+
     def test_ocr_split_identifier_is_detected(self):
         guard = module.Guard(self.root, self.policy)
         try:
