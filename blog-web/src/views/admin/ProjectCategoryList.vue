@@ -4,14 +4,13 @@
       <template #header>
         <div class="header-bar">
           <span>{{ wx('项目分类') }}</span>
-          <el-button type="primary" @click="openForm()"><el-icon><Plus /></el-icon> {{ wx('新建分类') }}</el-button>
+          <div class="header-actions">
+            <el-input v-model="filters.keyword" placeholder="搜索名称 / slug" clearable inputmode="search" class="search-input" @keyup.enter="reload" @clear="reload" />
+            <el-button @click="reload">查询</el-button>
+            <el-button type="primary" @click="openForm()"><el-icon><Plus /></el-icon> {{ wx('新建分类') }}</el-button>
+          </div>
         </div>
       </template>
-
-      <div class="toolbar">
-        <el-input v-model="filters.keyword" placeholder="搜索名称 / slug" clearable inputmode="search" style="width: 220px" @keyup.enter="reload" @clear="reload" />
-        <el-button @click="reload">查询</el-button>
-      </div>
 
       <div class="table-scroll">
         <el-table :data="list" v-loading="loading" row-key="id">
@@ -208,7 +207,9 @@ onMounted(reload)
 
 <style scoped lang="scss">
 .header-bar { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
-.toolbar { display: flex; gap: 10px; margin-bottom: 12px; }
+.header-actions { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 10px; max-width: 100%; margin-left: auto; }
+.header-actions .el-button + .el-button { margin-left: 0; }
+.search-input { width: 220px; max-width: 100%; }
 .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 .pager { margin-top: 12px; justify-content: flex-end; display: flex; }
 .color-dot { display: inline-block; width: 18px; height: 18px; border-radius: 6px; box-shadow: 0 0 0 1px rgba(var(--theme-black-rgb), 0.06); }
