@@ -9,6 +9,7 @@ import java.util.List;
 @Configuration
 @ConfigurationProperties(prefix = "blog")
 public class BlogProperties {
+    private String siteBaseUrl = "";
     private Jwt jwt = new Jwt();
     private Cors cors = new Cors();
     private LocalStorage localStorage = new LocalStorage();
@@ -16,6 +17,8 @@ public class BlogProperties {
     private Ip2Region ip2Region = new Ip2Region();
     private Site site = new Site();
 
+    public String getSiteBaseUrl() { return siteBaseUrl; }
+    public void setSiteBaseUrl(String siteBaseUrl) { this.siteBaseUrl = siteBaseUrl; }
     public Jwt getJwt() { return jwt; }
     public void setJwt(Jwt jwt) { this.jwt = jwt; }
     public Cors getCors() { return cors; }
@@ -31,11 +34,11 @@ public class BlogProperties {
 
     /**
      * 站点对外可访问的根 URL(用于邮件/通知里的审核/详情链接)。
-     * 默认 https://yourdomain.com 占位符,部署时通过 application.yml 的
-     * blog.site.url 覆盖。dev 环境通常填 http://localhost:5173。
+     * 旧版站点 URL 配置。新部署优先使用 blog.site-base-url；保留此项仅用于
+     * 兼容已有环境。dev 环境通常填 http://localhost:5173。
      */
     public static class Site {
-        private String url = "https://yourdomain.com";
+        private String url = "";
 
         public String getUrl() { return url; }
         public void setUrl(String url) { this.url = url; }

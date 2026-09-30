@@ -35,7 +35,7 @@ public class FriendLinkNotificationService {
     private static final Pattern EMAIL_RE = Pattern.compile(
             "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$");
 
-    /** 后台审核入口路径,基于 blog.site.url 拼接(避免源码里硬编码域名)。 */
+    /** 后台审核入口路径,基于可信站点根地址拼接(避免源码里硬编码域名)。 */
     private static final String ADMIN_PATH = "/admin/friend-links";
 
     private final SiteConfigService siteConfigService;
@@ -50,8 +50,8 @@ public class FriendLinkNotificationService {
         this.siteConfigService = siteConfigService;
         this.mailService = mailService;
         this.adminEmail = adminEmail;
-        String base = blogProperties.getSite().getUrl();
-        this.adminUrl = (base == null ? "" : base.replaceAll("/+$", "")) + ADMIN_PATH;
+        this.adminUrl = NotificationEmailSupport.link(
+                NotificationEmailSupport.siteUrl(blogProperties), ADMIN_PATH);
     }
 
     /**
@@ -66,6 +66,7 @@ public class FriendLinkNotificationService {
             if (!isValidEmail(adminEmail)) return;
 
             String subject = "[友链待审核] 收到来自 " + safe(f.getName()) + " 的友链申请";
+            String siteName = safe(siteConfigService.get("siteName", "Blog"));
             String text = String.format(
                     "有人提交了友链申请,等待你审核:\n\n" +
                             "站点名称: %s\n" +
@@ -85,8 +86,18 @@ public class FriendLinkNotificationService {
                     f.getId(),
                     f.getCreateTime() == null ? "（未知）" : f.getCreateTime().toString(),
                     adminUrl,
-                    "— " + safe(siteConfigService.get("siteName", "Blog")));
-            mailService.send(adminEmail, subject, text, null);
+                    "— " + siteName);
+            String html = NotificationEmailSupport.adminHtml(siteName, "新友链申请待审核", "收到了一条友链申请。",
+                    new String[][]{
+                            {"站点名称", safe(f.getName())},
+                            {"站点链接", safe(f.getUrl())},
+                            {"头像链接", f.getAvatar() == null || f.getAvatar().isBlank() ? "（未提供）" : safe(f.getAvatar())},
+                            {"站点简介", safe(f.getDescription())},
+                            {"联系邮箱", f.getEmail() == null || f.getEmail().isBlank() ? "（未提供）" : safe(f.getEmail())},
+                            {"申请编号", "#" + f.getId()},
+                            {"提交时间", f.getCreateTime() == null ? "（未知）" : f.getCreateTime().toString()}
+                    }, "前往审核", adminUrl);
+            mailService.send(adminEmail, subject, text, html);
         } catch (Exception e) {
             log.warn("[FriendLinkNotify] onApplied 失败 id={} errType={}",
                     f.getId(), e.getClass().getSimpleName());

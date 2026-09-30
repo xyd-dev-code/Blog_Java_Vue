@@ -59,6 +59,7 @@ blog:
   ip2-region:
     db-path: ${IP2_REGION_DB_PATH:classpath:ip2region.xdb}
   site:
+    # 兼容旧部署；外发链接统一优先使用上方 BLOG_SITE_BASE_URL。
     url: ${SITE_URL:http://localhost:5173}
   mail:
     enabled: ${BLOG_MAIL_ENABLED:false}

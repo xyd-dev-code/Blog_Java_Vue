@@ -64,7 +64,7 @@ public class CommentNotificationService {
         this.mailService = mailService;
         this.rateLimiter = rateLimiter;
         this.adminEmail = adminEmail;
-        this.siteUrl = trimSlash(blogProperties.getSite().getUrl());
+        this.siteUrl = NotificationEmailSupport.siteUrl(blogProperties);
     }
 
     /**
@@ -82,25 +82,41 @@ public class CommentNotificationService {
 
             String subject;
             String text;
-            String articleTitle = articleTitleOf(c.getArticleId());
+            String html;
             String snippet = clip(c.getContent());
             String link;
             boolean isGuestbook = CommentService.GUESTBOOK.equals(c.getTargetType());
+            String siteName = safe(siteConfigService.get("siteName", "Blog"));
 
             if (isGuestbook) {
                 subject = "[待审核-留言板] " + safe(c.getNickname());
-                link = siteUrl + "/admin/guestbook";
+                link = NotificationEmailSupport.link(siteUrl, "/admin/guestbook");
                 text = String.format(
-                        "留言板有新留言待审核:\n\n作者:%s\n邮箱:%s\nIP:%s\n内容:%s\n\n去审核:%s\n\n%s",
+                        "留言板收到一条新留言，等待审核。\n\n作者：%s\n邮箱：%s\nIP：%s\n内容：\n%s\n\n审核地址：\n%s\n\n%s",
                         safe(c.getNickname()), safe(c.getEmail()), safe(c.getIp()), snippet, link, signature());
+                html = NotificationEmailSupport.adminHtml(siteName, "新留言待审核", "留言板收到了一条新留言。",
+                        new String[][]{
+                                {"作者", safe(c.getNickname())},
+                                {"邮箱", safe(c.getEmail())},
+                                {"IP", safe(c.getIp())},
+                                {"内容", snippet}
+                        }, "前往审核", link);
             } else {
+                String articleTitle = articleTitleOf(c.getArticleId());
                 subject = "[待审核] " + safe(articleTitle);
-                link = siteUrl + "/admin/comments";
+                link = NotificationEmailSupport.link(siteUrl, "/admin/comments");
                 text = String.format(
-                        "文章《%s》有新评论待审核:\n\n作者:%s\n邮箱:%s\nIP:%s\n内容:%s\n\n去审核:%s\n\n%s",
+                        "文章《%s》收到一条新评论，等待审核。\n\n作者：%s\n邮箱：%s\nIP：%s\n内容：\n%s\n\n审核地址：\n%s\n\n%s",
                         articleTitle, safe(c.getNickname()), safe(c.getEmail()), safe(c.getIp()), snippet, link, signature());
+                html = NotificationEmailSupport.adminHtml(siteName, "新评论待审核", "《" + articleTitle + "》收到了一条新评论。",
+                        new String[][]{
+                                {"作者", safe(c.getNickname())},
+                                {"邮箱", safe(c.getEmail())},
+                                {"IP", safe(c.getIp())},
+                                {"内容", snippet}
+                        }, "前往审核", link);
             }
-            mailService.send(adminEmail, subject, text, null);
+            mailService.send(adminEmail, subject, text, html);
         } catch (Exception e) {
             log.warn("[CommentNotify] onCreated 失败 id={} errType={}",
                     c.getId(), e.getClass().getSimpleName());
@@ -172,9 +188,9 @@ public class CommentNotificationService {
         String snippet = clip(c.getContent());
         String link;
         if (CommentService.GUESTBOOK.equals(c.getTargetType())) {
-            link = siteUrl + "/guestbook#comment-" + c.getId();
+            link = NotificationEmailSupport.link(siteUrl, "/guestbook#comment-" + c.getId());
         } else {
-            link = siteUrl + "/articles/" + c.getArticleId() + "#comment-" + c.getId();
+            link = NotificationEmailSupport.link(siteUrl, "/articles/" + c.getArticleId() + "#comment-" + c.getId());
         }
         String text = String.format(
                 "%s,你%s的评论已通过审核,谢谢!\n\n文章:%s\n内容:%s\n\n查看:%s\n\n%s",
@@ -192,9 +208,9 @@ public class CommentNotificationService {
         String snippet = clip(reply.getContent());
         String link;
         if (CommentService.GUESTBOOK.equals(reply.getTargetType())) {
-            link = siteUrl + "/guestbook#comment-" + reply.getId();
+            link = NotificationEmailSupport.link(siteUrl, "/guestbook#comment-" + reply.getId());
         } else {
-            link = siteUrl + "/articles/" + reply.getArticleId() + "#comment-" + reply.getId();
+            link = NotificationEmailSupport.link(siteUrl, "/articles/" + reply.getArticleId() + "#comment-" + reply.getId());
         }
         String text = String.format(
                 "%s 在文章《%s》中回复了你的评论:\n\n原评论:%s\n\n回复内容:%s\n\n查看:%s\n\n%s",
@@ -265,8 +281,4 @@ public class CommentNotificationService {
         return s.replaceAll("[\\r\\n]", " ");
     }
 
-    private static String trimSlash(String s) {
-        if (s == null) return "";
-        return s.endsWith("/") ? s.substring(0, s.length() - 1) : s;
-    }
 }
