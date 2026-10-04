@@ -5,53 +5,63 @@
       <div v-if="drawerOpen && isMobile" class="aside-mask" @click="drawerOpen = false" />
     </transition>
 
-    <aside class="admin-aside" :class="{ collapsed, 'mobile-open': drawerOpen && isMobile }">
+    <aside class="admin-aside" :class="{ collapsed: !showAsideLabels, 'mobile-open': drawerOpen && isMobile }">
       <router-link to="/" class="aside-brand">
         <img v-if="siteLogo" :src="siteLogo" class="mark mark-img" alt="" aria-hidden="true" />
         <span v-else class="mark">·</span>
-        <span v-if="!collapsed" class="text">{{ wx('Admin') }}</span>
+        <span v-if="showAsideLabels" class="text">{{ wx('Admin') }}</span>
       </router-link>
       <nav class="aside-nav" @click="drawerOpen = false">
         <router-link to="/admin/dashboard" class="nav-item">
-          <el-icon><DataLine /></el-icon><span v-if="!collapsed">{{ wx('仪表盘') }}</span>
+          <el-icon><DataLine /></el-icon><span v-if="showAsideLabels">{{ wx('仪表盘') }}</span>
         </router-link>
         <router-link to="/admin/articles" class="nav-item">
-          <el-icon><Document /></el-icon><span v-if="!collapsed">{{ wx('文章管理') }}</span>
+          <el-icon><Document /></el-icon><span v-if="showAsideLabels">{{ wx('文章管理') }}</span>
         </router-link>
         <router-link to="/admin/archives" class="nav-item">
-          <el-icon><Clock /></el-icon><span v-if="!collapsed">{{ wx('归档管理') }}</span>
+          <el-icon><Clock /></el-icon><span v-if="showAsideLabels">{{ wx('归档管理') }}</span>
         </router-link>
         <router-link to="/admin/comments" class="nav-item">
-          <el-icon><ChatDotRound /></el-icon><span v-if="!collapsed">{{ wx('评论管理') }}</span>
+          <el-icon><ChatDotRound /></el-icon><span v-if="showAsideLabels">{{ wx('评论管理') }}</span>
         </router-link>
         <router-link to="/admin/guestbook" class="nav-item">
-          <el-icon><ChatLineSquare /></el-icon><span v-if="!collapsed">{{ wx('留言管理') }}</span>
+          <el-icon><ChatLineSquare /></el-icon><span v-if="showAsideLabels">{{ wx('留言管理') }}</span>
         </router-link>
         <router-link to="/admin/projects" class="nav-item">
-          <el-icon><Box /></el-icon><span v-if="!collapsed">{{ wx('项目管理') }}</span>
+          <el-icon><Box /></el-icon><span v-if="showAsideLabels">{{ wx('项目管理') }}</span>
         </router-link>
         <router-link to="/admin/tools" class="nav-item">
-          <el-icon><Tools /></el-icon><span v-if="!collapsed">{{ wx('工具管理') }}</span>
+          <el-icon><Tools /></el-icon><span v-if="showAsideLabels">{{ wx('工具管理') }}</span>
         </router-link>
         <router-link to="/admin/friend-links" class="nav-item">
-          <el-icon><Link /></el-icon><span v-if="!collapsed">{{ wx('友链管理') }}</span>
+          <el-icon><Link /></el-icon><span v-if="showAsideLabels">{{ wx('友链管理') }}</span>
         </router-link>
         <router-link to="/admin/subscriptions" class="nav-item">
-          <el-icon><Bell /></el-icon><span v-if="!collapsed">{{ wx('订阅管理') }}</span>
+          <el-icon><Bell /></el-icon><span v-if="showAsideLabels">{{ wx('订阅管理') }}</span>
         </router-link>
         <router-link to="/admin/stats" class="nav-item">
-          <el-icon><DataAnalysis /></el-icon><span v-if="!collapsed">{{ wx('访问统计') }}</span>
+          <el-icon><DataAnalysis /></el-icon><span v-if="showAsideLabels">{{ wx('访问统计') }}</span>
         </router-link>
         <div class="nav-sep" />
         <router-link to="/admin/themes" class="nav-item" :aria-label="wx('主题管理')">
-          <el-icon aria-hidden="true"><Brush /></el-icon><span v-if="!collapsed">{{ wx('主题管理') }}</span>
+          <el-icon aria-hidden="true"><Brush /></el-icon><span v-if="showAsideLabels">{{ wx('主题管理') }}</span>
         </router-link>
         <router-link to="/admin/profile" class="nav-item">
-          <el-icon><User /></el-icon><span v-if="!collapsed">{{ wx('个人中心') }}</span>
+          <el-icon><User /></el-icon><span v-if="showAsideLabels">{{ wx('个人中心') }}</span>
         </router-link>
       </nav>
-      <div class="aside-foot" v-if="!collapsed">
-        <a href="/" target="_blank" rel="noopener noreferrer"><el-icon><View /></el-icon> {{ wx('查看前台') }}</a>
+      <div class="aside-foot">
+        <a
+          class="front-portal"
+          href="/"
+          target="_blank"
+          rel="noopener noreferrer"
+          :aria-label="`${wx('查看前台')}，${wx('新窗口打开')}`"
+          :title="!showAsideLabels ? wx('查看前台') : undefined"
+        >
+          <span v-if="showAsideLabels" class="front-portal__label">{{ wx('查看前台') }}</span>
+          <el-icon v-else class="front-portal__collapsed-icon" aria-hidden="true"><Monitor /></el-icon>
+        </a>
       </div>
     </aside>
 
@@ -99,7 +109,7 @@ import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
   Expand, Fold, DataLine, DataAnalysis, Document,
-  ChatDotRound, ChatLineSquare, View, ArrowDown, Box, Link, User, Clock, Tools, Bell, Brush,
+  ChatDotRound, ChatLineSquare, Monitor, ArrowDown, Box, Link, User, Clock, Tools, Bell, Brush,
 } from '@element-plus/icons-vue'
 import { useUserStore } from '@/stores/user'
 import { useSiteStore } from '@/stores/site'
@@ -112,6 +122,7 @@ const siteStore = useSiteStore()
 const collapsed = ref(false)
 const drawerOpen = ref(false)
 const isMobile = ref(false)
+const showAsideLabels = computed(() => !collapsed.value || isMobile.value)
 const userInitial = computed(() => (userStore.userInfo?.username || 'A')[0].toUpperCase())
 const siteLogo = computed(() => siteStore.info?.siteLogo || '')
 
@@ -256,15 +267,56 @@ onUnmounted(() => {
 }
 
 .aside-foot {
-  padding: 12px 20px;
+  padding: 14px 12px;
   border-top: 1px solid var(--c-line-soft);
-  font-size: 13px;
 }
-.aside-foot a {
+.front-portal {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 6px;
-  color: var(--c-ink-soft);
+  justify-content: center;
+  min-height: 54px;
+  padding: 0 16px;
+  overflow: hidden;
+  color: var(--c-ink);
+  background: var(--c-paper);
+  border: 1px solid var(--c-line);
+  border-radius: 10px;
+  box-shadow: 0 3px 9px rgba(var(--theme-ink-rgb), 0.06);
+  font-size: 15px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background-color 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+}
+.front-portal::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 4px;
+  background: var(--c-autumn-500);
+}
+.front-portal__label {
+  white-space: nowrap;
+}
+.front-portal__collapsed-icon { font-size: 19px; }
+.front-portal:hover {
+  color: var(--c-ink);
+  background: var(--c-autumn-50);
+  border-color: var(--c-autumn-300);
+  box-shadow: 0 5px 13px rgba(var(--theme-ink-rgb), 0.1);
+}
+.front-portal:active {
+  background: var(--c-autumn-100);
+  box-shadow: 0 1px 4px rgba(var(--theme-ink-rgb), 0.08);
+}
+.front-portal:focus-visible {
+  outline: 2px solid var(--c-botany-800);
+  outline-offset: 3px;
+}
+.admin-aside.collapsed .aside-foot { padding: 8px; }
+.admin-aside.collapsed .front-portal {
+  min-height: 48px;
+  padding: 0;
 }
 
 .admin-main { flex: 1; display: flex; flex-direction: column; min-width: 0; height: 100%; }
@@ -318,6 +370,10 @@ onUnmounted(() => {
 
 .fade-enter-active, .fade-leave-active { transition: opacity 0.2s; }
 .fade-enter-from, .fade-leave-to { opacity: 0; }
+
+@media (prefers-reduced-motion: reduce) {
+  .front-portal { transition: none; }
+}
 
 @media (max-width: 900px) {
   .admin-layout > .admin-aside {
