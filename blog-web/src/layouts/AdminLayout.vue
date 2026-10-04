@@ -59,8 +59,8 @@
           :aria-label="`${wx('查看前台')}，${wx('新窗口打开')}`"
           :title="!showAsideLabels ? wx('查看前台') : undefined"
         >
+          <el-icon class="front-portal__icon" aria-hidden="true"><Monitor /></el-icon>
           <span v-if="showAsideLabels" class="front-portal__label">{{ wx('查看前台') }}</span>
-          <el-icon v-else class="front-portal__collapsed-icon" aria-hidden="true"><Monitor /></el-icon>
         </a>
       </div>
     </aside>
@@ -267,47 +267,33 @@ onUnmounted(() => {
 }
 
 .aside-foot {
-  padding: 14px 12px;
+  padding: 12px;
   border-top: 1px solid var(--c-line-soft);
 }
 .front-portal {
-  position: relative;
   display: flex;
   align-items: center;
-  justify-content: center;
-  min-height: 54px;
-  padding: 0 16px;
-  overflow: hidden;
-  color: var(--c-ink);
-  background: var(--c-paper);
-  border: 1px solid var(--c-line);
-  border-radius: 10px;
-  box-shadow: 0 3px 9px rgba(var(--theme-ink-rgb), 0.06);
-  font-size: 15px;
-  font-weight: 600;
+  gap: 12px;
+  min-height: 44px;
+  padding: 10px 14px;
+  color: var(--c-botany-900);
+  background: var(--c-botany-100);
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
   text-decoration: none;
-  transition: background-color 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
-}
-.front-portal::before {
-  content: '';
-  position: absolute;
-  inset: 0 auto 0 0;
-  width: 4px;
-  background: var(--c-autumn-500);
+  transition: background-color 0.18s ease, color 0.18s ease;
 }
 .front-portal__label {
   white-space: nowrap;
 }
-.front-portal__collapsed-icon { font-size: 19px; }
+.front-portal__icon { font-size: 16px; flex-shrink: 0; }
 .front-portal:hover {
-  color: var(--c-ink);
-  background: var(--c-autumn-50);
-  border-color: var(--c-autumn-300);
-  box-shadow: 0 5px 13px rgba(var(--theme-ink-rgb), 0.1);
+  color: var(--c-botany-900);
+  background: var(--c-botany-200);
 }
 .front-portal:active {
-  background: var(--c-autumn-100);
-  box-shadow: 0 1px 4px rgba(var(--theme-ink-rgb), 0.08);
+  background: var(--c-botany-300);
 }
 .front-portal:focus-visible {
   outline: 2px solid var(--c-botany-800);
@@ -317,6 +303,7 @@ onUnmounted(() => {
 .admin-aside.collapsed .front-portal {
   min-height: 48px;
   padding: 0;
+  justify-content: center;
 }
 
 .admin-main { flex: 1; display: flex; flex-direction: column; min-width: 0; height: 100%; }
